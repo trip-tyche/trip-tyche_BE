@@ -1,0 +1,14 @@
+services:
+  five-feeling-memory-database:
+    container_name: feeling-memory-database
+    build:
+      dockerfile: Dockerfile
+      context: ./database
+    image: maristadev/feeling-memory-database
+    environment:
+      - MYSQL_DATABASE=feeling_memory
+      - MYSQL_ROOT_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+    volumes:
+      - ./database/config:/etc/mysql/conf.d
+    ports:
+      - "3306:3306"
