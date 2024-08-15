@@ -1,10 +1,20 @@
 package com.fivefeeling.memory.dto;
 
+import com.fivefeeling.memory.entity.User;
+
 public record UserDTO(
-    Long userId,
     String userName,
-    String userEmail
+    String userEmail,
+    String provider
 ) {
+
+  public User toEntity() {
+    return User.builder()
+        .userName(this.userName())
+        .userEmail(this.userEmail())
+        .provider(this.provider())
+        .build();
+  }
 
 }
 
