@@ -1,10 +1,13 @@
 package com.fivefeeling.memory.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +26,7 @@ public class User {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "userId")
-  private Long id;
+  private Long userId;
 
   @Column(name = "userName", nullable = false, length = 255)
   private String userName;
@@ -36,6 +39,9 @@ public class User {
 
   @Column(name = "provider", nullable = false)
   private String provider;
+
+  @OneToMany(mappedBy = "userId", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Trip> trips;
 
   public User updateUser(String userName, String userEmail) {
     this.userName = userName;
