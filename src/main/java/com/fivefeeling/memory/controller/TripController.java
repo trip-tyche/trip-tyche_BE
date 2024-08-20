@@ -6,6 +6,8 @@ import com.fivefeeling.memory.dto.UserTripInfoDTO;
 import com.fivefeeling.memory.entity.User;
 import com.fivefeeling.memory.service.TripService;
 import com.fivefeeling.memory.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,8 +22,10 @@ public class TripController {
   private final TripService tripService;
   private final UserService userService;
 
+  @Operation(summary = "사용자의 여행 정보 조회", description = "특정 사용자의 여행 정보와 핀포인트 정보를 조회합니다.")
   @GetMapping("/api/user/tripInfo")
-  public ResponseEntity<UserTripInfoDTO> getUserTripInfo(@RequestParam Long userId) {
+  public ResponseEntity<UserTripInfoDTO> getUserTripInfo(
+      @Parameter(description = "사용자 ID", required = true) @RequestParam Long userId) {
     // 1. User 정보 조회
     User user = userService.getUserById(userId);
     String userNickName = user.getUserNickName();
