@@ -40,7 +40,7 @@ public class User {
   @Column(name = "provider", nullable = false)
   private String provider;
 
-  @OneToMany(mappedBy = "userId", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Trip> trips;
 
   public User updateUser(String userName, String userEmail) {

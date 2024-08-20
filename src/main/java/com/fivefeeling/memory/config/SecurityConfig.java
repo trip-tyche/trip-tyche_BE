@@ -20,6 +20,7 @@ public class SecurityConfig {
         .logout(logout -> logout.disable()) // 로그아웃 비활성화
         .formLogin(formLogin -> formLogin.disable()) // 폼 로그인 비활성화
         .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
             .requestMatchers("/").permitAll() // 홈 페이지는 인증 없이 접근 가능
             .anyRequest().authenticated() // 그 외 요청은 인증 필요
         )
