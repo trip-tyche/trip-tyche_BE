@@ -49,4 +49,8 @@ public class User {
     return this;
   }
 
+  public User updateUserNickName(String userNickName) {
+    this.userNickName = userNickName;
+    return this;
+  }
 }

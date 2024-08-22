@@ -1,12 +1,19 @@
 package com.fivefeeling.memory.config;
 
 import com.fivefeeling.memory.service.OAuth2Service;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+@Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
@@ -16,21 +23,33 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
-        .csrf(csrf -> csrf.disable()) // CSRF 비활성화
-        .logout(logout -> logout.disable()) // 로그아웃 비활성화
-        .formLogin(formLogin -> formLogin.disable()) // 폼 로그인 비활성화
+        .csrf(csrf -> csrf.disable())
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
-            .requestMatchers("/").permitAll() // 홈 페이지는 인증 없이 접근 가능
-            .anyRequest().authenticated() // 그 외 요청은 인증 필요
+            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/", "/oauth2/**", "/api/**", "/api/user/nickname", "/nickname")
+            .permitAll()
+            .anyRequest().authenticated()
         )
         .oauth2Login(oauth2 -> oauth2
-            .defaultSuccessUrl("/oauth/loginInfo", true) // 로그인 성공 시 이동할 URL
-            .userInfoEndpoint(userInfo -> userInfo
-                .userService(oAuth2Service) // OAuth2 사용자 정보 서비스 설정
-            )
-        );
+            .defaultSuccessUrl("/oauth/loginInfo", true)
+            .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2Service))
+        )
+        .logout(logout -> logout.logoutSuccessUrl("/"))
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
 
     return http.build();
+  }
+
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
+    configuration.setAllowedOrigins(List.of("http://localhost:3000"));  // Adjust your frontend URL here
+    configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    configuration.setAllowedHeaders(List.of("*"));
+    configuration.setAllowCredentials(true);
+
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration);
+    return source;
   }
 }
