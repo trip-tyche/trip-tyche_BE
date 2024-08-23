@@ -11,6 +11,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import java.util.Date;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -39,9 +41,11 @@ public class Trip {
   @Column(name = "country", nullable = false, length = 255)
   private String country;
 
+  @Temporal(TemporalType.DATE)
   @Column(name = "startDate", nullable = false)
   private Date startDate;
 
+  @Temporal(TemporalType.DATE)
   @Column(name = "endDate", nullable = false)
   private Date endDate;
 
@@ -50,4 +54,13 @@ public class Trip {
 
   @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<PinPoint> pinPoints;
+
+  // 해시태그 리스트로 처리
+  public void setHashtagsFromList(List<String> hashtags) {
+    this.hashtags = String.join(",", hashtags);
+  }
+
+  public List<String> getHashtagsAsList() {
+    return List.of(this.hashtags.split(","));
+  }
 }
