@@ -1,6 +1,8 @@
 package com.fivefeeling.memory.controller;
 
 import com.fivefeeling.memory.dto.PinPointSummaryDTO;
+import com.fivefeeling.memory.dto.TripRequestDTO;
+import com.fivefeeling.memory.dto.TripResponseDTO;
 import com.fivefeeling.memory.dto.TripSummaryDTO;
 import com.fivefeeling.memory.dto.UserTripInfoDTO;
 import com.fivefeeling.memory.entity.User;
@@ -11,7 +13,11 @@ import io.swagger.v3.oas.annotations.Parameter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -43,8 +49,20 @@ public class TripController {
         trips,
         pinPoints
     );
-
     return ResponseEntity.ok(userTripInfo);
+  }
+
+  @Operation(summary = "사용자 여행 정보 저장", description = "사용자의 여행 정보 저장")
+  @PostMapping("/api/trips")
+  public ResponseEntity<TripResponseDTO> createTrip(
+      Authentication authentication,
+      @RequestBody TripRequestDTO tripRequestDTO) {
+    OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+    String userEmail = (String) oAuth2User.getAttributes().get("email");
+
+    TripResponseDTO createdTrip = tripService.createTrip(userEmail, tripRequestDTO);
+
+    return ResponseEntity.ok(createdTrip);
   }
 
 }
