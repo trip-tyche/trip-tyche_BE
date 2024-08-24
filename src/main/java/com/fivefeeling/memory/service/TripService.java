@@ -62,8 +62,8 @@ public class TripService {
         savedTrip.getTripId(),
         savedTrip.getTripTitle(),
         savedTrip.getCountry(),
-        savedTrip.getStartDate().toString(),
-        savedTrip.getEndDate().toString(),
+        savedTrip.getStartDate(),
+        savedTrip.getEndDate(),
         savedTrip.getHashtagsAsList()
     );
   }

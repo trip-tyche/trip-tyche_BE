@@ -11,9 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,13 +39,11 @@ public class Trip {
   @Column(name = "country", nullable = false, length = 255)
   private String country;
 
-  @Temporal(TemporalType.DATE)
   @Column(name = "startDate", nullable = false)
-  private Date startDate;
+  private LocalDate startDate;
 
-  @Temporal(TemporalType.DATE)
   @Column(name = "endDate", nullable = false)
-  private Date endDate;
+  private LocalDate endDate;
 
   @Column(name = "hashtags", length = 255)
   private String hashtags;
