@@ -1,9 +1,11 @@
 package com.fivefeeling.memory.service;
 
 import com.fivefeeling.memory.dto.PinPointSummaryDTO;
+import com.fivefeeling.memory.dto.TripInfoDTO;
 import com.fivefeeling.memory.dto.TripRequestDTO;
 import com.fivefeeling.memory.dto.TripResponseDTO;
 import com.fivefeeling.memory.dto.TripSummaryDTO;
+import com.fivefeeling.memory.dto.UserTripsDTO;
 import com.fivefeeling.memory.entity.Trip;
 import com.fivefeeling.memory.entity.User;
 import com.fivefeeling.memory.repository.PinPointRepository;
@@ -66,5 +68,22 @@ public class TripService {
         savedTrip.getEndDate(),
         savedTrip.getHashtagsAsList()
     );
+  }
+
+  public UserTripsDTO getUserTripInfo(String userEmail) {
+    User user = userRepository.findByUserEmail(userEmail)
+        .orElseThrow(() -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다."));
+
+    List<TripInfoDTO> trips = tripRepository.findByUserUserId(user.getUserId()).stream()
+        .map(trip -> new TripInfoDTO(
+            trip.getTripId(),
+            trip.getTripTitle(),
+            trip.getCountry(),
+            trip.getStartDate(),
+            trip.getEndDate(),
+            trip.getHashtagsAsList()
+        ))
+        .collect(Collectors.toList());
+    return new UserTripsDTO(user.getUserNickName(), trips);
   }
 }
