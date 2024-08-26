@@ -5,6 +5,7 @@ import com.fivefeeling.memory.dto.TripRequestDTO;
 import com.fivefeeling.memory.dto.TripResponseDTO;
 import com.fivefeeling.memory.dto.TripSummaryDTO;
 import com.fivefeeling.memory.dto.UserTripInfoDTO;
+import com.fivefeeling.memory.dto.UserTripsDTO;
 import com.fivefeeling.memory.entity.User;
 import com.fivefeeling.memory.service.TripService;
 import com.fivefeeling.memory.service.UserService;
@@ -63,6 +64,14 @@ public class TripController {
     TripResponseDTO createdTrip = tripService.createTrip(userEmail, tripRequestDTO);
 
     return ResponseEntity.ok(createdTrip);
+  }
+
+  @Operation(summary = "여행관리페이지 사용자의 여행 정보 조회", description = "사용자 등록된 여행 정보 조회")
+  @GetMapping("/api/trips")
+  public ResponseEntity<UserTripsDTO> getUserTrips(Authentication authentication) {
+    String userEmail = authenticationHelper.getUserEmail(authentication);
+    UserTripsDTO trips = tripService.getUserTripInfo(userEmail);
+    return ResponseEntity.ok(trips);
   }
 
 }
