@@ -5,6 +5,7 @@ import com.fivefeeling.memory.dto.TripInfoDTO;
 import com.fivefeeling.memory.dto.TripRequestDTO;
 import com.fivefeeling.memory.dto.TripResponseDTO;
 import com.fivefeeling.memory.dto.TripSummaryDTO;
+import com.fivefeeling.memory.dto.TripUdateRequestDTO;
 import com.fivefeeling.memory.dto.UserTripsDTO;
 import com.fivefeeling.memory.entity.Trip;
 import com.fivefeeling.memory.entity.User;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -85,5 +87,44 @@ public class TripService {
         ))
         .collect(Collectors.toList());
     return new UserTripsDTO(user.getUserNickName(), trips);
+  }
+
+  // 사용자 여행 정보 수정
+  @Transactional
+  public TripResponseDTO updateTrip(String userEmail, Long tripId, TripUdateRequestDTO tripUdateRequestDTO) {
+    User user = userRepository.findByUserEmail(userEmail)
+        .orElseThrow(() -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다."));
+
+    Trip trip = tripRepository.findById(tripId)
+        .orElseThrow(() -> new IllegalArgumentException("해당 여행이 존재하지 않습니다."));
+
+    trip.setTripTitle(tripUdateRequestDTO.tripTitle());
+    trip.setCountry(tripUdateRequestDTO.country());
+    trip.setStartDate(tripUdateRequestDTO.startDate());
+    trip.setEndDate(tripUdateRequestDTO.endDate());
+    trip.setHashtagsFromList(tripUdateRequestDTO.hashtags());
+
+    Trip updatedTrip = tripRepository.save(trip);
+
+    return new TripResponseDTO(
+        updatedTrip.getTripId(),
+        updatedTrip.getTripTitle(),
+        updatedTrip.getCountry(),
+        updatedTrip.getStartDate(),
+        updatedTrip.getEndDate(),
+        updatedTrip.getHashtagsAsList()
+    );
+  }
+
+  // 사용자 여행 정보 삭제
+  @Transactional
+  public void deleteTrip(String userEmail, Long tripId) {
+    User user = userRepository.findByUserEmail(userEmail)
+        .orElseThrow(() -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다."));
+
+    Trip trip = tripRepository.findById(tripId)
+        .orElseThrow(() -> new IllegalArgumentException("해당 여행이 존재하지 않습니다."));
+
+    tripRepository.delete(trip);
   }
 }
