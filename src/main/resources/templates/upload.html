@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>File Upload</title>
+</head>
+<body>
+<h1>Upload Your Media File</h1>
+
+<form method="post" enctype="multipart/form-data"
+      th:action="@{/api/trips/{tripId}/upload(tripId=${tripId})}">
+  <!-- multiple 속성 추가 -->
+  <input type="file" name="files" multiple required>
+  <input type="hidden" name="tripId" th:value="${tripId}">
+  <button type="submit">Upload</button>
+</form>
+
+</body>
+</html>
