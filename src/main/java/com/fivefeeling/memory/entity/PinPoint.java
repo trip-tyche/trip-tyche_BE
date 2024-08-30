@@ -9,7 +9,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,15 +29,8 @@ public class PinPoint {
   private Trip trip;
 
   @Column(name = "latitude")
-  private Float latitude;
+  private Double latitude;
 
   @Column(name = "longitude")
-  private Float longitude;
-
-  @Column(name = "pinPointImageDate")
-  private Date pinPointImageDate;
-
-  @Column(name = "pinPointImageLink", length = 255)
-  private String pinPointImageLink;
-
+  private Double longitude;
 }
