@@ -1,5 +1,6 @@
 package com.fivefeeling.memory.controller;
 
+import com.fivefeeling.memory.dto.TripDetailsDTO;
 import com.fivefeeling.memory.dto.TripRequestDTO;
 import com.fivefeeling.memory.dto.TripResponseDTO;
 import com.fivefeeling.memory.dto.TripUdateRequestDTO;
@@ -62,12 +63,19 @@ public class TripController {
 
   @Operation(summary = "여행 정보 삭제", description = "특정 여행 정보 삭제")
   @DeleteMapping("/api/trips/{tripId}")
-  public ResponseEntity<Void> delteTrip(
+  public ResponseEntity<Void> deleteTrip(
       Authentication authentication,
       @PathVariable Long tripId) {
     String userEmail = authenticationHelper.getUserEmail(authentication);
     tripService.deleteTrip(userEmail, tripId);
 
     return ResponseEntity.noContent().build();
+  }
+
+  @Operation(summary = "타임라인 페이지 지도위 페이지 여행 정보 조회", description = "여행 정보 조회")
+  @GetMapping("/api/trips/{tripId}/info")
+  public ResponseEntity<TripDetailsDTO> getTripInfo(@PathVariable Long tripId) {
+    TripDetailsDTO tripInfo = tripService.getTripInfoById(tripId);
+    return ResponseEntity.ok(tripInfo);
   }
 }

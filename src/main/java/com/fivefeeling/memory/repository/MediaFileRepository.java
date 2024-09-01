@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository;
 public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
 
   List<MediaFile> findByTripTripId(Long tripId);
+
+  List<MediaFile> findByPinPointPinPointId(Long pinPointId);
 }
