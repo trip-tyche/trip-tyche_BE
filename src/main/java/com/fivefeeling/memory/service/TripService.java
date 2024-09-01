@@ -1,17 +1,24 @@
 package com.fivefeeling.memory.service;
 
+import com.fivefeeling.memory.dto.PinPointMediaDTO;
 import com.fivefeeling.memory.dto.PinPointSummaryDTO;
+import com.fivefeeling.memory.dto.TripDetailsDTO;
 import com.fivefeeling.memory.dto.TripInfoDTO;
 import com.fivefeeling.memory.dto.TripRequestDTO;
 import com.fivefeeling.memory.dto.TripResponseDTO;
 import com.fivefeeling.memory.dto.TripSummaryDTO;
 import com.fivefeeling.memory.dto.TripUdateRequestDTO;
 import com.fivefeeling.memory.dto.UserTripsDTO;
+import com.fivefeeling.memory.entity.MediaFile;
 import com.fivefeeling.memory.entity.Trip;
 import com.fivefeeling.memory.entity.User;
+import com.fivefeeling.memory.exception.ResourceNotFoundException;
+import com.fivefeeling.memory.repository.MediaFileRepository;
 import com.fivefeeling.memory.repository.PinPointRepository;
 import com.fivefeeling.memory.repository.TripRepository;
 import com.fivefeeling.memory.repository.UserRepository;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +32,13 @@ public class TripService {
   private final TripRepository tripRepository;
   private final PinPointRepository pinPointRepository;
   private final UserRepository userRepository;
+  private final MediaFileRepository mediaFileRepository;
+
+  private static final String TRIP_NOT_FOUND = "해당 여행이 존재하지 않습니다.";
+  private static final String MEDIA_FILE_NOT_FOUND = "해당 핀포인트의 미디어 파일이 존재하지 않습니다.";
+  // 날짜 포맷 형식 지정
+  private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+
 
   public List<TripSummaryDTO> getTripsByUserId(Long userId) {
     return tripRepository.findByUserUserId(userId).stream()
@@ -126,5 +140,46 @@ public class TripService {
         .orElseThrow(() -> new IllegalArgumentException("해당 여행이 존재하지 않습니다."));
 
     tripRepository.delete(trip);
+  }
+
+  public TripDetailsDTO getTripInfoById(Long tripId) {
+    Trip trip = tripRepository.findById(tripId)
+        .orElseThrow(() -> new ResourceNotFoundException(TRIP_NOT_FOUND));
+
+    List<PinPointMediaDTO> pinPoints = pinPointRepository.findByTripTripId(tripId)
+        .stream()
+        .map(pinPoint -> createPinPointMediaDTO(pinPoint.getPinPointId()))
+        .collect(Collectors.toList());
+
+    return new TripDetailsDTO(
+        trip.getTripId(),
+        trip.getTripTitle(),
+        trip.getCountry(),
+        trip.getStartDate(),
+        trip.getEndDate(),
+        pinPoints
+    );
+  }
+
+  private PinPointMediaDTO createPinPointMediaDTO(Long pinPointId) {
+    MediaFile mediaFile = mediaFileRepository.findByPinPointPinPointId(pinPointId)
+        .stream()
+        .findFirst()
+        .orElseThrow(() -> new ResourceNotFoundException(MEDIA_FILE_NOT_FOUND));
+
+    // recordDate 변환 로직을 서비스 계층에서 처리
+    String formattedRecordDate = formatDate(mediaFile.getRecordDate());
+
+    return new PinPointMediaDTO(
+        pinPointId,
+        mediaFile.getLatitude(),
+        mediaFile.getLongitude(),
+        formattedRecordDate,
+        mediaFile.getMediaLink()
+    );
+  }
+
+  private String formatDate(Date date) {
+    return date != null ? DATE_FORMAT.format(date) : null;
   }
 }
