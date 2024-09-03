@@ -1,5 +1,6 @@
 package com.fivefeeling.memory.controller;
 
+import com.fivefeeling.memory.dto.DateImageDTO;
 import com.fivefeeling.memory.dto.PointImageDTO;
 import com.fivefeeling.memory.dto.TripDetailsDTO;
 import com.fivefeeling.memory.dto.TripRequestDTO;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -80,7 +82,6 @@ public class TripController {
     return ResponseEntity.ok(tripInfo);
   }
 
-  // Pinpoint 슬라이드 쇼 조회
   @Operation(summary = "핀포인트별 슬라이드 쇼를 위한 이미지 조회", description = "이미지 조회")
   @GetMapping("/api/trips/{tripId}/pinpoints/{pinPointId}/images")
   public ResponseEntity<PointImageDTO> getPointImages(
@@ -94,5 +95,18 @@ public class TripController {
 
     return ResponseEntity.ok(pointImageDTO);
   }
+
+  @Operation(summary = "특정 날짜에 저장된 이미지를 조회", description = "특정 여행의 특정 날짜에 저장된 모든 이미지를 조회")
+  @GetMapping("/api/trips/{tripId}/map")
+  public ResponseEntity<DateImageDTO> getImagesByDate(
+      @PathVariable Long tripId,
+      @RequestParam String date,
+      Authentication authentication) {
+    String userEmail = authenticationHelper.getUserEmail(authentication);
+    DateImageDTO dateImageDTO = tripService.getImagesByDate(tripId, date, userEmail);
+
+    return ResponseEntity.ok(dateImageDTO);
+  }
+
 
 }
