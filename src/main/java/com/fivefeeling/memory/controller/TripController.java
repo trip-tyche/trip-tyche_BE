@@ -1,5 +1,6 @@
 package com.fivefeeling.memory.controller;
 
+import com.fivefeeling.memory.dto.PointImageDTO;
 import com.fivefeeling.memory.dto.TripDetailsDTO;
 import com.fivefeeling.memory.dto.TripRequestDTO;
 import com.fivefeeling.memory.dto.TripResponseDTO;
@@ -78,4 +79,20 @@ public class TripController {
     TripDetailsDTO tripInfo = tripService.getTripInfoById(tripId);
     return ResponseEntity.ok(tripInfo);
   }
+
+  // Pinpoint 슬라이드 쇼 조회
+  @Operation(summary = "핀포인트별 슬라이드 쇼를 위한 이미지 조회", description = "이미지 조회")
+  @GetMapping("/api/trips/{tripId}/pinpoints/{pinPointId}/images")
+  public ResponseEntity<PointImageDTO> getPointImages(
+      @PathVariable Long tripId,
+      @PathVariable Long pinPointId,
+      Authentication authentication) {
+
+    String userEmail = authenticationHelper.getUserEmail(authentication);
+
+    PointImageDTO pointImageDTO = tripService.getPointImages(tripId, pinPointId, userEmail);
+
+    return ResponseEntity.ok(pointImageDTO);
+  }
+
 }
