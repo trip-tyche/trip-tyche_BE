@@ -1,7 +1,9 @@
 package com.fivefeeling.memory.service;
 
+import com.fivefeeling.memory.dto.ImageDTO;
 import com.fivefeeling.memory.dto.PinPointMediaDTO;
 import com.fivefeeling.memory.dto.PinPointSummaryDTO;
+import com.fivefeeling.memory.dto.PointImageDTO;
 import com.fivefeeling.memory.dto.TripDetailsDTO;
 import com.fivefeeling.memory.dto.TripInfoDTO;
 import com.fivefeeling.memory.dto.TripRequestDTO;
@@ -10,6 +12,7 @@ import com.fivefeeling.memory.dto.TripSummaryDTO;
 import com.fivefeeling.memory.dto.TripUdateRequestDTO;
 import com.fivefeeling.memory.dto.UserTripsDTO;
 import com.fivefeeling.memory.entity.MediaFile;
+import com.fivefeeling.memory.entity.PinPoint;
 import com.fivefeeling.memory.entity.Trip;
 import com.fivefeeling.memory.entity.User;
 import com.fivefeeling.memory.exception.ResourceNotFoundException;
@@ -181,5 +184,44 @@ public class TripService {
 
   private String formatDate(Date date) {
     return date != null ? DATE_FORMAT.format(date) : null;
+  }
+
+  // Pinpoint 슬라이드 쇼 조회
+  @Transactional(readOnly = true)
+  public PointImageDTO getPointImages(Long tripId, Long pinPointId, String userEmail) {
+    PinPoint pinPoint = pinPointRepository.findById(pinPointId)
+        .orElseThrow(() -> new ResourceNotFoundException("해당 핀포인트가 존재하지 않습니다."));
+
+    List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripIdAndPinPointPinPointId(tripId, pinPointId);
+    if (mediaFiles.isEmpty()) {
+      throw new ResourceNotFoundException("해당 핀포인트에 이미지가 없습니다.");
+    }
+
+    MediaFile firstMediaFile = mediaFiles.get(0);
+    ImageDTO firstImage = new ImageDTO(firstMediaFile.getMediaLink());
+
+    String startDate = mediaFiles.stream().map(MediaFile::getRecordDate)
+        .min(Date::compareTo)
+        .map(DATE_FORMAT::format)
+        .orElse(null);
+
+    String endDate = mediaFiles.stream().map(MediaFile::getRecordDate)
+        .max(Date::compareTo)
+        .map(DATE_FORMAT::format)
+        .orElse(null);
+
+    List<ImageDTO> images = mediaFiles.stream()
+        .map(file -> new ImageDTO(file.getMediaLink()))
+        .collect(Collectors.toList());
+
+    return new PointImageDTO(
+        pinPoint.getPinPointId(),
+        pinPoint.getLatitude(),
+        pinPoint.getLongitude(),
+        startDate,
+        endDate,
+        firstImage,
+        images
+    );
   }
 }
