@@ -1,6 +1,8 @@
 package com.fivefeeling.memory.service;
 
+import com.fivefeeling.memory.dto.DateImageDTO;
 import com.fivefeeling.memory.dto.ImageDTO;
+import com.fivefeeling.memory.dto.MediaInfoDTO;
 import com.fivefeeling.memory.dto.PinPointMediaDTO;
 import com.fivefeeling.memory.dto.PinPointSummaryDTO;
 import com.fivefeeling.memory.dto.PointImageDTO;
@@ -20,6 +22,7 @@ import com.fivefeeling.memory.repository.MediaFileRepository;
 import com.fivefeeling.memory.repository.PinPointRepository;
 import com.fivefeeling.memory.repository.TripRepository;
 import com.fivefeeling.memory.repository.UserRepository;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -223,5 +226,32 @@ public class TripService {
         firstImage,
         images
     );
+  }
+
+  @Transactional(readOnly = true)
+  public DateImageDTO getImagesByDate(Long tripId, String date, String userEmail) {
+    // 날짜 형식 검증 및 변환
+    try {
+      Date parsedDate = DATE_FORMAT.parse(date);
+
+      // 이미지 조회
+      List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripIdAndRecordDate(tripId, DATE_FORMAT.format(parsedDate));
+      if (mediaFiles.isEmpty()) {
+        throw new ResourceNotFoundException("해당 날짜에 이미지가 존재하지 않습니다.");
+      }
+
+      // MediaInfoDTO 리스트 생성
+      List<MediaInfoDTO> images = mediaFiles.stream()
+          .map(file -> new MediaInfoDTO(file.getMediaFileId(), file.getMediaLink()))
+          .collect(Collectors.toList());
+
+      // 최종 응답 DTO 생성
+      return new DateImageDTO(
+          date,
+          images
+      );
+    } catch (ParseException e) {
+      throw new IllegalArgumentException("잘못된 날짜 형식입니다. yyyy-MM-dd 형식으로 입력해주세요.");
+    }
   }
 }
