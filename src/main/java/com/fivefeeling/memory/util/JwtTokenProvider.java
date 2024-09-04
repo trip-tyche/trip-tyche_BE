@@ -19,18 +19,22 @@ public class JwtTokenProvider {
     Date now = new Date();
     Date validity = new Date(now.getTime() + 3600000);
 
+    // JWT 토큰 생성
     return Jwts.builder()
+        // 서명을 하기 위한 키 설정
+        .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
         .setClaims(claims)
         .setIssuedAt(now)
         .setExpiration(validity)
-        .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
         .compact();
   }
 
   // 토큰 검증
   public boolean validateToken(String token) {
     try {
-      Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token);
+      Jwts.parser()
+          .setSigningKey(SECRET_KEY)
+          .parseClaimsJws(token);
       return true;
     } catch (Exception e) {
       return false;
