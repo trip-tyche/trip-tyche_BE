@@ -4,7 +4,9 @@ import com.fivefeeling.memory.dto.UserDTO;
 import com.fivefeeling.memory.entity.User;
 import com.fivefeeling.memory.oauth.OAuthAttributes;
 import com.fivefeeling.memory.repository.UserRepository;
+import com.fivefeeling.memory.util.JwtTokenProvider;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
   private final UserRepository userRepository;
+  private final JwtTokenProvider jwtTokenProvider;
 
   @Override
   public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -38,6 +41,11 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
     updateOrSaveUser(userProfile);
 
     Map<String, Object> customAttribute = getCustomAttribute(registrationId, userNameAttributeName, attributes, userProfile);
+
+    // JWT 토큰 생성 후 추가적으로 설정
+    List<String> roles = List.of("ROLE_USER"); // 기본 권한 설정 (예: USER)
+    String token = jwtTokenProvider.createToken(userProfile.userEmail(), roles);
+    customAttribute.put("token", token);  // 클라이언트에 JWT 토큰 전달
 
     return new DefaultOAuth2User(
         Collections.singleton(new SimpleGrantedAuthority("USER")),
