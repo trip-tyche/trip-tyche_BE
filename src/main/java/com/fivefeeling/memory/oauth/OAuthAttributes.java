@@ -2,15 +2,16 @@ package com.fivefeeling.memory.oauth;
 
 import com.fivefeeling.memory.dto.UserDTO;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-
 
 public enum OAuthAttributes {
   GOOGLE("google", (attribute) -> new UserDTO(
       (String) attribute.get("name"),
       (String) attribute.get("email"),
-      "google"
+      "google",
+      List.of("ROLE_USER") // 기본 권한 설정
   )),
 
   KAKAO("kakao", (attribute) -> {
@@ -20,7 +21,8 @@ public enum OAuthAttributes {
     return new UserDTO(
         profile.get("nickname"),
         (String) account.get("email"),
-        "kakao"
+        "kakao",
+        List.of("ROLE_USER") // 기본 권한 설정
     );
   });
 

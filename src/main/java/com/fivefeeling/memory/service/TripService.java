@@ -191,7 +191,7 @@ public class TripService {
 
   // Pinpoint 슬라이드 쇼 조회
   @Transactional(readOnly = true)
-  public PointImageDTO getPointImages(Long tripId, Long pinPointId, String userEmail) {
+  public PointImageDTO getPointImages(Long tripId, Long pinPointId) {
     PinPoint pinPoint = pinPointRepository.findById(pinPointId)
         .orElseThrow(() -> new ResourceNotFoundException("해당 핀포인트가 존재하지 않습니다."));
 
@@ -229,7 +229,7 @@ public class TripService {
   }
 
   @Transactional(readOnly = true)
-  public DateImageDTO getImagesByDate(Long tripId, String date, String userEmail) {
+  public DateImageDTO getImagesByDate(Long tripId, String date) {
     // 날짜 형식 검증 및 변환
     try {
       Date parsedDate = DATE_FORMAT.parse(date);

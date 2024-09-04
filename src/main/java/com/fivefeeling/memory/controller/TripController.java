@@ -8,18 +8,17 @@ import com.fivefeeling.memory.dto.TripResponseDTO;
 import com.fivefeeling.memory.dto.TripUdateRequestDTO;
 import com.fivefeeling.memory.dto.UserTripsDTO;
 import com.fivefeeling.memory.service.TripService;
-import com.fivefeeling.memory.service.UserService;
-import com.fivefeeling.memory.util.AuthenticationHelper;
+import com.fivefeeling.memory.util.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,17 +27,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class TripController {
 
   private final TripService tripService;
-  private final UserService userService;
-  private final AuthenticationHelper authenticationHelper;
+  private final JwtTokenProvider jwtTokenProvider;
 
 
   @Operation(summary = "사용자 여행 정보 저장", description = "사용자의 여행 정보 저장")
   @PostMapping("/api/trips")
   public ResponseEntity<TripResponseDTO> createTrip(
-      Authentication authentication,
+      @RequestHeader("Authorization") String authorizationHeader,
       @RequestBody TripRequestDTO tripRequestDTO) {
 
-    String userEmail = authenticationHelper.getUserEmail(authentication);
+    String token = authorizationHeader.substring(7);
+    String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
+
     TripResponseDTO createdTrip = tripService.createTrip(userEmail, tripRequestDTO);
 
     return ResponseEntity.ok(createdTrip);
@@ -46,8 +46,11 @@ public class TripController {
 
   @Operation(summary = "여행관리페이지 사용자의 여행 정보 조회", description = "사용자 등록된 여행 정보 조회")
   @GetMapping("/api/trips")
-  public ResponseEntity<UserTripsDTO> getUserTrips(Authentication authentication) {
-    String userEmail = authenticationHelper.getUserEmail(authentication);
+  public ResponseEntity<UserTripsDTO> getUserTrips(@RequestHeader("Authorization") String authorizationHeader) {
+
+    String token = authorizationHeader.substring(7);
+    String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
+
     UserTripsDTO trips = tripService.getUserTripInfo(userEmail);
     return ResponseEntity.ok(trips);
   }
@@ -55,10 +58,13 @@ public class TripController {
   @Operation(summary = "여행수정페이지 여행 정보 수정", description = "특정 여행 정보 수정")
   @PutMapping("/api/trips/{tripId}")
   public ResponseEntity<TripResponseDTO> updateTrip(
-      Authentication authentication,
+      @RequestHeader("Authorization") String authorizationHeader,
       @PathVariable Long tripId,
       @RequestBody TripUdateRequestDTO tripUdateRequestDTO) {
-    String userEmail = authenticationHelper.getUserEmail(authentication);
+
+    String token = authorizationHeader.substring(7);
+    String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
+
     TripResponseDTO updatedTrip = tripService.updateTrip(userEmail, tripId, tripUdateRequestDTO);
 
     return ResponseEntity.ok(updatedTrip);
@@ -67,9 +73,10 @@ public class TripController {
   @Operation(summary = "여행 정보 삭제", description = "특정 여행 정보 삭제")
   @DeleteMapping("/api/trips/{tripId}")
   public ResponseEntity<Void> deleteTrip(
-      Authentication authentication,
+      @RequestHeader("Authorization") String authorizationHeader,
       @PathVariable Long tripId) {
-    String userEmail = authenticationHelper.getUserEmail(authentication);
+    String token = authorizationHeader.substring(7);
+    String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
     tripService.deleteTrip(userEmail, tripId);
 
     return ResponseEntity.noContent().build();
@@ -86,12 +93,9 @@ public class TripController {
   @GetMapping("/api/trips/{tripId}/pinpoints/{pinPointId}/images")
   public ResponseEntity<PointImageDTO> getPointImages(
       @PathVariable Long tripId,
-      @PathVariable Long pinPointId,
-      Authentication authentication) {
+      @PathVariable Long pinPointId) {
 
-    String userEmail = authenticationHelper.getUserEmail(authentication);
-
-    PointImageDTO pointImageDTO = tripService.getPointImages(tripId, pinPointId, userEmail);
+    PointImageDTO pointImageDTO = tripService.getPointImages(tripId, pinPointId);
 
     return ResponseEntity.ok(pointImageDTO);
   }
@@ -100,10 +104,9 @@ public class TripController {
   @GetMapping("/api/trips/{tripId}/map")
   public ResponseEntity<DateImageDTO> getImagesByDate(
       @PathVariable Long tripId,
-      @RequestParam String date,
-      Authentication authentication) {
-    String userEmail = authenticationHelper.getUserEmail(authentication);
-    DateImageDTO dateImageDTO = tripService.getImagesByDate(tripId, date, userEmail);
+      @RequestParam String date) {
+
+    DateImageDTO dateImageDTO = tripService.getImagesByDate(tripId, date);
 
     return ResponseEntity.ok(dateImageDTO);
   }
