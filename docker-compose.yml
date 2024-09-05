@@ -3,8 +3,10 @@ version: '3.8'
 services:
   app:
     container_name: feeling-memory-app
-    ports:
-      - "8080:8080"
+    build: .
+    depends_on:
+      - db
+    image: maristadev/feeling-memory-app
     environment:
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
@@ -14,9 +16,10 @@ services:
       GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET}
       AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
       AWS_SECRET_KEY: ${AWS_SECRET_KEY}
-    image: maristadev/feeling-memory-app
-    depends_on:
-      - db
+    ports:
+      - "80:8080"
+    restart: always
+
 
   db:
     image: mysql:8.0
@@ -28,3 +31,4 @@ services:
       - ./database/config:/etc/mysql/conf.d
     ports:
       - "3306:3306"
+    restart: always

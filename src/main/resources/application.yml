@@ -1,15 +1,15 @@
 spring:
   profiles:
-    active: local
+    active: prod
 
 ---
 spring:
   config:
     activate:
-      on-profile: local
+      on-profile: prod
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/feeling_memory?serverTimezone=UTC
+    url: jdbc:mysql://feeling-memory-database:3306/feeling_memory
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
   jpa:
