@@ -6,7 +6,8 @@ import com.fivefeeling.memory.domain.trip.model.TripDetailsDTO;
 import com.fivefeeling.memory.domain.trip.model.TripRequestDTO;
 import com.fivefeeling.memory.domain.trip.model.TripResponseDTO;
 import com.fivefeeling.memory.domain.trip.model.TripUdateRequestDTO;
-import com.fivefeeling.memory.domain.trip.service.TripService;
+import com.fivefeeling.memory.domain.trip.service.TripManagementService;
+import com.fivefeeling.memory.domain.trip.service.TripQueryService;
 import com.fivefeeling.memory.domain.user.model.UserTripsDTO;
 import com.fivefeeling.memory.global.util.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,9 +27,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class TripController {
 
-  private final TripService tripService;
+  private final TripQueryService tripQueryService;
+  private final TripManagementService tripManagementService;
   private final JwtTokenProvider jwtTokenProvider;
-
 
   @Operation(summary = "사용자 여행 정보 저장", description = "사용자의 여행 정보 저장")
   @PostMapping("/api/trips")
@@ -39,20 +40,9 @@ public class TripController {
     String token = authorizationHeader.substring(7);
     String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
 
-    TripResponseDTO createdTrip = tripService.createTrip(userEmail, tripRequestDTO);
+    TripResponseDTO createdTrip = tripManagementService.createTrip(userEmail, tripRequestDTO);
 
     return ResponseEntity.ok(createdTrip);
-  }
-
-  @Operation(summary = "여행관리페이지 사용자의 여행 정보 조회", description = "사용자 등록된 여행 정보 조회")
-  @GetMapping("/api/trips")
-  public ResponseEntity<UserTripsDTO> getUserTrips(@RequestHeader("Authorization") String authorizationHeader) {
-
-    String token = authorizationHeader.substring(7);
-    String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
-
-    UserTripsDTO trips = tripService.getUserTripInfo(userEmail);
-    return ResponseEntity.ok(trips);
   }
 
   @Operation(summary = "여행수정페이지 여행 정보 수정", description = "특정 여행 정보 수정")
@@ -65,7 +55,7 @@ public class TripController {
     String token = authorizationHeader.substring(7);
     String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
 
-    TripResponseDTO updatedTrip = tripService.updateTrip(userEmail, tripId, tripUdateRequestDTO);
+    TripResponseDTO updatedTrip = tripManagementService.updateTrip(userEmail, tripId, tripUdateRequestDTO);
 
     return ResponseEntity.ok(updatedTrip);
   }
@@ -75,17 +65,31 @@ public class TripController {
   public ResponseEntity<Void> deleteTrip(
       @RequestHeader("Authorization") String authorizationHeader,
       @PathVariable Long tripId) {
+
     String token = authorizationHeader.substring(7);
     String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
-    tripService.deleteTrip(userEmail, tripId);
+
+    tripManagementService.deleteTrip(userEmail, tripId);
 
     return ResponseEntity.noContent().build();
   }
 
+  @Operation(summary = "여행관리페이지 사용자의 여행 정보 조회", description = "사용자 등록된 여행 정보 조회")
+  @GetMapping("/api/trips")
+  public ResponseEntity<UserTripsDTO> getUserTrips(@RequestHeader("Authorization") String authorizationHeader) {
+
+    String token = authorizationHeader.substring(7);
+    String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
+
+    UserTripsDTO trips = tripQueryService.getUserTripInfo(userEmail);
+    return ResponseEntity.ok(trips);
+  }
+
+
   @Operation(summary = "타임라인 페이지 지도위 페이지 여행 정보 조회", description = "여행 정보 조회")
   @GetMapping("/api/trips/{tripId}/info")
   public ResponseEntity<TripDetailsDTO> getTripInfo(@PathVariable Long tripId) {
-    TripDetailsDTO tripInfo = tripService.getTripInfoById(tripId);
+    TripDetailsDTO tripInfo = tripQueryService.getTripInfoById(tripId);
     return ResponseEntity.ok(tripInfo);
   }
 
@@ -95,7 +99,7 @@ public class TripController {
       @PathVariable Long tripId,
       @PathVariable Long pinPointId) {
 
-    PointImageDTO pointImageDTO = tripService.getPointImages(tripId, pinPointId);
+    PointImageDTO pointImageDTO = tripQueryService.getPointImages(tripId, pinPointId);
 
     return ResponseEntity.ok(pointImageDTO);
   }
@@ -106,7 +110,7 @@ public class TripController {
       @PathVariable Long tripId,
       @RequestParam String date) {
 
-    DateImageDTO dateImageDTO = tripService.getImagesByDate(tripId, date);
+    DateImageDTO dateImageDTO = tripQueryService.getImagesByDate(tripId, date);
 
     return ResponseEntity.ok(dateImageDTO);
   }

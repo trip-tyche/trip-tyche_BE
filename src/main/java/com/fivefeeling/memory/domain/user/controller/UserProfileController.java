@@ -2,7 +2,7 @@ package com.fivefeeling.memory.domain.user.controller;
 
 import com.fivefeeling.memory.domain.pinpoint.model.PinPointSummaryDTO;
 import com.fivefeeling.memory.domain.trip.model.TripSummaryDTO;
-import com.fivefeeling.memory.domain.trip.service.TripService;
+import com.fivefeeling.memory.domain.trip.service.TripQueryService;
 import com.fivefeeling.memory.domain.user.model.User;
 import com.fivefeeling.memory.domain.user.model.UserTripInfoDTO;
 import com.fivefeeling.memory.domain.user.service.UserService;
@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserProfileController {
 
   private final UserService userService;
-  private final TripService tripService;
+  private final TripQueryService tripQueryService;
   private final JwtTokenProvider jwtTokenProvider;  // JWT 토큰 프로바이더 추가
 
   @Operation(summary = "사용자 정보 및 여행 정보 조회", description = "특정 사용자의 여행 정보와 핀포인트 정보를 조회합니다.")
@@ -39,10 +39,10 @@ public class UserProfileController {
     String userNickName = user.getUserNickName();
 
     // 2. Trip 정보 조회
-    List<TripSummaryDTO> trips = tripService.getTripsByUserId(userId);
+    List<TripSummaryDTO> trips = tripQueryService.getTripsByUserId(userId);
 
     // 3. PinPoint 정보 조회
-    List<PinPointSummaryDTO> pinPoints = tripService.getPinPointsByUserId(userId);
+    List<PinPointSummaryDTO> pinPoints = tripQueryService.getPinPointsByUserId(userId);
 
     // 4. 모든 정보를 포함하는 UserTripInfoDTO 생성
     UserTripInfoDTO userTripInfo = new UserTripInfoDTO(

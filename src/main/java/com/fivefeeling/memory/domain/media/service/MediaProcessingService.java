@@ -6,7 +6,6 @@ import com.fivefeeling.memory.domain.media.repository.MediaFileRepository;
 import com.fivefeeling.memory.domain.pinpoint.model.PinPoint;
 import com.fivefeeling.memory.domain.pinpoint.service.PinPointService;
 import com.fivefeeling.memory.domain.trip.model.Trip;
-import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.global.s3.S3UploadService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +19,6 @@ public class MediaProcessingService {
   private final MetadataExtractorService metadataExtractorService;
   private final PinPointService pinPointService;
   private final MediaFileRepository mediaFileRepository;
-  private final TripRepository tripRepository;
 
   // 파일 업로드를 처리하는 메인 메서드
   public MediaFile processFileUpload(Trip trip, MultipartFile file) {
