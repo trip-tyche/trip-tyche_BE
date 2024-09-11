@@ -1,5 +1,6 @@
 package com.fivefeeling.memory.global.config;
 
+import com.fivefeeling.memory.global.oauth.OAuth2LoginSuccessHandler;
 import com.fivefeeling.memory.global.oauth.OAuth2Service;
 import com.fivefeeling.memory.global.util.JWTAuthenticationFilter;
 import com.fivefeeling.memory.global.util.JwtTokenProvider;
@@ -22,6 +23,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
   private final OAuth2Service oAuth2Service;
+  private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtTokenProvider jwtTokenProvider) throws Exception {
@@ -35,8 +37,11 @@ public class SecurityConfig {
             .anyRequest().authenticated()
         )
         .oauth2Login(oauth2 -> oauth2
+            .userInfoEndpoint(userInfo -> userInfo
+                .userService(oAuth2Service)
+            )
+            .successHandler(oAuth2LoginSuccessHandler)
             .defaultSuccessUrl("/swagger-ui/index.html", true)
-            .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2Service))
         )
         .logout(logout -> logout.logoutSuccessUrl("/"))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
