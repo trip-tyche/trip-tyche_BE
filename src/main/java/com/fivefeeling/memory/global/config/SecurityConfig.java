@@ -31,8 +31,19 @@ public class SecurityConfig {
         .csrf(csrf -> csrf.disable())
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/", "/oauth2/**", "/api/**", "/api/user/nickname", "/nickname",
-                "/upload/**")
+            .requestMatchers(
+                "/swagger-ui/**",
+                "/v3/api-docs/**",
+                "/swagger-resources/**",
+                "/webjars/**",
+                "/",
+                "/oauth2/**",
+                "/api/**",
+                "/api/user/nickname",
+                "/nickname",
+                "/login/oauth2/code/**",
+                "/upload/**",
+                "/oauth2/success")
             .permitAll()
             .anyRequest().authenticated()
         )
@@ -41,7 +52,7 @@ public class SecurityConfig {
                 .userService(oAuth2Service)
             )
             .successHandler(oAuth2LoginSuccessHandler)
-            .defaultSuccessUrl("/swagger-ui/index.html", true)
+            .defaultSuccessUrl("/oauth2/success", true)
         )
         .logout(logout -> logout.logoutSuccessUrl("/"))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

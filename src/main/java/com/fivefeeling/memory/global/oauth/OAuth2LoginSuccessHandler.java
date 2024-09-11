@@ -43,6 +43,9 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     // JSON 형태로 응답 작성
     response.setContentType("application/json;charset=UTF-8");
     response.getWriter().write("{\"token\": \"" + jwtToken + "\", \"userId\": " + userId + "}");
+
+    // 리다이렉트 URL에 userId와 token을 파라미터로 전달
+    response.sendRedirect("/oauth2/success?userId=" + userId + "&token=" + jwtToken);
   }
 }
 
