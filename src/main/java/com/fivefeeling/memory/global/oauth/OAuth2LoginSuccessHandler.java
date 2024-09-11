@@ -44,8 +44,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 //    response.setContentType("application/json;charset=UTF-8");
 //    response.getWriter().write("{\"token\": \"" + jwtToken + "\", \"userId\": " + userId + "}");
 
-    response.sendRedirect("http://localhost:3000?redirectedFromSocialLogin=true&token=" + jwtToken + "&userId=" + userId);
-
+    response.sendRedirect("http://localhost:3000/oauth2/success?redirectedFromSocialLogin=true&token=" + jwtToken + "&userId=" + userId);
   }
 }
 
