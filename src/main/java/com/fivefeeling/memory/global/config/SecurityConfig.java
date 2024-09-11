@@ -43,7 +43,8 @@ public class SecurityConfig {
                 "/nickname",
                 "/login/oauth2/code/**",
                 "/upload/**",
-                "/oauth2/success")
+                "/oauth2/success",
+                "/oauth2/authorization/**")
             .permitAll()
             .anyRequest().authenticated()
         )
@@ -52,6 +53,7 @@ public class SecurityConfig {
                 .userService(oAuth2Service)
             )
             .successHandler(oAuth2LoginSuccessHandler)
+            .defaultSuccessUrl("/")
         )
         .logout(logout -> logout.logoutSuccessUrl("/"))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
