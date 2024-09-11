@@ -52,7 +52,6 @@ public class SecurityConfig {
                 .userService(oAuth2Service)
             )
             .successHandler(oAuth2LoginSuccessHandler)
-            .defaultSuccessUrl("/oauth2/success", true)
         )
         .logout(logout -> logout.logoutSuccessUrl("/"))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
