@@ -49,11 +49,11 @@ public class SecurityConfig {
             .anyRequest().authenticated()
         )
         .oauth2Login(oauth2 -> oauth2
-            .userInfoEndpoint(userInfo -> userInfo
-                .userService(oAuth2Service)
-            )
-            .successHandler(oAuth2LoginSuccessHandler)
-            .defaultSuccessUrl("/swagger-ui/index.html#/")
+                .userInfoEndpoint(userInfo -> userInfo
+                    .userService(oAuth2Service)
+                )
+                .successHandler(oAuth2LoginSuccessHandler)
+//            .defaultSuccessUrl("/swagger-ui/index.html#/")
         )
         .logout(logout -> logout.logoutSuccessUrl("/"))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
