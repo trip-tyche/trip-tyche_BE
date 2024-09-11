@@ -65,7 +65,7 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(List.of("http://localhost:3000"));  // Adjust your frontend URL here
+    configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://ec2-3-34-22-216.ap-northeast-2.compute.amazonaws.com"));
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(List.of("*"));
     configuration.setAllowCredentials(true);
