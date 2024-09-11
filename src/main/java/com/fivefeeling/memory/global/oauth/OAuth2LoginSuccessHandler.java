@@ -40,9 +40,11 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
       return;
     }
 
-    // JSON 형태로 응답 작성
-    response.setContentType("application/json;charset=UTF-8");
-    response.getWriter().write("{\"token\": \"" + jwtToken + "\", \"userId\": " + userId + "}");
+//    // JSON 형태로 응답 작성
+//    response.setContentType("application/json;charset=UTF-8");
+//    response.getWriter().write("{\"token\": \"" + jwtToken + "\", \"userId\": " + userId + "}");
+
+    response.sendRedirect("http://localhost:3000?redirectedFromSocialLogin=true&token=" + jwtToken + "&userId=" + userId);
 
   }
 }
