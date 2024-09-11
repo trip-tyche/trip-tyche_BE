@@ -53,6 +53,7 @@ public class SecurityConfig {
                 .userService(oAuth2Service)
             )
             .successHandler(oAuth2LoginSuccessHandler)
+            .defaultSuccessUrl("swagger-ui/index.html#/")
         )
         .logout(logout -> logout.logoutSuccessUrl("/"))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
