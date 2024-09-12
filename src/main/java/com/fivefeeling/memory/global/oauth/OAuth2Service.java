@@ -33,7 +33,9 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
 
     String registrationId = userRequest.getClientRegistration().getRegistrationId();
     String userNameAttributeName = userRequest.getClientRegistration()
-        .getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName();
+        .getProviderDetails()
+        .getUserInfoEndpoint()
+        .getUserNameAttributeName();
 
     Map<String, Object> attributes = oAuth2User.getAttributes();
     UserDTO userProfile = OAuthAttributes.extract(registrationId, attributes);

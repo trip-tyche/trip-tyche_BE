@@ -1,6 +1,6 @@
 package com.fivefeeling.memory.domain.trip.model;
 
-import java.util.List;
+import com.fivefeeling.memory.domain.media.model.MediaFileResponseDTO;
 
 public record PointImageDTO(
     Long pinPointId,
@@ -8,8 +8,7 @@ public record PointImageDTO(
     Double longitude,
     String startDate,
     String endDate,
-    ImageDTO firstImage,
-    List<ImageDTO> images
+    MediaFileResponseDTO firstImage
 ) {
 
 }
