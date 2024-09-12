@@ -1,5 +1,7 @@
 package com.fivefeeling.memory.domain.trip.service;
 
+import static com.fivefeeling.memory.global.util.DateFormatter.formatLocalDateToString;
+
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.model.TripInfoRequestDTO;
 import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
@@ -35,8 +37,8 @@ public class TripManagementService {
         savedTrip.getTripId(),
         savedTrip.getTripTitle(),
         savedTrip.getCountry(),
-        savedTrip.getStartDate(),
-        savedTrip.getEndDate(),
+        formatLocalDateToString(savedTrip.getStartDate()),
+        formatLocalDateToString(savedTrip.getEndDate()),
         savedTrip.getHashtagsAsList()
     );
   }
@@ -62,8 +64,8 @@ public class TripManagementService {
         updatedTrip.getTripId(),
         updatedTrip.getTripTitle(),
         updatedTrip.getCountry(),
-        updatedTrip.getStartDate(),
-        updatedTrip.getEndDate(),
+        formatLocalDateToString(updatedTrip.getStartDate()),
+        formatLocalDateToString(updatedTrip.getEndDate()),
         updatedTrip.getHashtagsAsList()
     );
   }
