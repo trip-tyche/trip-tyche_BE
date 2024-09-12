@@ -1,9 +1,8 @@
 package com.fivefeeling.memory.domain.trip.service;
 
 import com.fivefeeling.memory.domain.trip.model.Trip;
-import com.fivefeeling.memory.domain.trip.model.TripRequestDTO;
-import com.fivefeeling.memory.domain.trip.model.TripResponseDTO;
-import com.fivefeeling.memory.domain.trip.model.TripUdateRequestDTO;
+import com.fivefeeling.memory.domain.trip.model.TripInfoRequestDTO;
+import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.user.model.User;
 import com.fivefeeling.memory.domain.user.repository.UserRepository;
@@ -18,21 +17,21 @@ public class TripManagementService {
   private final TripRepository tripRepository;
   private final UserRepository userRepository;
 
-  public TripResponseDTO createTrip(String userEmail, TripRequestDTO tripRequestDTO) {
+  public TripInfoResponseDTO createTrip(String userEmail, TripInfoRequestDTO tripInfoRequestDTO) {
     User user = userRepository.findByUserEmail(userEmail)
         .orElseThrow(() -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다."));
     Trip trip = Trip.builder()
         .user(user)
-        .tripTitle(tripRequestDTO.tripTitle())
-        .country(tripRequestDTO.country())
-        .startDate(tripRequestDTO.startDate())
-        .endDate(tripRequestDTO.endDate())
+        .tripTitle(tripInfoRequestDTO.tripTitle())
+        .country(tripInfoRequestDTO.country())
+        .startDate(tripInfoRequestDTO.startDate())
+        .endDate(tripInfoRequestDTO.endDate())
         .build();
 
-    trip.setHashtagsFromList(tripRequestDTO.hashtags());
+    trip.setHashtagsFromList(tripInfoRequestDTO.hashtags());
     Trip savedTrip = tripRepository.save(trip);
 
-    return new TripResponseDTO(
+    return new TripInfoResponseDTO(
         savedTrip.getTripId(),
         savedTrip.getTripTitle(),
         savedTrip.getCountry(),
@@ -44,22 +43,22 @@ public class TripManagementService {
 
   // 사용자 여행 정보 수정
   @Transactional
-  public TripResponseDTO updateTrip(String userEmail, Long tripId, TripUdateRequestDTO tripUdateRequestDTO) {
+  public TripInfoResponseDTO updateTrip(String userEmail, Long tripId, TripInfoRequestDTO tripInfoRequestDTO) {
     User user = userRepository.findByUserEmail(userEmail)
         .orElseThrow(() -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다."));
 
     Trip trip = tripRepository.findById(tripId)
         .orElseThrow(() -> new IllegalArgumentException("해당 여행이 존재하지 않습니다."));
 
-    trip.setTripTitle(tripUdateRequestDTO.tripTitle());
-    trip.setCountry(tripUdateRequestDTO.country());
-    trip.setStartDate(tripUdateRequestDTO.startDate());
-    trip.setEndDate(tripUdateRequestDTO.endDate());
-    trip.setHashtagsFromList(tripUdateRequestDTO.hashtags());
+    trip.setTripTitle(tripInfoRequestDTO.tripTitle());
+    trip.setCountry(tripInfoRequestDTO.country());
+    trip.setStartDate(tripInfoRequestDTO.startDate());
+    trip.setEndDate(tripInfoRequestDTO.endDate());
+    trip.setHashtagsFromList(tripInfoRequestDTO.hashtags());
 
     Trip updatedTrip = tripRepository.save(trip);
 
-    return new TripResponseDTO(
+    return new TripInfoResponseDTO(
         updatedTrip.getTripId(),
         updatedTrip.getTripTitle(),
         updatedTrip.getCountry(),

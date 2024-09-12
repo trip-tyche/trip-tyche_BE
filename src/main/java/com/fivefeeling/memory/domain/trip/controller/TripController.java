@@ -1,14 +1,13 @@
 package com.fivefeeling.memory.domain.trip.controller;
 
-import com.fivefeeling.memory.domain.trip.model.DateImageDTO;
+import com.fivefeeling.memory.domain.media.model.MediaFileResponseDTO;
+import com.fivefeeling.memory.domain.pinpoint.model.PinPointTripInfoResponseDTO;
 import com.fivefeeling.memory.domain.trip.model.PointImageDTO;
-import com.fivefeeling.memory.domain.trip.model.TripDetailsDTO;
-import com.fivefeeling.memory.domain.trip.model.TripRequestDTO;
-import com.fivefeeling.memory.domain.trip.model.TripResponseDTO;
-import com.fivefeeling.memory.domain.trip.model.TripUdateRequestDTO;
+import com.fivefeeling.memory.domain.trip.model.TripInfoRequestDTO;
+import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
 import com.fivefeeling.memory.domain.trip.service.TripManagementService;
 import com.fivefeeling.memory.domain.trip.service.TripQueryService;
-import com.fivefeeling.memory.domain.user.model.UserTripsDTO;
+import com.fivefeeling.memory.domain.user.model.UserTripInfoResponseDTO;
 import com.fivefeeling.memory.global.util.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -33,29 +32,29 @@ public class TripController {
 
   @Operation(summary = "사용자 여행 정보 저장", description = "사용자의 여행 정보 저장")
   @PostMapping("/api/trips")
-  public ResponseEntity<TripResponseDTO> createTrip(
+  public ResponseEntity<TripInfoResponseDTO> createTrip(
       @RequestHeader("Authorization") String authorizationHeader,
-      @RequestBody TripRequestDTO tripRequestDTO) {
+      @RequestBody TripInfoRequestDTO tripInfoRequestDTO) {
 
     String token = authorizationHeader.substring(7);
     String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
 
-    TripResponseDTO createdTrip = tripManagementService.createTrip(userEmail, tripRequestDTO);
+    TripInfoResponseDTO createdTrip = tripManagementService.createTrip(userEmail, tripInfoRequestDTO);
 
     return ResponseEntity.ok(createdTrip);
   }
 
   @Operation(summary = "여행수정페이지 여행 정보 수정", description = "특정 여행 정보 수정")
   @PutMapping("/api/trips/{tripId}")
-  public ResponseEntity<TripResponseDTO> updateTrip(
+  public ResponseEntity<TripInfoResponseDTO> updateTrip(
       @RequestHeader("Authorization") String authorizationHeader,
       @PathVariable Long tripId,
-      @RequestBody TripUdateRequestDTO tripUdateRequestDTO) {
+      @RequestBody TripInfoRequestDTO tripInfoRequestDTO) {
 
     String token = authorizationHeader.substring(7);
     String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
 
-    TripResponseDTO updatedTrip = tripManagementService.updateTrip(userEmail, tripId, tripUdateRequestDTO);
+    TripInfoResponseDTO updatedTrip = tripManagementService.updateTrip(userEmail, tripId, tripInfoRequestDTO);
 
     return ResponseEntity.ok(updatedTrip);
   }
@@ -76,20 +75,20 @@ public class TripController {
 
   @Operation(summary = "여행관리페이지 사용자의 여행 정보 조회", description = "사용자 등록된 여행 정보 조회")
   @GetMapping("/api/trips")
-  public ResponseEntity<UserTripsDTO> getUserTrips(@RequestHeader("Authorization") String authorizationHeader) {
+  public ResponseEntity<UserTripInfoResponseDTO> getUserTrips(@RequestHeader("Authorization") String authorizationHeader) {
 
     String token = authorizationHeader.substring(7);
     String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
 
-    UserTripsDTO trips = tripQueryService.getUserTripInfo(userEmail);
+    UserTripInfoResponseDTO trips = tripQueryService.getUserTripInfo(userEmail);
     return ResponseEntity.ok(trips);
   }
 
 
   @Operation(summary = "타임라인 페이지 지도위 페이지 여행 정보 조회", description = "여행 정보 조회")
   @GetMapping("/api/trips/{tripId}/info")
-  public ResponseEntity<TripDetailsDTO> getTripInfo(@PathVariable Long tripId) {
-    TripDetailsDTO tripInfo = tripQueryService.getTripInfoById(tripId);
+  public ResponseEntity<PinPointTripInfoResponseDTO> getTripInfo(@PathVariable Long tripId) {
+    PinPointTripInfoResponseDTO tripInfo = tripQueryService.getTripInfoById(tripId);
     return ResponseEntity.ok(tripInfo);
   }
 
@@ -106,11 +105,11 @@ public class TripController {
 
   @Operation(summary = "특정 날짜에 저장된 이미지를 조회", description = "특정 여행의 특정 날짜에 저장된 모든 이미지를 조회")
   @GetMapping("/api/trips/{tripId}/map")
-  public ResponseEntity<DateImageDTO> getImagesByDate(
+  public ResponseEntity<MediaFileResponseDTO> getImagesByDate(
       @PathVariable Long tripId,
       @RequestParam String date) {
 
-    DateImageDTO dateImageDTO = tripQueryService.getImagesByDate(tripId, date);
+    MediaFileResponseDTO dateImageDTO = tripQueryService.getImagesByDate(tripId, date);
 
     return ResponseEntity.ok(dateImageDTO);
   }

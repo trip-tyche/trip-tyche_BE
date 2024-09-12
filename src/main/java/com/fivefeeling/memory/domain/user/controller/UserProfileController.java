@@ -1,10 +1,10 @@
 package com.fivefeeling.memory.domain.user.controller;
 
-import com.fivefeeling.memory.domain.pinpoint.model.PinPointSummaryDTO;
-import com.fivefeeling.memory.domain.trip.model.TripSummaryDTO;
+import com.fivefeeling.memory.domain.pinpoint.model.PinPointResponseDTO;
+import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
 import com.fivefeeling.memory.domain.trip.service.TripQueryService;
 import com.fivefeeling.memory.domain.user.model.User;
-import com.fivefeeling.memory.domain.user.model.UserTripInfoDTO;
+import com.fivefeeling.memory.domain.user.model.UserTripInfoResponseDTO;
 import com.fivefeeling.memory.domain.user.service.UserService;
 import com.fivefeeling.memory.global.util.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,20 +32,20 @@ public class UserProfileController {
 
   @Operation(summary = "사용자 정보 및 여행 정보 조회", description = "특정 사용자의 여행 정보와 핀포인트 정보를 조회합니다.")
   @GetMapping("/tripInfo")
-  public ResponseEntity<UserTripInfoDTO> getUserTripInfo(
+  public ResponseEntity<UserTripInfoResponseDTO> getUserTripInfo(
       @Parameter(description = "사용자 ID", required = true) @RequestParam Long userId) {
     // 1. User 정보 조회
     User user = userService.getUserById(userId);
     String userNickName = user.getUserNickName();
 
     // 2. Trip 정보 조회
-    List<TripSummaryDTO> trips = tripQueryService.getTripsByUserId(userId);
+    List<TripInfoResponseDTO> trips = tripQueryService.getTripsByUserId(userId);
 
     // 3. PinPoint 정보 조회
-    List<PinPointSummaryDTO> pinPoints = tripQueryService.getPinPointsByUserId(userId);
+    List<PinPointResponseDTO> pinPoints = tripQueryService.getPinPointsByUserId(userId);
 
     // 4. 모든 정보를 포함하는 UserTripInfoDTO 생성
-    UserTripInfoDTO userTripInfo = new UserTripInfoDTO(
+    UserTripInfoResponseDTO userTripInfo = new UserTripInfoResponseDTO(
         user.getUserId(),
         userNickName,
         trips,
