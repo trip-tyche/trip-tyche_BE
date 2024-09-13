@@ -45,7 +45,8 @@ public class SecurityConfig {
                 "/upload/**",
                 "/oauth2/success",
                 "/oauth2/authorization/**",
-                "/actuator/**")
+                "/actuator/**",
+                "/actuator/loggers/**")
             .permitAll()
             .anyRequest().authenticated()
         )
