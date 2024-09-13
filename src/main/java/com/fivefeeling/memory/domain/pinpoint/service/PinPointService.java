@@ -20,7 +20,7 @@ public class PinPointService {
 
     for (PinPoint pinPoint : existingPinPoints) {
       double distance = calculateDistance(pinPoint.getLatitude(), pinPoint.getLongitude(), latitude, longitude);
-      if (distance <= 2) { // 2km 이내라면 기존 PinPoint 사용
+      if (distance <= 1) { // 1km
         return pinPoint;
       }
     }
