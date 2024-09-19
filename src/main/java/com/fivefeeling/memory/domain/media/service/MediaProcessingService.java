@@ -3,7 +3,6 @@ package com.fivefeeling.memory.domain.media.service;
 import com.fivefeeling.memory.domain.media.model.ImageMetadataDTO;
 import com.fivefeeling.memory.domain.media.model.MediaFile;
 import com.fivefeeling.memory.domain.media.repository.MediaFileRepository;
-import com.fivefeeling.memory.domain.pinpoint.model.PinPoint;
 import com.fivefeeling.memory.domain.pinpoint.service.PinPointService;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.global.s3.S3UploadService;
@@ -26,7 +25,7 @@ public class MediaProcessingService {
     ImageMetadataDTO metadata = metadataExtractorService.extractMetadata(file);
 
     // 2. PinPoint 결정
-    PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, metadata.latitude(), metadata.longitude());
+//    PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, metadata.latitude(), metadata.longitude());
 
     // 3. S3에 파일 업로드
     String mediaLink = s3UploadService.uploadFile(file, "uploads/" + trip.getTripId());
@@ -34,7 +33,7 @@ public class MediaProcessingService {
     // 4. MediaFile을 DB에 저장
     MediaFile mediaFile = new MediaFile();
     mediaFile.setTrip(trip);
-    mediaFile.setPinPoint(pinPoint);
+//    mediaFile.setPinPoint(pinPoint);
     mediaFile.setMediaType(metadata.mediaType());
     mediaFile.setMediaLink(mediaLink);
     mediaFile.setRecordDate(metadata.date());
