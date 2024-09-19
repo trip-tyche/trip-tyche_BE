@@ -34,7 +34,7 @@ public class MediaFile {
   private Trip trip;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "pinPointId", nullable = false)
+  @JoinColumn(name = "pinPointId", nullable = true)
   private PinPoint pinPoint;
 
   @Column(name = "mediaType", length = 50)
