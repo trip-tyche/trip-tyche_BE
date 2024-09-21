@@ -73,6 +73,15 @@ jobs:
             # 기존의 Docker Compose 서비스를 중지합니다.
             docker-compose down
             
-            # 새 이미지를 사용해 Docker Compose 서비스를 재시작합니다.
-
+            # Docker Compose 환경변수를 GitHub Secrets에서 주입하여 실행합니다.
+            SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }} \
+            SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }} \
+            KAKAO_OAUTH_CLIENT_ID=${{ secrets.KAKAO_OAUTH_CLIENT_ID }} \
+            KAKAO_OAUTH_CLIENT_SECRET=${{ secrets.KAKAO_OAUTH_CLIENT_SECRET }} \
+            KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }} \
+            GOOGLE_OAUTH_CLIENT_ID=${{ secrets.GOOGLE_OAUTH_CLIENT_ID }} \
+            GOOGLE_OAUTH_CLIENT_SECRET=${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }} \
+            GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }} \
+            AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }} \
+            AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }} \
             docker-compose up -d
