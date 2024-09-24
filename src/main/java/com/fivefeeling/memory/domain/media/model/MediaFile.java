@@ -52,4 +52,7 @@ public class MediaFile {
 
   @Column(name = "longitude")
   private Double longitude;
+
+  @Column(name = "mediaKey", nullable = false, length = 255)
+  private String mediaKey;
 }
