@@ -2,6 +2,7 @@ package com.fivefeeling.memory.domain.trip.service;
 
 import static com.fivefeeling.memory.global.util.DateFormatter.formatLocalDateToString;
 
+import com.fivefeeling.memory.domain.media.service.MediaProcessingService;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.model.TripInfoRequestDTO;
 import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
@@ -18,6 +19,7 @@ public class TripManagementService {
 
   private final TripRepository tripRepository;
   private final UserRepository userRepository;
+  private final MediaProcessingService mediaProcessingService;
 
   public TripInfoResponseDTO createTrip(String userEmail, TripInfoRequestDTO tripInfoRequestDTO) {
     User user = userRepository.findByUserEmail(userEmail)
@@ -79,6 +81,10 @@ public class TripManagementService {
     Trip trip = tripRepository.findById(tripId)
         .orElseThrow(() -> new IllegalArgumentException("해당 여행이 존재하지 않습니다."));
 
+    // 미디어 파일 삭제
+    mediaProcessingService.deleteMediaFilesByTrip(trip);
+
+    // 여행 삭제
     tripRepository.delete(trip);
   }
 }

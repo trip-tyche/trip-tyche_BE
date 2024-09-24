@@ -1,6 +1,7 @@
 package com.fivefeeling.memory.domain.media.repository;
 
 import com.fivefeeling.memory.domain.media.model.MediaFile;
+import com.fivefeeling.memory.domain.trip.model.Trip;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -21,4 +22,6 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
       @Param("tripId") Long tripId,
       @Param("recordDate") String recordDate
   );
+
+  List<MediaFile> findAllByTrip(Trip trip);
 }
