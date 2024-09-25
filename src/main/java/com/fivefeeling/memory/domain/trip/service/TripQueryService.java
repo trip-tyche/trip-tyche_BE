@@ -104,7 +104,18 @@ public class TripQueryService {
         formatLocalDateToString(trip.getStartDate()),
         formatLocalDateToString(trip.getEndDate())
     );
-    return PinPointTripInfoResponseDTO.from(tripInfo, pinPoints);
+
+    List<MediaFileResponseDTO> mediaFiles = mediaFileRepository.findByTripTripId(tripId)
+        .stream()
+        .map(mediaFile -> MediaFileResponseDTO.mediaFileSummary(
+            mediaFile.getMediaFileId(),
+            mediaFile.getMediaLink(),
+            mediaFile.getLatitude(),
+            mediaFile.getLongitude()
+        ))
+        .collect(Collectors.toList());
+
+    return PinPointTripInfoResponseDTO.from(tripInfo, pinPoints, mediaFiles);
   }
 
   private PinPointResponseDTO createPinPointMediaDTO(Long pinPointId) {

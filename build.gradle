@@ -61,6 +61,9 @@ dependencies {
 
     // SWS S3 SDK 의존성
     implementation 'software.amazon.awssdk:s3:2.20.17'
+
+    // Jackson Databind 의존성 추가
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.0'
 }
 
 tasks.named('test') {

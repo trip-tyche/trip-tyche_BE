@@ -1,8 +1,10 @@
 package com.fivefeeling.memory.domain.media.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Date;
 import java.util.List;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record MediaFileResponseDTO(
     Long mediaFileId,
     String mediaLink,
@@ -36,5 +38,10 @@ public record MediaFileResponseDTO(
       List<MediaFileResponseDTO> images
   ) {
     return new MediaFileResponseDTO(null, mediaLink, null, null, null, null, images);
+  }
+
+  // 요약된 미디어 파일 정보 생성
+  public static MediaFileResponseDTO mediaFileSummary(Long mediaFileId, String mediaLink, Double latitude, Double longitude) {
+    return new MediaFileResponseDTO(mediaFileId, mediaLink, null, null, latitude, longitude, null);
   }
 }

@@ -24,4 +24,6 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
   );
 
   List<MediaFile> findAllByTrip(Trip trip);
+
+  List<MediaFile> findByTripTripId(Long tripId);
 }
