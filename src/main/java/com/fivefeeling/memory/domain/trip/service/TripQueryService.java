@@ -87,6 +87,20 @@ public class TripQueryService {
         trips);
   }
 
+  public TripInfoResponseDTO getTripById(Long tripId) {
+    Trip trip = tripRepository.findByTripId(tripId)
+        .orElseThrow(() -> new ResourceNotFoundException(TRIP_NOT_FOUND));
+
+    return new TripInfoResponseDTO(
+        trip.getTripId(),
+        trip.getTripTitle(),
+        trip.getCountry(),
+        formatLocalDateToString(trip.getStartDate()),
+        formatLocalDateToString(trip.getEndDate()),
+        trip.getHashtagsAsList()
+    );
+  }
+
 
   public PinPointTripInfoResponseDTO getTripInfoById(Long tripId) {
     Trip trip = tripRepository.findById(tripId)

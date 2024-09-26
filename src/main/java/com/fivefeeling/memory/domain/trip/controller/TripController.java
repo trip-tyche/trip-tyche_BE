@@ -84,6 +84,14 @@ public class TripController {
     return ResponseEntity.ok(trips);
   }
 
+  @Operation(summary = "여행관리페이지 {tripId}로 사용자의 여행 정보 조회", description = "사용자 등록된 여행 정보 조회")
+  @GetMapping("/api/trips/{tripId}")
+  public ResponseEntity<TripInfoResponseDTO> getTripById(@PathVariable Long tripId) {
+    TripInfoResponseDTO tripInfo = tripQueryService.getTripById(tripId);
+
+    return ResponseEntity.ok(tripInfo);
+  }
+
 
   @Operation(summary = "타임라인 페이지 지도위 페이지 여행 정보 조회", description = "여행 정보 조회")
   @GetMapping("/api/trips/{tripId}/info")
