@@ -65,7 +65,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/projects/5FeelingMemory_BE
+            cd ~/project
             
             # 최신 Docker 이미지를 가져옵니다.
             docker pull maristadev/feeling-memory-app:latest
