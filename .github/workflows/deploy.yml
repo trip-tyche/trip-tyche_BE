@@ -59,7 +59,7 @@ jobs:
     steps:
       # Step 6: EC2에 배포하기 위해 SSH로 접속합니다.
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@v0.1.3  # 최신 버전 확인
+        uses: appleboy/ssh-action@v1.0.3  # 최신 버전 확인
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
