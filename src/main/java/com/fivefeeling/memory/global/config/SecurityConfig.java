@@ -4,8 +4,15 @@ import com.fivefeeling.memory.global.oauth.OAuth2LoginSuccessHandler;
 import com.fivefeeling.memory.global.oauth.OAuth2Service;
 import com.fivefeeling.memory.global.util.JWTAuthenticationFilter;
 import com.fivefeeling.memory.global.util.JwtTokenProvider;
+import io.jsonwebtoken.io.IOException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -16,6 +23,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -57,7 +65,8 @@ public class SecurityConfig {
         )
         .logout(logout -> logout.logoutSuccessUrl("/"))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .addFilterBefore(new JWTAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+        .addFilterBefore(new JWTAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(new IPLoggingFilter(), JWTAuthenticationFilter.class);
 
     return http.build();
   }
@@ -73,6 +82,20 @@ public class SecurityConfig {
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", configuration);
     return source;
+  }
+
+  // IPLoggingFilter 클래스 추가
+  public class IPLoggingFilter extends OncePerRequestFilter {
+
+    private static final Logger logger = LoggerFactory.getLogger(IPLoggingFilter.class);
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+        throws ServletException, IOException, java.io.IOException {
+      String clientIp = request.getRemoteAddr();
+      logger.info("Request from IP: {}", clientIp);
+      filterChain.doFilter(request, response);
+    }
   }
 }
 
