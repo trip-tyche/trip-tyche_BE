@@ -128,3 +128,4 @@ logging:
     com.fivefeeling.memory.global.oauth: DEBUG
   file:
     path: /var/log/spring-boot/
+
