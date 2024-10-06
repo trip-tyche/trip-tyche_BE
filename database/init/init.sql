@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.38, for macos14 (arm64)
 --
--- Host: ec2-13-125-15-154.ap-northeast-2.compute.amazonaws.com    Database: feeling_memory
+-- Host: ec2-43-203-13-252.ap-northeast-2.compute.amazonaws.com    Database: feeling_memory
 -- ------------------------------------------------------
 -- Server version	8.0.39
 
