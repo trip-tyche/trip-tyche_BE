@@ -44,7 +44,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 //    response.setContentType("application/json;charset=UTF-8");
 //    response.getWriter().write("{\"token\": \"" + jwtToken + "\", \"userId\": " + userId + "}");
 
-    response.sendRedirect("http://localhost:3000/auth/redirect?redirectedFromSocialLogin=true&token=" + jwtToken + "&userId=" + userId);
+    response.sendRedirect("http://5feeling-fe.vercel.app/auth/redirect?redirectedFromSocialLogin=true&token=" + jwtToken + "&userId=" + userId);
   }
 }
 
