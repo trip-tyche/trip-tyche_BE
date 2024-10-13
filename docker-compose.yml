@@ -31,7 +31,7 @@ services:
   db:
     build:
       context: .
-      dockerfile: Dockerfile  # 이 Dockerfile에서 MySQL 컨테이너를 빌드
+      dockerfile: ./database/Dockerfile
     container_name: feeling-memory-database
     environment:
       MYSQL_DATABASE: feeling_memory
