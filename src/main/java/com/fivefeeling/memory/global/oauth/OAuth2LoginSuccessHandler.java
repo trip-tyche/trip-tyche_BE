@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
-  @Value("${redirect.url}")
+  @Value(value = "${spring.redirect.url}")
   private String redirectUrl;
 
   @Override
