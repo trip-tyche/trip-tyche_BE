@@ -1,7 +1,5 @@
 package com.fivefeeling.memory.global.oauth;
 
-import com.fivefeeling.memory.domain.user.service.UserService;
-import com.fivefeeling.memory.global.util.JwtTokenProvider;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -9,6 +7,7 @@ import java.io.IOException;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -19,8 +18,8 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
-  private final JwtTokenProvider jwtTokenProvider;
-  private final UserService userService;
+  @Value("${redirect.url}")
+  private String redirectUrl;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -44,8 +43,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 //    response.setContentType("application/json;charset=UTF-8");
 //    response.getWriter().write("{\"token\": \"" + jwtToken + "\", \"userId\": " + userId + "}");
 
-    response.sendRedirect("https://triptyche.world/auth/redirect?redirectedFromSocialLogin=true&token=" + jwtToken + "&userId=" + userId);
-//    response.sendRedirect("http://localhost:3000/auth/redirect?redirectedFromSocialLogin=true&token=" + jwtToken + "&userId=" + userId);
+    response.sendRedirect(redirectUrl + "?redirectedFromSocialLogin=true&token=" + jwtToken + "&userId=" + userId);
   }
 }
 

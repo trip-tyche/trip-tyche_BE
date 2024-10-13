@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: prod
+    active: local
 
 ---
 spring:
@@ -119,8 +119,75 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
+  redirect:
+    url: https://triptyche.world/auth/redirect
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    com.fivefeeling.memory.global.oauth: DEBUG
+  file:
+    path: /var/log/spring-boot/
 
 
+---
+spring:
+  config:
+    activate:
+      on-profile: staging
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://feeling-memory-database:3306/feeling_memory
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_OAUTH_CLIENT_ID}
+            client-secret: ${KAKAO_OAUTH_CLIENT_SECRET}
+            redirect-uri: "${KAKAO_REDIRECT_URI}"
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            scope: profile_nickname, account_email
+            client-name: Kakao
+          google:
+            client-id: ${GOOGLE_OAUTH_CLIENT_ID}
+            client-secret: ${GOOGLE_OAUTH_CLIENT_SECRET}
+            redirect-uri: "${STAGING_GOOGLE_REDIRECT_URI}"
+            authorization-grant-type: authorization_code
+            scope: profile, email
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+  cloud:
+    aws:
+      s3:
+        bucketName: staging-trip-tyche
+      credentials:
+        accessKey: ${STAGING_AWS_ACCESS_KEY}
+        secretKey: ${STAGING_AWS_SECRET_KEY}
+      region:
+        static: ap-northeast-2
+      stack:
+        auto: false
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  redirect:
+    url: http://localhost:3000/auth/redirect
 
 logging:
   level:
