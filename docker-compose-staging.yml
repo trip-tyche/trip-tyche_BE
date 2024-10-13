@@ -16,9 +16,9 @@ services:
       KAKAO_REDIRECT_URI: ${KAKAO_REDIRECT_URI}
       GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID}
       GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET}
-      GOOGLE_REDIRECT_URI: ${STAGING_GOOGLE_REDIRECT_URI}
-      AWS_ACCESS_KEY: ${STAGING_AWS_ACCESS_KEY}
-      AWS_SECRET_KEY: ${STAGING_AWS_SECRET_KEY}
+      STAGING_GOOGLE_REDIRECT_URI: ${STAGING_GOOGLE_REDIRECT_URI}
+      STAGING_AWS_ACCESS_KEY: ${STAGING_AWS_ACCESS_KEY}
+      STAGING_AWS_SECRET_KEY: ${STAGING_AWS_SECRET_KEY}
     ports:
       - "80:8080"
     restart: always
@@ -33,9 +33,9 @@ services:
     build:
       context: .
       dockerfile: ./database/Dockerfile
-    container_name: feeling-memory-database
+    container_name: staging-trip-tyche-database
     environment:
-      MYSQL_DATABASE: feeling_memory
+      MYSQL_DATABASE: trip_tyche
       MYSQL_ROOT_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
     volumes:
       - ./database/config:/etc/mysql/conf.d
