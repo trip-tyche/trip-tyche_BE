@@ -1,6 +1,9 @@
 spring:
   profiles:
-    active:
+    group:
+      local: local
+      prod: prod
+      staging: staging
 
 ---
 spring:
