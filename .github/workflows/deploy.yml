@@ -125,12 +125,12 @@ jobs:
           SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
           KAKAO_OAUTH_CLIENT_ID: ${{ secrets.KAKAO_OAUTH_CLIENT_ID }}
           KAKAO_OAUTH_CLIENT_SECRET: ${{ secrets.KAKAO_OAUTH_CLIENT_SECRET }}
-          KAKAO_REDIRECT_URI: ${{ secrets.STAGING_KAKAO_REDIRECT_URI }}
+          KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
-          GOOGLE_REDIRECT_URI: ${{ secrets.STAGING_GOOGLE_REDIRECT_URI }}
-          AWS_ACCESS_KEY: ${{ secrets.STAGING_AWS_ACCESS_KEY }}
-          AWS_SECRET_KEY: ${{ secrets.STAGING_AWS_SECRET_KEY }}
+          STAGING_GOOGLE_REDIRECT_URI: ${{ secrets.STAGING_GOOGLE_REDIRECT_URI }}
+          STAGING_AWS_ACCESS_KEY: ${{ secrets.STAGING_AWS_ACCESS_KEY }}
+          STAGING_AWS_SECRET_KEY: ${{ secrets.STAGING_AWS_SECRET_KEY }}
 
   deploy-staging:
     runs-on: ubuntu-latest
@@ -162,7 +162,7 @@ jobs:
             KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }} \
             GOOGLE_OAUTH_CLIENT_ID=${{ secrets.GOOGLE_OAUTH_CLIENT_ID }} \
             GOOGLE_OAUTH_CLIENT_SECRET=${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }} \
-            GOOGLE_REDIRECT_URI=${{ secrets.STAGING_GOOGLE_REDIRECT_URI }} \
-            AWS_ACCESS_KEY=${{ secrets.STAGING_AWS_ACCESS_KEY }} \
-            AWS_SECRET_KEY=${{ secrets.STAGING_AWS_SECRET_KEY }} \
+            STAGING_GOOGLE_REDIRECT_URI=${{ secrets.STAGING_GOOGLE_REDIRECT_URI }} \
+            STAGING_AWS_ACCESS_KEY=${{ secrets.STAGING_AWS_ACCESS_KEY }} \
+            STAGING_AWS_SECRET_KEY=${{ secrets.STAGING_AWS_SECRET_KEY }} \
             docker-compose up -d
