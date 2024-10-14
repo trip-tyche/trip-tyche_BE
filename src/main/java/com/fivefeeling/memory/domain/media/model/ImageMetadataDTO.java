@@ -5,7 +5,7 @@ import java.util.Date;
 public record ImageMetadataDTO(
     Double latitude,
     Double longitude,
-    Date date,
+    Date recordDate,
     String mediaType
 ) {
 

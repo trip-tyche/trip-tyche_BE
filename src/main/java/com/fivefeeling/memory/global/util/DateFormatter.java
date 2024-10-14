@@ -20,17 +20,4 @@ public class DateFormatter {
     return date != null ? SIMPLE_DATE_FORMAT.format(date) : null;
   }
 
-//  // String을 LocalDate로 변환
-//  public static LocalDate parseStringToLocalDate(String date) {
-//    return date != null ? LocalDate.parse(date, DATE_FORMATTER) : null;
-//  }
-//
-//  // String을 Date로 변환 (추가 메서드)
-//  public static Date parseStringToDate(String date) {
-//    try {
-//      return date != null ? SIMPLE_DATE_FORMAT.parse(date) : null;
-//    } catch (Exception e) {
-//      throw new IllegalArgumentException("Invalid date format. Please use yyyy-MM-dd.", e);
-//    }
-//  }
 }
