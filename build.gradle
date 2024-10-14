@@ -57,7 +57,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
     // 메타데이터 추출용 의존성
-    implementation 'com.drewnoakes:metadata-extractor:2.19.0'
+    implementation 'com.drewnoakes:metadata-extractor:2.18.0'
 
     // SWS S3 SDK 의존성
     implementation 'software.amazon.awssdk:s3:2.20.17'

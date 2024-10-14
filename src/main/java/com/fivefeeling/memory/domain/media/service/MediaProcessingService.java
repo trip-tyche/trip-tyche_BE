@@ -42,7 +42,7 @@ public class MediaProcessingService {
     mediaFile.setMediaType(metadata.mediaType());
     mediaFile.setMediaLink(uploadResult.getMediaLink());
     mediaFile.setMediaKey(uploadResult.getMediaKey());
-    mediaFile.setRecordDate(metadata.date());
+    mediaFile.setRecordDate(metadata.recordDate());
     mediaFile.setLatitude(metadata.latitude());
     mediaFile.setLongitude(metadata.longitude());
     mediaFileRepository.save(mediaFile);
