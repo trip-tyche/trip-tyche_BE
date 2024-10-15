@@ -43,7 +43,7 @@ public class MediaFile {
   @Column(name = "mediaLink", length = 255)
   private String mediaLink;
 
-  @Temporal(TemporalType.DATE)
+  @Temporal(TemporalType.TIMESTAMP)
   @Column(name = "recordDate")
   private Date recordDate;
 
