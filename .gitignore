@@ -247,4 +247,4 @@ gradle-app.setting
 
 ### env
 .env
-# End of https://www.toptal.com/developers/gitignore/api/intellij+all,macos,java,gradle,visualstudiocode,git,netbeans,windows
+# End of https://www.toptal.com/developers/gitignore/api/intellij+all,macos,java,gradle,visualstudiocode,git,netbeans,windows!/k6-test/*
