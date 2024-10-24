@@ -134,6 +134,7 @@ logging:
     com.fivefeeling.memory.global.oauth: DEBUG
   file:
     path: /var/log/spring-boot/
+    max-history: 2
 
 
 ---
@@ -201,4 +202,5 @@ logging:
     com.fivefeeling.memory.global.oauth: DEBUG
   file:
     path: /var/log/spring-boot/
+    max-history: 2
 
