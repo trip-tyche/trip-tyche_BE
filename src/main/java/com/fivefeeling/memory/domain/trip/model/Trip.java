@@ -35,16 +35,16 @@ public class Trip {
   @JoinColumn(name = "userId", nullable = false)
   private User user;
 
-  @Column(name = "tripTitle", nullable = false, length = 255)
+  @Column(name = "tripTitle")
   private String tripTitle;
 
-  @Column(name = "country", nullable = false, length = 255)
+  @Column(name = "country")
   private String country;
 
-  @Column(name = "startDate", nullable = false)
+  @Column(name = "startDate")
   private LocalDate startDate;
 
-  @Column(name = "endDate", nullable = false)
+  @Column(name = "endDate")
   private LocalDate endDate;
 
   @Column(name = "hashtags", length = 255)

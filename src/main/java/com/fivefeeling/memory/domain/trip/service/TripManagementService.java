@@ -9,6 +9,8 @@ import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.user.model.User;
 import com.fivefeeling.memory.domain.user.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
+import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,34 +23,27 @@ public class TripManagementService {
   private final UserRepository userRepository;
   private final MediaProcessingService mediaProcessingService;
 
-  public TripInfoResponseDTO createTrip(String userEmail, TripInfoRequestDTO tripInfoRequestDTO) {
+
+  public Long createTripId(String userEmail) {
     User user = userRepository.findByUserEmail(userEmail)
-        .orElseThrow(() -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다."));
+        .orElseThrow(() -> new EntityNotFoundException("해당 사용자가 존재하지 않습니다."));
+
     Trip trip = Trip.builder()
         .user(user)
-        .tripTitle(tripInfoRequestDTO.tripTitle())
-        .country(tripInfoRequestDTO.country())
-        .startDate(tripInfoRequestDTO.startDate())
-        .endDate(tripInfoRequestDTO.endDate())
+        .tripTitle("N/A")
+        .country("N/A")
+        .startDate(LocalDate.now())
+        .endDate(LocalDate.now())
+        .hashtags("")
         .build();
-
-    trip.setHashtagsFromList(tripInfoRequestDTO.hashtags());
-    Trip savedTrip = tripRepository.save(trip);
-
-    return new TripInfoResponseDTO(
-        savedTrip.getTripId(),
-        savedTrip.getTripTitle(),
-        savedTrip.getCountry(),
-        formatLocalDateToString(savedTrip.getStartDate()),
-        formatLocalDateToString(savedTrip.getEndDate()),
-        savedTrip.getHashtagsAsList()
-    );
+    tripRepository.save(trip);
+    return trip.getTripId();
   }
 
-  // 사용자 여행 정보 수정
+  // 사용자 여행 정보 저장 및 수정
   @Transactional
   public TripInfoResponseDTO updateTrip(String userEmail, Long tripId, TripInfoRequestDTO tripInfoRequestDTO) {
-    User user = userRepository.findByUserEmail(userEmail)
+    userRepository.findByUserEmail(userEmail)
         .orElseThrow(() -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다."));
 
     Trip trip = tripRepository.findById(tripId)

@@ -24,4 +24,9 @@ public record TripInfoResponseDTO(
   ) {
     return new TripInfoResponseDTO(tripId, tripTitle, country, startDate, endDate, null);
   }
+
+  // tripId만 반환하는 메서드
+  public static TripInfoResponseDTO tripIdOnly(Long tripId) {
+    return new TripInfoResponseDTO(tripId, null, null, null, null, null);
+  }
 }

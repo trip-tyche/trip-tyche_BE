@@ -30,18 +30,33 @@ public class TripController {
   private final TripManagementService tripManagementService;
   private final JwtTokenProvider jwtTokenProvider;
 
-  @Operation(summary = "사용자 여행 정보 저장", description = "사용자의 여행 정보 저장")
+  @Operation(summary = "tripId 생성", description = "tripId를 반환")
   @PostMapping("/api/trips")
   public ResponseEntity<TripInfoResponseDTO> createTrip(
+      @RequestHeader("Authorization") String authorizationHeader) {
+
+    String token = authorizationHeader.substring(7);
+    String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
+
+    Long tripId = tripManagementService.createTripId(userEmail);
+
+    TripInfoResponseDTO tripIdResponse = TripInfoResponseDTO.tripIdOnly(tripId);
+    return ResponseEntity.ok(tripIdResponse);
+  }
+
+  @Operation(summary = "사용자 여행 정보 저장", description = "사용자의 여행 정보 저장")
+  @PostMapping("/api/trips/{tripId}/info")
+  public ResponseEntity<TripInfoResponseDTO> createTripInfo(
       @RequestHeader("Authorization") String authorizationHeader,
+      @PathVariable Long tripId,
       @RequestBody TripInfoRequestDTO tripInfoRequestDTO) {
 
     String token = authorizationHeader.substring(7);
     String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
 
-    TripInfoResponseDTO createdTrip = tripManagementService.createTrip(userEmail, tripInfoRequestDTO);
+    TripInfoResponseDTO createdTripInfo = tripManagementService.updateTrip(userEmail, tripId, tripInfoRequestDTO);
 
-    return ResponseEntity.ok(createdTrip);
+    return ResponseEntity.ok(createdTripInfo);
   }
 
   @Operation(summary = "여행수정페이지 여행 정보 수정", description = "특정 여행 정보 수정")
