@@ -16,7 +16,6 @@ import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,44 +24,17 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class MediaProcessingService {
 
-  @Qualifier("fileProcessingTaskExecutor")
-  private final Executor fileProcessingTaskExecutor;
+  private final Executor cpuBoundTaskExecutor;
+  private final Executor ioBoundTaskExecutor;
   private final S3UploadService s3UploadService;
   private final MetadataExtractorService metadataExtractorService;
   private final PinPointService pinPointService;
   private final MediaFileRepository mediaFileRepository;
 
-  /**
-   * // 파일 업로드를 처리하는 메인 메서드
-   * public MediaFile processFileUpload(Trip trip, MultipartFile file) {
-   * // 1. 메타데이터 추출
-   * ImageMetadataDTO metadata = metadataExtractorService.extractMetadata(file);
-   *
-   * // 2. PinPoint 결정
-   * PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, metadata.latitude(), metadata.longitude());
-   *
-   * // 3. S3에 파일 업로드
-   * UploadResult uploadResult = s3UploadService.uploadFile(file, "uploads/" + trip.getTripId());
-   *
-   * // 4. MediaFile을 DB에 저장
-   * MediaFile mediaFile = new MediaFile();
-   * mediaFile.setTrip(trip);
-   * mediaFile.setPinPoint(pinPoint);
-   * mediaFile.setMediaType(metadata.mediaType());
-   * mediaFile.setMediaLink(uploadResult.getMediaLink());
-   * mediaFile.setMediaKey(uploadResult.getMediaKey());
-   * mediaFile.setRecordDate(metadata.recordDate());
-   * mediaFile.setLatitude(metadata.latitude());
-   * mediaFile.setLongitude(metadata.longitude());
-   * mediaFileRepository.save(mediaFile);
-   *
-   * return mediaFile;
-   * }
-   */
-
+  @Transactional
   public CompletableFuture<List<MediaFile>> processFileUpload(Trip trip, List<MultipartFile> files) {
     // 각 파일별로 비동기 작업 수행
-    List<CompletableFuture<MediaProcessResult>> futures = files.parallelStream()
+    List<CompletableFuture<MediaProcessResult>> futures = files.stream()
         .map(file -> processSingleFileUpload(trip, file))
         .collect(Collectors.toList());
 
@@ -95,41 +67,34 @@ public class MediaProcessingService {
             mediaFile.setLongitude(result.metadata().longitude());
             mediaFile.setPinPoint(pinPoint);
 
-            mediaFileRepository.save(mediaFile);
-            log.info("MediaFile DB 저장 완료 '{}' 스레드 {}", mediaFile.getMediaKey(), Thread.currentThread().getName());
-
             return mediaFile;
           })
           .collect(Collectors.toList());
-
+      mediaFileRepository.saveAll(mediaFiles);
+//      log.info("MediaFile 배치 저장 완료 스레드 {}", Thread.currentThread().getName());
       return mediaFiles;
-    }, fileProcessingTaskExecutor);
+    }, ioBoundTaskExecutor);
   }
 
   // 단일 파일 처리 메서드
   private CompletableFuture<MediaProcessResult> processSingleFileUpload(Trip trip, MultipartFile file) {
-    log.info("파일 '{}' 스레드 {}", file.getOriginalFilename(), Thread.currentThread().getName());
+//    log.info("파일 '{}' 스레드 {}", file.getOriginalFilename(), Thread.currentThread().getName());
 
     // 병렬 작업 - 메타데이터 추출
     CompletableFuture<ImageMetadataDTO> metadataFuture = CompletableFuture.supplyAsync(() -> {
-      log.info("메타데이터 추출 시작 '{}' 스레드 {}", file.getOriginalFilename(), Thread.currentThread().getName());
+//      log.info("메타데이터 추출 시작 '{}' 스레드 {}", file.getOriginalFilename(), Thread.currentThread().getName());
       return metadataExtractorService.extractMetadata(file);
-    }, fileProcessingTaskExecutor);
+    }, cpuBoundTaskExecutor);
 
-    // 병렬 작업 - S3 업로드
+    // I/O 바운드 작업 - S3 업로드
     CompletableFuture<UploadResult> uploadFuture = CompletableFuture.supplyAsync(() -> {
-      log.info("S3 업로드 시작 '{}' 스레드 {}", file.getOriginalFilename(), Thread.currentThread().getName());
+//      log.info("S3 업로드 시작 '{}' 스레드 {}", file.getOriginalFilename(), Thread.currentThread().getName());
       return s3UploadService.uploadFile(file, "uploads/" + trip.getTripId());
-    }, fileProcessingTaskExecutor);
+    }, ioBoundTaskExecutor);
 
     // 메타데이터와 S3 업로드가 모두 완료되면 결과를 결합하여 반환
-    return metadataFuture.thenCombine(uploadFuture, (metadata, uploadResult) -> {
-      log.info("메타데이터 추출 및 S3 업로드 완료 '{}' 스레드 {}", file.getOriginalFilename(), Thread.currentThread().getName());
-      return new MediaProcessResult(metadata, uploadResult.getMediaLink(), uploadResult.getMediaKey());
-    }).exceptionally(ex -> {
-      log.error("Error processing file '{}': {}", file.getOriginalFilename(), ex.getMessage());
-      return null;
-    });
+    return metadataFuture.thenCombine(uploadFuture, (metadata, uploadResult) -> new MediaProcessResult(
+        metadata, uploadResult.getMediaLink(), uploadResult.getMediaKey())).exceptionally(ex -> null);
   }
 
   @Transactional

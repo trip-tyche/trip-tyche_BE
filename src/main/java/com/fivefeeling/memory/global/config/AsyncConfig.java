@@ -8,14 +8,25 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @Configuration
 public class AsyncConfig {
 
-  @Bean(name = "fileProcessingTaskExecutor")
-  public Executor fileProcessingTaskExecutor() {
+  @Bean(name = "cpuBoundTaskExecutor")
+  public Executor cpuBoundTaskExecutor() {
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-    executor.setCorePoolSize(2);  // 기본 유지 스레드 수
-    executor.setMaxPoolSize(4);   // 최대 스레드 수
-    executor.setQueueCapacity(20); // 대기열 크기
-    executor.setKeepAliveSeconds(30); // 유휴 스레드 유지 시간
-    executor.setThreadNamePrefix("파일업로드-");
+    executor.setCorePoolSize(1);    // CPU 코어 수에 맞게 설정 (1 vCPU)
+    executor.setMaxPoolSize(1);
+    executor.setQueueCapacity(100);  // 대기열 크기 조정
+    executor.setThreadNamePrefix("CPU-작업-");
+    executor.initialize();
+    return executor;
+  }
+
+  // I/O 바운드 작업을 위한 Executor 설정 (t2.micro에 맞게 조정)
+  @Bean(name = "ioBoundTaskExecutor")
+  public Executor ioBoundTaskExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(8);    // I/O 작업을 위해 스레드 수 제한
+    executor.setMaxPoolSize(16);
+    executor.setQueueCapacity(200); // 대기열 크기 조정
+    executor.setThreadNamePrefix("IO-작업-");
     executor.initialize();
     return executor;
   }
