@@ -23,6 +23,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -101,14 +102,13 @@ public class TripQueryService {
     );
   }
 
-
+  // 수정사항
   public PinPointTripInfoResponseDTO getTripInfoById(Long tripId) {
     Trip trip = tripRepository.findById(tripId)
         .orElseThrow(() -> new ResourceNotFoundException(TRIP_NOT_FOUND));
 
-    List<PinPointResponseDTO> pinPoints = pinPointRepository.findByTripTripId(tripId)
-        .stream()
-        .map(pinPoint -> createPinPointMediaDTO(pinPoint.getPinPointId()))
+    List<PinPointResponseDTO> pinPoints = pinPointRepository.findByTripTripId(tripId).stream()
+        .map(pinPointFirstImage())
         .collect(Collectors.toList());
 
     TripInfoResponseDTO tripInfo = TripInfoResponseDTO.withoutHashtags(
@@ -132,19 +132,21 @@ public class TripQueryService {
     return PinPointTripInfoResponseDTO.from(tripInfo, pinPoints, mediaFiles);
   }
 
-  private PinPointResponseDTO createPinPointMediaDTO(Long pinPointId) {
-    MediaFile mediaFile = mediaFileRepository.findByPinPointPinPointId(pinPointId)
-        .stream()
-        .findFirst()
-        .orElseThrow(() -> new ResourceNotFoundException(MEDIA_FILE_NOT_FOUND));
+  private Function<PinPoint, PinPointResponseDTO> pinPointFirstImage() {
+    return pinPoint -> {
+      // 각 PinPoint에서 MediaFile을 가져옵니다.
+      MediaFile mediaFile = pinPoint.getMediaFiles().stream()
+          .findFirst()
+          .orElseThrow(() -> new ResourceNotFoundException(MEDIA_FILE_NOT_FOUND));
 
-    return new PinPointResponseDTO(
-        pinPointId,
-        mediaFile.getLatitude(),
-        mediaFile.getLongitude(),
-        formatDateToString(mediaFile.getRecordDate()),
-        mediaFile.getMediaLink()
-    );
+      return new PinPointResponseDTO(
+          pinPoint.getPinPointId(),
+          mediaFile.getLatitude(),
+          mediaFile.getLongitude(),
+          formatDateToString(mediaFile.getRecordDate()),
+          mediaFile.getMediaLink()
+      );
+    };
   }
 
   // Pinpoint 슬라이드 쇼 조회
