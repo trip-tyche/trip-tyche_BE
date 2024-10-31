@@ -19,9 +19,11 @@ import com.fivefeeling.memory.domain.user.model.UserTripInfoResponseDTO;
 import com.fivefeeling.memory.domain.user.repository.UserRepository;
 import com.fivefeeling.memory.global.exception.ResourceNotFoundException;
 import com.fivefeeling.memory.global.util.DateFormatter;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -185,13 +187,13 @@ public class TripQueryService {
         DateFormatter.formatDateToString(
             mediaFiles.stream()
                 .map(MediaFile::getRecordDate)
-                .min(Date::compareTo)
+                .min(LocalDateTime::compareTo)
                 .orElse(null)
         ),
         DateFormatter.formatDateToString(
             mediaFiles.stream()
                 .map(MediaFile::getRecordDate)
-                .max(Date::compareTo)
+                .max(LocalDateTime::compareTo)
                 .orElse(null)
         ),
         MediaFileResponseDTO.firstImageAndImages(firstMediaLink, images)
@@ -201,10 +203,12 @@ public class TripQueryService {
   @Transactional(readOnly = true)
   public MediaFileResponseDTO getImagesByDate(Long tripId, String date) {
     try {
-      Date parsedDate = DATE_FORMAT.parse(date);
+      LocalDate parsedDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+      LocalDateTime startOfDay = parsedDate.atStartOfDay(); // 시작 시간
+      LocalDateTime endOfDay = parsedDate.atTime(23, 59, 59); // 종료 시간
 
       // 이미지 조회
-      List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripIdAndRecordDate(tripId, DATE_FORMAT.format(parsedDate));
+      List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripIdAndRecordDate(tripId, startOfDay, endOfDay);
       if (mediaFiles.isEmpty()) {
         throw new ResourceNotFoundException("해당 날짜에 이미지가 존재하지 않습니다.");
       }
@@ -221,9 +225,9 @@ public class TripQueryService {
           ))
           .collect(Collectors.toList());
 
-      return MediaFileResponseDTO.withImages(parsedDate, images);
+      return MediaFileResponseDTO.withImages(startOfDay, images);
 
-    } catch (ParseException e) {
+    } catch (DateTimeParseException e) {
       throw new IllegalArgumentException("잘못된 날짜 형식입니다. yyyy-MM-dd 형식으로 입력해주세요.");
     }
   }

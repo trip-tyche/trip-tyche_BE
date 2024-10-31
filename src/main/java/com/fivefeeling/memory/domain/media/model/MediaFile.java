@@ -14,7 +14,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,7 +25,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Table(name = "MediaFile", indexes = {
     @Index(name = "idx_media_file_trip_id", columnList = "tripId"),
-    @Index(name = "idx_media_file_pin_point_id", columnList = "pinPointId")
+    @Index(name = "idx_media_file_pin_point_id", columnList = "pinPointId"),
+    @Index(name = "idx_media_file_trip_id_record_date", columnList = "tripId, recordDate")
 })
 public class MediaFile {
 
@@ -49,7 +50,7 @@ public class MediaFile {
 
   @Temporal(TemporalType.TIMESTAMP)
   @Column(name = "recordDate")
-  private Date recordDate;
+  private LocalDateTime recordDate;
 
   @Column(name = "latitude")
   private Double latitude;

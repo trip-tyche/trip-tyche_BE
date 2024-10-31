@@ -1,7 +1,7 @@
 package com.fivefeeling.memory.domain.media.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -9,7 +9,7 @@ public record MediaFileResponseDTO(
     Long mediaFileId,
     String mediaLink,
     String mediaType,
-    Date recordDate,
+    LocalDateTime recordDate,
     Double latitude,
     Double longitude,
     List<MediaFileResponseDTO> images
@@ -20,7 +20,7 @@ public record MediaFileResponseDTO(
       Long mediaFileId,
       String mediaLink,
       String mediaType,
-      Date recordDate,
+      LocalDateTime recordDate,
       Double latitude,
       Double longitude
   ) {
@@ -28,7 +28,7 @@ public record MediaFileResponseDTO(
   }
 
   // 특정 날짜에 포함된 이미지 목록을 위한 생성
-  public static MediaFileResponseDTO withImages(Date recordDate, List<MediaFileResponseDTO> images) {
+  public static MediaFileResponseDTO withImages(LocalDateTime recordDate, List<MediaFileResponseDTO> images) {
     return new MediaFileResponseDTO(null, null, null, recordDate, null, null, images);
   }
 
