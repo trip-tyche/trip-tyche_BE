@@ -1,6 +1,6 @@
 package com.fivefeeling.memory.domain.trip.service;
 
-import static com.fivefeeling.memory.global.util.DateFormatter.formatDateToString;
+import static com.fivefeeling.memory.global.util.DateFormatter.formatLocalDateTimeToString;
 import static com.fivefeeling.memory.global.util.DateFormatter.formatLocalDateToString;
 
 import com.fivefeeling.memory.domain.media.model.MediaFile;
@@ -145,7 +145,7 @@ public class TripQueryService {
           pinPoint.getPinPointId(),
           mediaFile.getLatitude(),
           mediaFile.getLongitude(),
-          formatDateToString(mediaFile.getRecordDate()),
+          formatLocalDateTimeToString(mediaFile.getRecordDate()),
           mediaFile.getMediaLink()
       );
     };
@@ -184,13 +184,13 @@ public class TripQueryService {
         pinPoint.getPinPointId(),
         pinPoint.getLatitude(),
         pinPoint.getLongitude(),
-        DateFormatter.formatDateToString(
+        DateFormatter.formatLocalDateTimeToString(
             mediaFiles.stream()
                 .map(MediaFile::getRecordDate)
                 .min(LocalDateTime::compareTo)
                 .orElse(null)
         ),
-        DateFormatter.formatDateToString(
+        DateFormatter.formatLocalDateTimeToString(
             mediaFiles.stream()
                 .map(MediaFile::getRecordDate)
                 .max(LocalDateTime::compareTo)
