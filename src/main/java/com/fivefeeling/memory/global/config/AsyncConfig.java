@@ -11,8 +11,8 @@ public class AsyncConfig {
   @Bean(name = "cpuBoundTaskExecutor")
   public Executor cpuBoundTaskExecutor() {
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-    executor.setCorePoolSize(1);    // CPU 코어 수에 맞게 설정 (1 vCPU)
-    executor.setMaxPoolSize(1);
+    executor.setCorePoolSize(2);    // CPU 코어 수에 맞게 설정 (1 vCPU)
+    executor.setMaxPoolSize(2);
     executor.setQueueCapacity(100);  // 대기열 크기 조정
     executor.setThreadNamePrefix("CPU-작업-");
     executor.initialize();
