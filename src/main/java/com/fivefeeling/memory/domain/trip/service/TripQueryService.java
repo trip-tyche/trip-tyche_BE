@@ -13,17 +13,18 @@ import com.fivefeeling.memory.domain.pinpoint.repository.PinPointRepository;
 import com.fivefeeling.memory.domain.trip.model.PointImageDTO;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
+import com.fivefeeling.memory.domain.trip.model.TripSummaryDTO;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.user.model.User;
 import com.fivefeeling.memory.domain.user.model.UserTripInfoResponseDTO;
 import com.fivefeeling.memory.domain.user.repository.UserRepository;
 import com.fivefeeling.memory.global.exception.ResourceNotFoundException;
 import com.fivefeeling.memory.global.util.DateFormatter;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -42,31 +43,32 @@ public class TripQueryService {
 
   private static final String TRIP_NOT_FOUND = "해당 여행이 존재하지 않습니다.";
   private static final String MEDIA_FILE_NOT_FOUND = "해당 핀포인트의 미디어 파일이 존재하지 않습니다.";
-  private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-
-  public List<TripInfoResponseDTO> getTripsByUserId(Long userId) {
-    return tripRepository.findByUserUserId(userId).stream()
-        .map(trip -> TripInfoResponseDTO.tripInfoSummary(
-            trip.getTripId(),
-            trip.getCountry()
-        ))
-        .collect(Collectors.toList());
-  }
 
 
-  public List<PinPointResponseDTO> getPinPointsByUserId(Long userId) {
-    return tripRepository.findByUserUserId(userId).stream()
-        .map(trip -> pinPointRepository.findByTripTripId(trip.getTripId())
-            .stream()
-            .findFirst()
-            .orElse(null))
-        .filter(pinPoint -> pinPoint != null)
-        .map(pinPoint -> PinPointResponseDTO.pinPointSummary(
-            pinPoint.getPinPointId(),
-            pinPoint.getLatitude(),
-            pinPoint.getLongitude()
-        ))
-        .collect(Collectors.toList());
+  public TripSummaryDTO getTripSummary(Long userId) {
+    List<Trip> trips = tripRepository.findByUserUserId(userId);
+    int tripCount = trips.size();
+
+    Trip recentTrip = trips.stream()
+        .max(Comparator.comparing(Trip::getTripId))
+        .orElse(null);
+
+    TripInfoResponseDTO recentlyTripDTO = null;
+    if (recentTrip != null) {
+      recentlyTripDTO = new TripInfoResponseDTO(
+          recentTrip.getTripId(),
+          recentTrip.getTripTitle(),
+          recentTrip.getCountry(),
+          formatLocalDateToString(recentTrip.getStartDate()),
+          formatLocalDateToString(recentTrip.getEndDate()),
+          recentTrip.getHashtagsAsList()
+      );
+    }
+
+    return new TripSummaryDTO(
+        tripCount,
+        recentlyTripDTO
+    );
   }
 
 
@@ -90,6 +92,7 @@ public class TripQueryService {
         trips);
   }
 
+
   public TripInfoResponseDTO getTripById(Long tripId) {
     Trip trip = tripRepository.findByTripId(tripId)
         .orElseThrow(() -> new ResourceNotFoundException(TRIP_NOT_FOUND));
@@ -104,7 +107,7 @@ public class TripQueryService {
     );
   }
 
-  // 수정사항
+
   public PinPointTripInfoResponseDTO getTripInfoById(Long tripId) {
     Trip trip = tripRepository.findById(tripId)
         .orElseThrow(() -> new ResourceNotFoundException(TRIP_NOT_FOUND));
@@ -136,7 +139,6 @@ public class TripQueryService {
 
   private Function<PinPoint, PinPointResponseDTO> pinPointFirstImage() {
     return pinPoint -> {
-      // 각 PinPoint에서 MediaFile을 가져옵니다.
       MediaFile mediaFile = pinPoint.getMediaFiles().stream()
           .findFirst()
           .orElseThrow(() -> new ResourceNotFoundException(MEDIA_FILE_NOT_FOUND));
@@ -151,23 +153,19 @@ public class TripQueryService {
     };
   }
 
-  // Pinpoint 슬라이드 쇼 조회
+
   @Transactional(readOnly = true)
   public PointImageDTO getPointImages(Long tripId, Long pinPointId) {
-    // 핀포인트를 조회
     PinPoint pinPoint = pinPointRepository.findById(pinPointId)
         .orElseThrow(() -> new ResourceNotFoundException("해당 핀포인트가 존재하지 않습니다."));
 
-    // 트립 ID와 핀포인트 ID로 미디어 파일을 조회
     List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripIdAndPinPointPinPointId(tripId, pinPointId);
     if (mediaFiles.isEmpty()) {
       throw new ResourceNotFoundException("해당 핀포인트에 이미지가 없습니다.");
     }
 
-    // 첫 번째 이미지의 링크만 추출
     String firstMediaLink = mediaFiles.get(0).getMediaLink();
 
-    // 모든 이미지 정보를 MediaFileResponseDTO로 변환
     List<MediaFileResponseDTO> images = mediaFiles.stream()
         .map(file -> MediaFileResponseDTO.detailed(
             file.getMediaFileId(),
@@ -179,7 +177,6 @@ public class TripQueryService {
         ))
         .collect(Collectors.toList());
 
-    // PointImageDTO로 최종 응답 생성
     return new PointImageDTO(
         pinPoint.getPinPointId(),
         pinPoint.getLatitude(),
@@ -200,20 +197,19 @@ public class TripQueryService {
     );
   }
 
+
   @Transactional(readOnly = true)
   public MediaFileResponseDTO getImagesByDate(Long tripId, String date) {
     try {
       LocalDate parsedDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-      LocalDateTime startOfDay = parsedDate.atStartOfDay(); // 시작 시간
-      LocalDateTime endOfDay = parsedDate.atTime(23, 59, 59); // 종료 시간
+      LocalDateTime startOfDay = parsedDate.atStartOfDay();
+      LocalDateTime endOfDay = parsedDate.atTime(23, 59, 59);
 
-      // 이미지 조회
       List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripIdAndRecordDate(tripId, startOfDay, endOfDay);
       if (mediaFiles.isEmpty()) {
         throw new ResourceNotFoundException("해당 날짜에 이미지가 존재하지 않습니다.");
       }
 
-      // MediaFileResponseDTO 리스트 생성
       List<MediaFileResponseDTO> images = mediaFiles.stream()
           .map(file -> MediaFileResponseDTO.detailed(
               file.getMediaFileId(),
