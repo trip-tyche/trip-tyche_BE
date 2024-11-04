@@ -1,15 +1,13 @@
 package com.fivefeeling.memory.domain.user.controller;
 
-import com.fivefeeling.memory.domain.pinpoint.model.PinPointResponseDTO;
-import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
+import com.fivefeeling.memory.domain.trip.model.TripSummaryDTO;
 import com.fivefeeling.memory.domain.trip.service.TripQueryService;
 import com.fivefeeling.memory.domain.user.model.User;
-import com.fivefeeling.memory.domain.user.model.UserTripInfoResponseDTO;
+import com.fivefeeling.memory.domain.user.model.UserTripSummaryDTO;
 import com.fivefeeling.memory.domain.user.service.UserService;
 import com.fivefeeling.memory.global.util.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,26 +30,22 @@ public class UserProfileController {
 
   @Operation(summary = "사용자 정보 및 여행 정보 조회", description = "특정 사용자의 여행 정보와 핀포인트 정보를 조회합니다.")
   @GetMapping("/tripInfo")
-  public ResponseEntity<UserTripInfoResponseDTO> getUserTripInfo(
-      @Parameter(description = "사용자 ID", required = true) @RequestParam Long userId) {
-    // 1. User 정보 조회
+  public ResponseEntity<UserTripSummaryDTO> getUserTripInfo(
+      @Parameter(description = "사용자 ID", required = true)
+      @RequestParam Long userId) {
+    // 1. 사용자 정보 조회
     User user = userService.getUserById(userId);
-    String userNickName = user.getUserNickName();
 
-    // 2. Trip 정보 조회
-    List<TripInfoResponseDTO> trips = tripQueryService.getTripsByUserId(userId);
+    // 2. 여행 요약 정보 조회
+    TripSummaryDTO tripSummary = tripQueryService.getTripSummary(userId);
 
-    // 3. PinPoint 정보 조회
-    List<PinPointResponseDTO> pinPoints = tripQueryService.getPinPointsByUserId(userId);
-
-    // 4. 모든 정보를 포함하는 UserTripInfoDTO 생성
-    UserTripInfoResponseDTO userTripInfo = new UserTripInfoResponseDTO(
-        user.getUserId(),
-        userNickName,
-        trips,
-        pinPoints
+    // 3. 응답 DTO 생성
+    UserTripSummaryDTO response = new UserTripSummaryDTO(
+        user.getUserNickName(),
+        tripSummary.tripCount(),
+        tripSummary.recentlyTrip()
     );
-    return ResponseEntity.ok(userTripInfo);
+    return ResponseEntity.ok(response);
   }
 
   @Operation(summary = "사용자 닉네임 등록", description = "로그인된 사용자의 닉네임을 등록")
