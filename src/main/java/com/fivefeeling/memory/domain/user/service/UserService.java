@@ -2,6 +2,8 @@ package com.fivefeeling.memory.domain.user.service;
 
 import com.fivefeeling.memory.domain.user.model.User;
 import com.fivefeeling.memory.domain.user.repository.UserRepository;
+import com.fivefeeling.memory.global.common.ResultCode;
+import com.fivefeeling.memory.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,13 +17,13 @@ public class UserService {
 
   public User getUserById(Long userId) {
     return userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다."));
+        .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
   }
 
   public User updateUserNickNameByEmail(String userEmail, String userNickName) {
-    log.info("받은 이메일 : {}", userEmail);
     User user = userRepository.findByUserEmail(userEmail.trim().toLowerCase())
-        .orElseThrow(() -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다."));
+        .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+
     user.updateUserNickName(userNickName);
     return userRepository.save(user);
   }

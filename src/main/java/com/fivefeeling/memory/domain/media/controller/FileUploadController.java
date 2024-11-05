@@ -5,6 +5,8 @@ import com.fivefeeling.memory.domain.media.model.MediaFileResponseDTO;
 import com.fivefeeling.memory.domain.media.service.MediaProcessingService;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
+import com.fivefeeling.memory.global.common.ResultCode;
+import com.fivefeeling.memory.global.exception.CustomException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -30,7 +32,7 @@ public class FileUploadController {
 
     // 여행 정보 가져오기
     Trip trip = tripRepository.findById(tripId)
-        .orElseThrow(() -> new IllegalArgumentException("해당 여행 정보가 존재하지 않습니다."));
+        .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
 
     // 비동기적으로 파일 업로드 처리
     CompletableFuture<List<MediaFile>> futureMediaFiles = mediaProcessingService.processFileUpload(trip, files);

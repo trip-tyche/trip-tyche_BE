@@ -1,14 +1,23 @@
 package com.fivefeeling.memory.global.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fivefeeling.memory.global.common.ResultCode;
+import com.fivefeeling.memory.global.exception.CustomException;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.DecodingException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,9 +43,11 @@ public class JwtTokenProvider {
   @PostConstruct
   private void init() {
     try {
-      // 강력한 키를 자동 생성하여 256비트 이상의 HMAC-SHA 알고리즘에 적합한 키를 설정
-      this.KAKAO_SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-      this.GOOGLE_SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+      String kakaoBase64Key = Base64.getEncoder().encodeToString(kakaoSecretKey.getBytes());
+      this.KAKAO_SECRET_KEY = Keys.hmacShaKeyFor(Base64.getDecoder().decode(kakaoBase64Key));
+
+      String googleBase64Key = Base64.getEncoder().encodeToString(googleSecretKey.getBytes());
+      this.GOOGLE_SECRET_KEY = Keys.hmacShaKeyFor(Base64.getDecoder().decode(googleBase64Key));
     } catch (Exception e) {
       System.err.println("Error initializing JWT keys: " + e.getMessage());
       throw e;
@@ -68,6 +79,7 @@ public class JwtTokenProvider {
   public String createToken(String userEmail, List<String> roles, String provider) {
     Claims claims = Jwts.claims().setSubject(userEmail);
     claims.put("roles", roles);
+    claims.put("provider", provider);
 
     Date now = new Date();
     Date validity = new Date(now.getTime() + 3600000); // 1시간 유효기간
@@ -91,49 +103,81 @@ public class JwtTokenProvider {
           .build()
           .parseClaimsJws(token);
       return true;
-    } catch (DecodingException e) {
-      // 디코딩 오류 처리
-      System.err.println("DecodingException: Invalid JWT format - " + e.getMessage());
-      return false;
+    } catch (SecurityException | MalformedJwtException e) {
+      // 서명 오류 또는 토큰 변조
+      throw new CustomException(ResultCode.INVALID_JWT);
+    } catch (ExpiredJwtException e) {
+      // 토큰 만료
+      throw new CustomException(ResultCode.EXPIRED_JWT);
+    } catch (UnsupportedJwtException e) {
+      // 지원하지 않는 토큰
+      throw new CustomException(ResultCode.INVALID_JWT);
+    } catch (IllegalArgumentException e) {
+      // 잘못된 토큰
+      throw new CustomException(ResultCode.INVALID_JWT);
     } catch (Exception e) {
-      // 일반적인 검증 오류 처리
-      System.err.println("Token validation failed - " + e.getMessage());
-      return false;
+      // 기타 예외
+      throw new CustomException(ResultCode.JWT_PARSING_ERROR);
     }
   }
 
   // provider에 따라 Secret Key 가져오기
   private Key getSecretKeyFromToken(String token) {
-    Claims claims = Jwts.parserBuilder()
-        .build()
-        .parseClaimsJws(token)
-        .getBody();
+// 토큰을 '.'으로 분리
+    String[] chunks = token.split("\\.");
+    if (chunks.length != 3) {
+      throw new CustomException(ResultCode.INVALID_JWT);
+    }
+
+    // 페이로드 부분(Base64 디코딩)
+    String payload = new String(Base64.getUrlDecoder().decode(chunks[1]), StandardCharsets.UTF_8);
+
+    // JSON 파싱하여 Claims 생성
+    ObjectMapper objectMapper = new ObjectMapper();
+    Map<String, Object> claims;
+    try {
+      claims = objectMapper.readValue(payload, Map.class);
+    } catch (IOException e) {
+      throw new CustomException(ResultCode.JWT_CLAIM_ERROR);
+    }
 
     String provider = (String) claims.get("provider");
+    if (provider == null) {
+      throw new CustomException(ResultCode.JWT_CLAIM_ERROR);
+    }
+
     return provider.equals("kakao") ? KAKAO_SECRET_KEY : GOOGLE_SECRET_KEY;
   }
 
   // 토큰에서 사용자 정보 추출
   public String getUserEmailFromToken(String token) {
-    Key secretKey = getSecretKeyFromToken(token);
-    return Jwts.parserBuilder()
-        .setSigningKey(secretKey)
-        .build()
-        .parseClaimsJws(token)
-        .getBody()
-        .getSubject();
+    try {
+      Key secretKey = getSecretKeyFromToken(token);
+      return Jwts.parserBuilder()
+          .setSigningKey(secretKey)
+          .build()
+          .parseClaimsJws(token)
+          .getBody()
+          .getSubject();
+    } catch (Exception e) {
+      throw new CustomException(ResultCode.JWT_CLAIM_ERROR);
+    }
   }
 
   // 토큰에서 권한 정보 추출
   public List<GrantedAuthority> getAuthorities(String token) {
-    Key secretKey = getSecretKeyFromToken(token);
-    Claims claims = Jwts.parserBuilder()
-        .setSigningKey(secretKey)
-        .build()
-        .parseClaimsJws(token)
-        .getBody();
+    try {
+      Key secretKey = getSecretKeyFromToken(token);
+      Claims claims = Jwts.parserBuilder()
+          .setSigningKey(secretKey)
+          .build()
+          .parseClaimsJws(token)
+          .getBody();
 
-    List<String> roles = (List<String>) claims.get("roles");
-    return roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+      List<String> roles = (List<String>) claims.get("roles");
+      return roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+    } catch (Exception e) {
+      throw new CustomException(ResultCode.JWT_CLAIM_ERROR);
+    }
   }
 }

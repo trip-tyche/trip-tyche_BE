@@ -8,10 +8,10 @@ import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
 import com.fivefeeling.memory.domain.trip.service.TripManagementService;
 import com.fivefeeling.memory.domain.trip.service.TripQueryService;
 import com.fivefeeling.memory.domain.user.model.UserTripInfoResponseDTO;
+import com.fivefeeling.memory.global.common.RestResponse;
 import com.fivefeeling.memory.global.util.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,7 +32,7 @@ public class TripController {
 
   @Operation(summary = "tripId 생성", description = "tripId를 반환")
   @PostMapping("/api/trips")
-  public ResponseEntity<TripInfoResponseDTO> createTrip(
+  public RestResponse<TripInfoResponseDTO> createTrip(
       @RequestHeader("Authorization") String authorizationHeader) {
 
     String token = authorizationHeader.substring(7);
@@ -41,12 +41,12 @@ public class TripController {
     Long tripId = tripManagementService.createTripId(userEmail);
 
     TripInfoResponseDTO tripIdResponse = TripInfoResponseDTO.tripIdOnly(tripId);
-    return ResponseEntity.ok(tripIdResponse);
+    return RestResponse.success(tripIdResponse);
   }
 
   @Operation(summary = "사용자 여행 정보 저장", description = "사용자의 여행 정보 저장")
   @PostMapping("/api/trips/{tripId}/info")
-  public ResponseEntity<TripInfoResponseDTO> createTripInfo(
+  public RestResponse<TripInfoResponseDTO> createTripInfo(
       @RequestHeader("Authorization") String authorizationHeader,
       @PathVariable Long tripId,
       @RequestBody TripInfoRequestDTO tripInfoRequestDTO) {
@@ -56,12 +56,12 @@ public class TripController {
 
     TripInfoResponseDTO createdTripInfo = tripManagementService.updateTrip(userEmail, tripId, tripInfoRequestDTO);
 
-    return ResponseEntity.ok(createdTripInfo);
+    return RestResponse.success(createdTripInfo);
   }
 
   @Operation(summary = "여행수정페이지 여행 정보 수정", description = "특정 여행 정보 수정")
   @PutMapping("/api/trips/{tripId}")
-  public ResponseEntity<TripInfoResponseDTO> updateTrip(
+  public RestResponse<TripInfoResponseDTO> updateTrip(
       @RequestHeader("Authorization") String authorizationHeader,
       @PathVariable Long tripId,
       @RequestBody TripInfoRequestDTO tripInfoRequestDTO) {
@@ -71,70 +71,70 @@ public class TripController {
 
     TripInfoResponseDTO updatedTrip = tripManagementService.updateTrip(userEmail, tripId, tripInfoRequestDTO);
 
-    return ResponseEntity.ok(updatedTrip);
+    return RestResponse.success(updatedTrip);
   }
 
   @Operation(summary = "여행 정보 삭제", description = "특정 여행 정보 삭제")
   @DeleteMapping("/api/trips/{tripId}")
-  public ResponseEntity<Void> deleteTrip(
+  public RestResponse<String> deleteTrip(
       @RequestHeader("Authorization") String authorizationHeader,
       @PathVariable Long tripId) {
 
     String token = authorizationHeader.substring(7);
     String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
 
-    tripManagementService.deleteTrip(userEmail, tripId);
+    tripManagementService.deleteTrip(tripId);
 
-    return ResponseEntity.noContent().build();
+    return RestResponse.success("성공적으로 삭제되었습니다.");
   }
 
   @Operation(summary = "여행관리페이지 사용자의 여행 정보 조회", description = "사용자 등록된 여행 정보 조회")
   @GetMapping("/api/trips")
-  public ResponseEntity<UserTripInfoResponseDTO> getUserTrips(@RequestHeader("Authorization") String authorizationHeader) {
+  public RestResponse<UserTripInfoResponseDTO> getUserTrips(@RequestHeader("Authorization") String authorizationHeader) {
 
     String token = authorizationHeader.substring(7);
     String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
 
     UserTripInfoResponseDTO trips = tripQueryService.getUserTripInfo(userEmail);
-    return ResponseEntity.ok(trips);
+    return RestResponse.success(trips);
   }
 
   @Operation(summary = "여행관리페이지 {tripId}로 사용자의 여행 정보 조회", description = "사용자 등록된 여행 정보 조회")
   @GetMapping("/api/trips/{tripId}")
-  public ResponseEntity<TripInfoResponseDTO> getTripById(@PathVariable Long tripId) {
+  public RestResponse<TripInfoResponseDTO> getTripById(@PathVariable Long tripId) {
     TripInfoResponseDTO tripInfo = tripQueryService.getTripById(tripId);
 
-    return ResponseEntity.ok(tripInfo);
+    return RestResponse.success(tripInfo);
   }
 
 
   @Operation(summary = "타임라인 페이지 지도위 페이지 여행 정보 조회", description = "여행 정보 조회")
   @GetMapping("/api/trips/{tripId}/info")
-  public ResponseEntity<PinPointTripInfoResponseDTO> getTripInfo(@PathVariable Long tripId) {
+  public RestResponse<PinPointTripInfoResponseDTO> getTripInfo(@PathVariable Long tripId) {
     PinPointTripInfoResponseDTO tripInfo = tripQueryService.getTripInfoById(tripId);
-    return ResponseEntity.ok(tripInfo);
+    return RestResponse.success(tripInfo);
   }
 
   @Operation(summary = "핀포인트별 슬라이드 쇼를 위한 이미지 조회", description = "이미지 조회")
   @GetMapping("/api/trips/{tripId}/pinpoints/{pinPointId}/images")
-  public ResponseEntity<PointImageDTO> getPointImages(
+  public RestResponse<PointImageDTO> getPointImages(
       @PathVariable Long tripId,
       @PathVariable Long pinPointId) {
 
     PointImageDTO pointImageDTO = tripQueryService.getPointImages(tripId, pinPointId);
 
-    return ResponseEntity.ok(pointImageDTO);
+    return RestResponse.success(pointImageDTO);
   }
 
   @Operation(summary = "특정 날짜에 저장된 이미지를 조회", description = "특정 여행의 특정 날짜에 저장된 모든 이미지를 조회")
   @GetMapping("/api/trips/{tripId}/map")
-  public ResponseEntity<MediaFileResponseDTO> getImagesByDate(
+  public RestResponse<MediaFileResponseDTO> getImagesByDate(
       @PathVariable Long tripId,
       @RequestParam String date) {
 
     MediaFileResponseDTO dateImageDTO = tripQueryService.getImagesByDate(tripId, date);
 
-    return ResponseEntity.ok(dateImageDTO);
+    return RestResponse.success(dateImageDTO);
   }
 
 }

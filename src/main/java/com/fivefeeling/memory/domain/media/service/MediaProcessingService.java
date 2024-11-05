@@ -13,6 +13,7 @@ import com.fivefeeling.memory.global.util.DateUtil;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
@@ -50,10 +51,12 @@ public class MediaProcessingService {
       // 결과 수집
       List<MediaProcessResult> results = futures.stream()
           .map(CompletableFuture::join)
+          .filter(Objects::nonNull)
           .collect(Collectors.toList());
 
       // 각 결과에 대해 PinPoint 추출 및 MediaFile 저장
       List<MediaFile> mediaFiles = results.stream()
+          .filter(result -> result != null) // 예외 발생한 파일 제외
           .map(result -> {
             // PinPoint 찾기 또는 생성
             PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, result.metadata().latitude(), result.metadata().longitude());
@@ -97,7 +100,11 @@ public class MediaProcessingService {
 
     // 메타데이터와 S3 업로드가 모두 완료되면 결과를 결합하여 반환
     return metadataFuture.thenCombine(uploadFuture, (metadata, uploadResult) -> new MediaProcessResult(
-        metadata, uploadResult.getMediaLink(), uploadResult.getMediaKey())).exceptionally(ex -> null);
+            metadata, uploadResult.getMediaLink(), uploadResult.getMediaKey()))
+        .exceptionally(ex -> {
+          log.error("파일 처리 중 오류 발생: {}", ex.getMessage());
+          return null;
+        });
   }
 
   @Transactional

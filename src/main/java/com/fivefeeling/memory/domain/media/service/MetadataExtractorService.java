@@ -5,6 +5,8 @@ import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
 import com.drew.metadata.exif.GpsDirectory;
 import com.fivefeeling.memory.domain.media.model.ImageMetadataDTO;
+import com.fivefeeling.memory.global.common.ResultCode;
+import com.fivefeeling.memory.global.exception.CustomException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
@@ -48,9 +50,11 @@ public class MetadataExtractorService {
 
       return new ImageMetadataDTO(latitude, longitude, recordDate, file.getContentType());
     } catch (IOException e) {
-      throw new RuntimeException("파일을 읽는 중 오류가 발생했습니다.", e);
+      log.error("파일을 읽는 중 오류가 발생했습니다: {}", e.getMessage());
+      throw new CustomException(ResultCode.FILE_READ_ERROR);
     } catch (Exception e) {
-      throw new RuntimeException("메타데이터를 추출하는 데 실패했습니다.", e);
+      log.error("메타데이터를 추출하는 데 실패했습니다: {}", e.getMessage());
+      throw new CustomException(ResultCode.METADATA_EXTRACTION_FAILED);
     }
   }
 }
