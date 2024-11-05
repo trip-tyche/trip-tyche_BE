@@ -44,4 +44,9 @@ public class RestResponse<T> {
         .data(data)
         .build();
   }
+
+  // ResultCode의 HttpStatus를 직접 반환하는 메서드
+  public HttpStatus getHttpStatus() {
+    return HttpStatus.valueOf(this.status);
+  }
 }
