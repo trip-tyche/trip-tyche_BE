@@ -95,9 +95,11 @@ public class TripQueryService {
 
     List<MediaFileResponseDTO> mediaFiles = mediaFileRepository.findByTripTripId(tripId)
         .stream()
-        .map(mediaFile -> MediaFileResponseDTO.mediaFileSummary(
+        .map(mediaFile -> MediaFileResponseDTO.detailed(
             mediaFile.getMediaFileId(),
             mediaFile.getMediaLink(),
+            mediaFile.getMediaType(),
+            mediaFile.getRecordDate(),
             mediaFile.getLatitude(),
             mediaFile.getLongitude()
         ))
