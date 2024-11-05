@@ -45,7 +45,7 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
 
     // JWT 토큰 생성 후 추가적으로 설정
     List<String> roles = List.of("ROLE_USER"); // 기본 권한 설정 (예: USER)
-    String token = jwtTokenProvider.createToken(userProfile.userEmail(), roles);
+    String token = jwtTokenProvider.createToken(userProfile.userEmail(), roles, registrationId);
 
     Map<String, Object> customAttribute = getCustomAttribute(registrationId, userNameAttributeName, attributes, userProfile);
     customAttribute.put("token", token);
