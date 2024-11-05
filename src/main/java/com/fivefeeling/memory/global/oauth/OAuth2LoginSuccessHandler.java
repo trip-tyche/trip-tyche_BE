@@ -31,19 +31,14 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     // 속성에서 userId와 jwtToken 추출
     Long userId = attributes.get("userId") instanceof Number ? ((Number) attributes.get("userId")).longValue() : null;
     String jwtToken = attributes.get("token") instanceof String ? (String) attributes.get("token") : null;
-
     log.debug("userId: {}, jwtToken: {}", userId, jwtToken);
+
     // userId나 token이 없을 경우 에러 처리
     if (userId == null || jwtToken == null) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid user ID or token");
       return;
     }
 
-//    // JSON 형태로 응답 작성
-//    response.setContentType("application/json;charset=UTF-8");
-//    response.getWriter().write("{\"token\": \"" + jwtToken + "\", \"userId\": " + userId + "}");
-
     response.sendRedirect(redirectUrl + "?redirectedFromSocialLogin=true&token=" + jwtToken + "&userId=" + userId);
   }
 }
-

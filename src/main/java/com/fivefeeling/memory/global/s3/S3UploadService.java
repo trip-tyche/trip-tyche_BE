@@ -1,11 +1,14 @@
 package com.fivefeeling.memory.global.s3;
 
+import com.fivefeeling.memory.global.common.ResultCode;
+import com.fivefeeling.memory.global.exception.CustomException;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -18,6 +21,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class S3UploadService {
 
   private final S3Client s3Client;
@@ -37,9 +41,11 @@ public class S3UploadService {
       String mediaLink = "https://" + bucketName + ".s3.amazonaws.com/" + mediaKey;
       return new UploadResult(mediaKey, mediaLink);
     } catch (S3Exception e) {
-      throw new RuntimeException("S3에 파일 업로드에 실패했습니다.", e);
+      log.error("S3에 파일 업로드에 실패했습니다: {}", e.getMessage());
+      throw new CustomException(ResultCode.S3_UPLOAD_FAILED, e);
     } catch (IOException e) {
-      throw new RuntimeException("파일 읽기 중 오류가 발생했습니다.", e);
+      log.error("파일 읽기 중 오류가 발생했습니다: {}", e.getMessage());
+      throw new CustomException(ResultCode.FILE_READ_ERROR, e);
     }
   }
 
@@ -57,7 +63,8 @@ public class S3UploadService {
 
       s3Client.deleteObjects(deleteObjectsRequest);
     } catch (S3Exception e) {
-      throw new RuntimeException("S3에서 파일 삭제에 실패했습니다.", e);
+      log.error("S3에서 파일 삭제에 실패했습니다: {}", e.getMessage());
+      throw new CustomException(ResultCode.FILE_DELETE_FAILED, e);
     }
   }
 }

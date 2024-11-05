@@ -1,5 +1,6 @@
 package com.fivefeeling.memory.global.config;
 
+import com.fivefeeling.memory.global.oauth.OAuth2AuthenticationFailureHandler;
 import com.fivefeeling.memory.global.oauth.OAuth2LoginSuccessHandler;
 import com.fivefeeling.memory.global.oauth.OAuth2Service;
 import com.fivefeeling.memory.global.util.JWTAuthenticationFilter;
@@ -32,6 +33,8 @@ public class SecurityConfig {
 
   private final OAuth2Service oAuth2Service;
   private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+  private final OAuth2AuthenticationFailureHandler failureHandler;
+
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtTokenProvider jwtTokenProvider) throws Exception {
@@ -61,6 +64,7 @@ public class SecurityConfig {
                     .userService(oAuth2Service)
                 )
                 .successHandler(oAuth2LoginSuccessHandler)
+                .failureHandler(failureHandler)
 //            .defaultSuccessUrl("/swagger-ui/index.html#/")
         )
         .logout(logout -> logout.logoutSuccessUrl("/"))
