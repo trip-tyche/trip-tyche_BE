@@ -27,7 +27,7 @@ public enum ResultCode {
   JWT_CLAIM_ERROR(HttpStatus.BAD_REQUEST, 2004, "토큰에서 정보를 추출하는 데 실패했습니다."),
   JWT_PARSING_ERROR(HttpStatus.BAD_REQUEST, 2005, "토큰 파싱 중 오류가 발생했습니다."),
   USER_SAVE_FAILURE(HttpStatus.INTERNAL_SERVER_ERROR, 2006, "사용자 정보를 저장하는 데 실패했습니다."),
-
+  INVALID_PROVIDER(HttpStatus.BAD_REQUEST, 2007, "유효하지 않은 OAuth 제공자입니다."),
   // 사용자 관련 오류 코드 (3000번대)
   USER_NOT_FOUND(HttpStatus.NOT_FOUND, 3000, "사용자 정보를 찾을 수 없습니다."),
 
