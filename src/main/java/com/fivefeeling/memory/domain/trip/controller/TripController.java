@@ -9,9 +9,12 @@ import com.fivefeeling.memory.domain.trip.service.TripManagementService;
 import com.fivefeeling.memory.domain.trip.service.TripQueryService;
 import com.fivefeeling.memory.domain.user.model.UserTripInfoResponseDTO;
 import com.fivefeeling.memory.global.common.RestResponse;
+import com.fivefeeling.memory.global.common.ResultCode;
+import com.fivefeeling.memory.global.exception.CustomException;
 import com.fivefeeling.memory.global.util.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class TripController {
 
   private final TripQueryService tripQueryService;
@@ -34,6 +38,11 @@ public class TripController {
   @PostMapping("/api/trips")
   public RestResponse<TripInfoResponseDTO> createTrip(
       @RequestHeader("Authorization") String authorizationHeader) {
+
+    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+      log.error("유효하지 않은 Authorization 헤더 형식입니다: {}", authorizationHeader);
+      throw new CustomException(ResultCode.INVALID_JWT);
+    }
 
     String token = authorizationHeader.substring(7);
     String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
@@ -51,6 +60,11 @@ public class TripController {
       @PathVariable Long tripId,
       @RequestBody TripInfoRequestDTO tripInfoRequestDTO) {
 
+    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+      log.error("유효하지 않은 Authorization 헤더 형식입니다: {}", authorizationHeader);
+      throw new CustomException(ResultCode.INVALID_JWT);
+    }
+
     String token = authorizationHeader.substring(7);
     String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
 
@@ -66,6 +80,11 @@ public class TripController {
       @PathVariable Long tripId,
       @RequestBody TripInfoRequestDTO tripInfoRequestDTO) {
 
+    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+      log.error("유효하지 않은 Authorization 헤더 형식입니다: {}", authorizationHeader);
+      throw new CustomException(ResultCode.INVALID_JWT);
+    }
+
     String token = authorizationHeader.substring(7);
     String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
 
@@ -80,6 +99,11 @@ public class TripController {
       @RequestHeader("Authorization") String authorizationHeader,
       @PathVariable Long tripId) {
 
+    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+      log.error("유효하지 않은 Authorization 헤더 형식입니다: {}", authorizationHeader);
+      throw new CustomException(ResultCode.INVALID_JWT);
+    }
+
     String token = authorizationHeader.substring(7);
     String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
 
@@ -91,6 +115,11 @@ public class TripController {
   @Operation(summary = "여행관리페이지 사용자의 여행 정보 조회", description = "사용자 등록된 여행 정보 조회")
   @GetMapping("/api/trips")
   public RestResponse<UserTripInfoResponseDTO> getUserTrips(@RequestHeader("Authorization") String authorizationHeader) {
+
+    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+      log.error("유효하지 않은 Authorization 헤더 형식입니다: {}", authorizationHeader);
+      throw new CustomException(ResultCode.INVALID_JWT);
+    }
 
     String token = authorizationHeader.substring(7);
     String userEmail = jwtTokenProvider.getUserEmailFromToken(token);

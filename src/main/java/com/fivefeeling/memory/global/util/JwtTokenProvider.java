@@ -107,6 +107,7 @@ public class JwtTokenProvider {
       return true;
     } catch (SecurityException | MalformedJwtException e) {
       // 서명 오류 또는 토큰 변조
+      log.error("JWT 서명 오류 또는 변조된 토큰: {}", e.getMessage());
       throw new CustomException(ResultCode.INVALID_JWT);
     } catch (ExpiredJwtException e) {
       // 토큰 만료
@@ -114,12 +115,15 @@ public class JwtTokenProvider {
       throw new CustomException(ResultCode.EXPIRED_JWT);
     } catch (UnsupportedJwtException e) {
       // 지원하지 않는 토큰
+      log.error("지원되지 않는 JWT 토큰: {}", e.getMessage());
       throw new CustomException(ResultCode.INVALID_JWT);
     } catch (IllegalArgumentException e) {
       // 잘못된 토큰
+      log.error("잘못된 JWT 토큰: {}", e.getMessage());
       throw new CustomException(ResultCode.INVALID_JWT);
     } catch (Exception e) {
       // 기타 예외
+      log.error("JWT 파싱 오류 발생: {}", e.getMessage());
       throw new CustomException(ResultCode.JWT_PARSING_ERROR);
     }
   }
@@ -129,11 +133,12 @@ public class JwtTokenProvider {
 // 토큰을 '.'으로 분리
     String[] chunks = token.split("\\.");
     if (chunks.length != 3) {
+      log.error("유효하지 않은 JWT 토큰 형식입니다.");
       throw new CustomException(ResultCode.INVALID_JWT);
     }
 
     // 페이로드 부분(Base64 디코딩)
-    String payload = new String(Base64.getUrlDecoder().decode(chunks[1]), StandardCharsets.UTF_8);
+    String payload = new String(Base64.getDecoder().decode(chunks[1]), StandardCharsets.UTF_8);
 
     // JSON 파싱하여 Claims 생성
     ObjectMapper objectMapper = new ObjectMapper();
@@ -141,11 +146,13 @@ public class JwtTokenProvider {
     try {
       claims = objectMapper.readValue(payload, Map.class);
     } catch (IOException e) {
+      log.error("JWT 페이로드 파싱 오류: {}", e.getMessage());
       throw new CustomException(ResultCode.JWT_CLAIM_ERROR);
     }
 
     String provider = (String) claims.get("provider");
     if (provider == null) {
+      log.error("JWT에 'provider' 정보가 없습니다.");
       throw new CustomException(ResultCode.JWT_CLAIM_ERROR);
     }
 
@@ -163,6 +170,7 @@ public class JwtTokenProvider {
           .getBody()
           .getSubject();
     } catch (Exception e) {
+      log.error("JWT에서 사용자 이메일 추출 중 오류 발생: {}", e.getMessage());
       throw new CustomException(ResultCode.JWT_CLAIM_ERROR);
     }
   }
