@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtTokenProvider {
 
 //  private final Key SECRET_KEY;
@@ -108,6 +110,7 @@ public class JwtTokenProvider {
       throw new CustomException(ResultCode.INVALID_JWT);
     } catch (ExpiredJwtException e) {
       // 토큰 만료
+      log.error("토큰 만료: {}", e.getMessage()); // 로그 추가
       throw new CustomException(ResultCode.EXPIRED_JWT);
     } catch (UnsupportedJwtException e) {
       // 지원하지 않는 토큰
