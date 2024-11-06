@@ -100,10 +100,11 @@ public class JwtTokenProvider {
   public boolean validateToken(String token) {
     try {
       Key secretKey = getSecretKeyFromToken(token);
-      Jwts.parserBuilder()
+      Claims claims = (Claims) Jwts.parserBuilder()
           .setSigningKey(secretKey)
           .build()
           .parseClaimsJws(token);
+      log.debug("제공된 토큰: {}", claims.get("provider"));
       return true;
     } catch (SecurityException | MalformedJwtException e) {
       // 서명 오류 또는 토큰 변조
