@@ -16,7 +16,7 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
   List<MediaFile> findByTripTripIdAndPinPointPinPointId(Long tripId, Long pinPointId);
 
   // String 형식의 날짜를 Date로 변환하여 조회
-  @Query("SELECT m FROM MediaFile m WHERE m.trip.tripId = :tripId AND m.recordDate BETWEEN :startOfDay AND :endOfDay")
+  @Query("SELECT m FROM MediaFile m WHERE m.trip.tripId = :tripId AND m.recordDate BETWEEN :startOfDay AND :endOfDay ORDER BY m.recordDate ASC")
   List<MediaFile> findByTripTripIdAndRecordDate(
       @Param("tripId") Long tripId,
       @Param("startOfDay") LocalDateTime startOfDay,
