@@ -65,8 +65,6 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
       );
     } catch (OAuth2AuthenticationException e) {
       log.error("OAuth2 인증 중 오류 발생: {}", e.getMessage());
-      throw new CustomException(ResultCode.OAUTH_SERVICE_FAILURE, e);
-    } catch (CustomException e) {
       throw e;
     } catch (Exception e) {
       log.error("OAuth2 서비스 처리 중 알 수 없는 오류 발생: {}", e.getMessage());
@@ -104,7 +102,7 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
       }
     } catch (DataIntegrityViolationException e) {
       log.error("이메일 중복으로 사용자 저장 실패: {}", e.getMessage());
-      throw new OAuth2AuthenticationException(new OAuth2Error("email_already_registered", "이메일이 이미 등록되어 있습니다.", null), e);
+      throw new OAuth2AuthenticationException(new OAuth2Error("email_already_registered", "이메일이 이미 등록되어 있습니다.", null), e.getMessage());
     } catch (Exception e) {
       log.error("사용자 정보 저장 또는 업데이트 중 오류 발생: {}", e.getMessage());
       throw new CustomException(ResultCode.USER_SAVE_FAILURE, e);

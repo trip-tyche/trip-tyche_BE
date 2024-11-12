@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class OAuth2AuthenticationFailureHandler implements AuthenticationFailureHandler {
+public class CustomOAuth2AuthenticationFailureHandler implements AuthenticationFailureHandler {
 
   private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -43,11 +43,10 @@ public class OAuth2AuthenticationFailureHandler implements AuthenticationFailure
       errorResponse = RestResponse.error(ResultCode.OAUTH_SERVICE_FAILURE);
       log.error("OAuth2 인증 실패: {}", exception.getMessage());
     }
-    
+
     // ResultCode의 HttpStatus 값을 직접 사용하여 응답 설정
     response.setStatus(errorResponse.getHttpStatus().value());
     response.setContentType("application/json;charset=UTF-8");
     response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
   }
 }
-
