@@ -133,7 +133,7 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
   redirect:
-    url: https://triptyche.world/auth/redirect
+    url: https://triptyche.world/login/redirect
 
 logging:
   level:
@@ -201,7 +201,7 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
   redirect:
-    url: http://localhost:3000/auth/redirect
+    url: http://localhost:3000/login/redirect
 
 logging:
   level:

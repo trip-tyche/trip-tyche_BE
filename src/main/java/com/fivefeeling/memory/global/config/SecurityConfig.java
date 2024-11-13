@@ -1,6 +1,6 @@
 package com.fivefeeling.memory.global.config;
 
-import com.fivefeeling.memory.global.oauth.OAuth2AuthenticationFailureHandler;
+import com.fivefeeling.memory.global.oauth.CustomOAuth2AuthenticationFailureHandler;
 import com.fivefeeling.memory.global.oauth.OAuth2LoginSuccessHandler;
 import com.fivefeeling.memory.global.oauth.OAuth2Service;
 import com.fivefeeling.memory.global.util.JWTAuthenticationFilter;
@@ -35,8 +35,7 @@ public class SecurityConfig {
 
   private final OAuth2Service oAuth2Service;
   private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-  private final OAuth2AuthenticationFailureHandler failureHandler;
-
+  private final CustomOAuth2AuthenticationFailureHandler customOAuth2AuthenticationFailureHandler;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtTokenProvider jwtTokenProvider) throws Exception {
@@ -49,11 +48,8 @@ public class SecurityConfig {
                 "/v3/api-docs/**",
                 "/swagger-resources/**",
                 "/webjars/**",
-                "/",
                 "/oauth2/**",
                 "/api/**",
-                "/api/user/nickname",
-                "/nickname",
                 "/login/oauth2/code/**",
                 "/upload/**",
                 "/oauth2/success",
@@ -62,12 +58,11 @@ public class SecurityConfig {
             .anyRequest().authenticated()
         )
         .oauth2Login(oauth2 -> oauth2
-                .userInfoEndpoint(userInfo -> userInfo
-                    .userService(oAuth2Service)
-                )
-                .successHandler(oAuth2LoginSuccessHandler)
-                .failureHandler(failureHandler)
-//            .defaultSuccessUrl("/swagger-ui/index.html#/")
+            .userInfoEndpoint(userInfo -> userInfo
+                .userService(oAuth2Service)
+            )
+            .successHandler(oAuth2LoginSuccessHandler)
+            .failureHandler(customOAuth2AuthenticationFailureHandler)
         )
         .exceptionHandling(exceptionHandling -> exceptionHandling
             .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
@@ -106,7 +101,7 @@ public class SecurityConfig {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException, java.io.IOException {
       String clientIp = request.getRemoteAddr();
-      logger.info("Request from IP: {}", clientIp);
+      logger.info("요청 IP: {}", clientIp);
       filterChain.doFilter(request, response);
     }
   }

@@ -15,17 +15,12 @@ public class UserService {
 
   private final UserRepository userRepository;
 
-  public User getUserById(Long userId) {
-    return userRepository.findById(userId)
-        .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-  }
-
-  public User updateUserNickNameByEmail(String userEmail, String userNickName) {
+  public void updateUserNickNameByEmail(String userEmail, String userNickName) {
     User user = userRepository.findByUserEmail(userEmail.trim().toLowerCase())
         .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
     user.updateUserNickName(userNickName);
-    return userRepository.save(user);
+    userRepository.save(user);
   }
 
 }
