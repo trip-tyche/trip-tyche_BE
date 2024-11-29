@@ -20,3 +20,7 @@
     
 
 # 🏗️ 시스템 아키텍쳐
+![SA2](https://github.com/user-attachments/assets/67aee674-9757-48c8-9c3b-66f86c8dda65)
+
+# 🗂️ ERD
+![5-gamdiary (1)](https://github.com/user-attachments/assets/0981e3cd-684c-42bd-b328-a8c21b0ee949)
