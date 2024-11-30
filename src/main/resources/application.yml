@@ -65,6 +65,20 @@ spring:
   #      enabled: true
   redirect:
     url: http://localhost:8080/auth/redirect
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: "*"
+    endpoint:
+      prometheus:
+        enabled: true
+    metrics:
+      export:
+        prometheus:
+          enabled: true
+      server:
+        base-path: /actuator
 logging:
   level:
     org.springframework.security: DEBUG
@@ -134,7 +148,18 @@ spring:
       max-request-size: 100MB
   redirect:
     url: https://triptyche.world/login/redirect
-
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: "*"
+    endpoint:
+      prometheus:
+        enabled: true
+    metrics:
+      export:
+        prometheus:
+          enabled: true
 logging:
   level:
     org.springframework.security: DEBUG
@@ -202,7 +227,18 @@ spring:
       max-request-size: 100MB
   redirect:
     url: http://localhost:3000/login/redirect
-
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: "*"
+    endpoint:
+      prometheus:
+        enabled: true
+    metrics:
+      export:
+        prometheus:
+          enabled: true
 logging:
   level:
     org.springframework.security: DEBUG

@@ -53,7 +53,8 @@ public class SecurityConfig {
                 "/login/oauth2/code/**",
                 "/upload/**",
                 "/oauth2/success",
-                "/oauth2/authorization/**")
+                "/oauth2/authorization/**",
+                "/actuator/**")
             .permitAll()
             .anyRequest().authenticated()
         )
@@ -88,6 +89,7 @@ public class SecurityConfig {
     configuration.setAllowCredentials(true);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/actuator/**", configuration);
     source.registerCorsConfiguration("/**", configuration);
     return source;
   }
