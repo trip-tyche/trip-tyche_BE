@@ -7,18 +7,16 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/s3/files")
 public class PresignedURLController {
 
   private final PresignedURLService presignedURLService;
 
-  @PostMapping("/presigned")
+  @PostMapping("/api/trips/{tripId}/presigned-url")
   public ResponseEntity<Map<String, String>> generatePresignedUrl(
       @RequestParam String fileName,
       @RequestParam String fileType,
