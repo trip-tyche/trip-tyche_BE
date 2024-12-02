@@ -11,12 +11,12 @@ import software.amazon.awssdk.services.s3.S3Client;
 @Configuration
 public class S3Config {
 
-  //  @Value("${spring.cloud.aws.credentials.accessKey}")
-  @Value("${AWS_ACCESS_KEY}")
+  @Value("${spring.cloud.aws.credentials.accessKey}")
+//  @Value("${AWS_ACCESS_KEY}")
   private String accessKey;
 
-  //  @Value("${spring.cloud.aws.credentials.secretKey}")
-  @Value("${AWS_SECRET_KEY}")
+  @Value("${spring.cloud.aws.credentials.secretKey}")
+//  @Value("${AWS_SECRET_KEY}")
   private String secretKey;
 
   @Value("${spring.cloud.aws.s3.bucketName}")
