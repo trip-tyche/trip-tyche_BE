@@ -18,7 +18,7 @@ public enum ResultCode {
   TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, 1003, "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요."),
   INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 1004, "서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."),
   DATA_SAVE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 1005, "데이터 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."),
-
+  INVALID_REQUEST(HttpStatus.BAD_REQUEST, 1006, "요청 형식이 잘못되었습니다."),
   // 인증 및 로그인 관련 오류 코드 (2000번대)
   EMAIL_ALREADY_REGISTERED(HttpStatus.CONFLICT, 2000, "이미 가입된 이메일입니다."),
   OAUTH_SERVICE_FAILURE(HttpStatus.BAD_REQUEST, 2001, "OAuth 서비스 연동에 실패했습니다."),
@@ -48,6 +48,7 @@ public enum ResultCode {
 
   // 날짜별 정보 조회 관련 오류 코드 (6000번대)
   DATE_TRIP_NOT_FOUND(HttpStatus.NOT_FOUND, 6000, "해당 날짜의 여행 정보가 존재하지 않습니다.");
+
 
   private final HttpStatus httpStatus;
   private final int code;
