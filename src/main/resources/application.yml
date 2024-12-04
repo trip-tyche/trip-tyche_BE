@@ -243,7 +243,7 @@ logging:
   level:
     org.springframework.security: DEBUG
     com.fivefeeling.memory.global.oauth: DEBUG
-    #    com.fivefeeling.memory.global.s3: DEBUG
+    com.fivefeeling.memory.global.s3: DEBUG
     #    software.amazon.awssdk: DEBUG
     org.hibernate:
       sql: debug
