@@ -77,7 +77,7 @@ public class MediaProcessingService {
           })
           .collect(Collectors.toList());
       mediaFileRepository.saveAll(mediaFiles);
-      log.info("MediaFile 배치 저장 완료 스레드 {}", Thread.currentThread().getName());
+//      log.info("MediaFile 배치 저장 완료 스레드 {}", Thread.currentThread().getName());
       return mediaFiles;
     }, ioBoundTaskExecutor);
   }
@@ -88,13 +88,13 @@ public class MediaProcessingService {
 
     // 병렬 작업 - 메타데이터 추출
     CompletableFuture<ImageMetadataDTO> metadataFuture = CompletableFuture.supplyAsync(() -> {
-      log.info("메타데이터 추출 시작 '{}' 스레드 {}", file.getOriginalFilename(), Thread.currentThread().getName());
+//      log.info("메타데이터 추출 시작 '{}' 스레드 {}", file.getOriginalFilename(), Thread.currentThread().getName());
       return metadataExtractorService.extractMetadata(file);
     }, cpuBoundTaskExecutor);
 
     // I/O 바운드 작업 - S3 업로드
     CompletableFuture<UploadResult> uploadFuture = CompletableFuture.supplyAsync(() -> {
-      log.info("S3 업로드 시작 '{}' 스레드 {}", file.getOriginalFilename(), Thread.currentThread().getName());
+//      log.info("S3 업로드 시작 '{}' 스레드 {}", file.getOriginalFilename(), Thread.currentThread().getName());
       return s3UploadService.uploadFile(file, "uploads/" + trip.getTripId());
     }, ioBoundTaskExecutor);
 

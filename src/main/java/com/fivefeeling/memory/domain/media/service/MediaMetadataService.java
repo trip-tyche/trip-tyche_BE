@@ -10,6 +10,7 @@ import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.global.common.ResultCode;
 import com.fivefeeling.memory.global.exception.CustomException;
 import com.fivefeeling.memory.global.util.DateUtil;
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,7 +40,6 @@ public class MediaMetadataService {
 
           String mediaKey = extractMediaKey(file.mediaLink());
 
-          // Create MediaFile without modifying PinPoint's mediaFiles collection
           return MediaFile.builder()
               .trip(trip)
               .pinPoint(pinPoint)
@@ -57,6 +57,7 @@ public class MediaMetadataService {
   }
 
   private String extractMediaKey(String mediaLink) {
-    return mediaLink.replace("https://" + bucketName + ".s3.amazonaws.com/", "");
+    URI uri = URI.create(mediaLink);
+    return uri.getPath().substring(1);
   }
 }
