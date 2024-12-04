@@ -17,7 +17,7 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -102,7 +102,7 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate:
@@ -164,6 +164,8 @@ logging:
   level:
     org.springframework.security: DEBUG
     com.fivefeeling.memory.global.oauth: DEBUG
+    com.fivefeeling.memory.global.s3: DEBUG
+    software.amazon.awssdk: DEBUG
   file:
     path: /var/log/spring-boot/
     max-history: 2
@@ -243,6 +245,16 @@ logging:
   level:
     org.springframework.security: DEBUG
     com.fivefeeling.memory.global.oauth: DEBUG
+    com.fivefeeling.memory.global.s3: DEBUG
+    software.amazon.awssdk: DEBUG
+    org.hibernate:
+      sql: debug
+      type:
+        descriptor:
+          sql:
+            BasicBinder: trace
+
+
   file:
     path: /var/log/spring-boot/
     max-history: 2

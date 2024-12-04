@@ -33,7 +33,7 @@ public class PinPoint {
   @JoinColumn(name = "tripId", nullable = false)
   private Trip trip;
 
-  @OneToMany(mappedBy = "pinPoint", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "pinPoint", cascade = CascadeType.ALL)
   private List<MediaFile> mediaFiles;
 
   @Column(name = "latitude")
