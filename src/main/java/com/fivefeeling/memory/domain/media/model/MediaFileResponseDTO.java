@@ -12,7 +12,7 @@ public record MediaFileResponseDTO(
     LocalDateTime recordDate,
     Double latitude,
     Double longitude,
-    List<MediaFileResponseDTO> images
+    List<MediaFileResponseDTO> imagesLink
 ) {
 
   // 기본 상세 정보를 포함한 객체 생성
@@ -24,7 +24,14 @@ public record MediaFileResponseDTO(
       Double latitude,
       Double longitude
   ) {
-    return new MediaFileResponseDTO(mediaFileId, mediaLink, mediaType, recordDate, latitude, longitude, null);
+    return new MediaFileResponseDTO(
+        mediaFileId,
+        mediaLink,
+        mediaType,
+        recordDate,
+        latitude,
+        longitude,
+        null);
   }
 
   // 특정 날짜에 포함된 이미지 목록을 위한 생성
@@ -33,15 +40,15 @@ public record MediaFileResponseDTO(
   }
 
   // 특정 날짜와 함께 이미지 목록을 포함하는 객체 생성
-  public static MediaFileResponseDTO firstImageAndImages(
-      String mediaLink,
-      List<MediaFileResponseDTO> images
+  public static MediaFileResponseDTO imagesAndFirstImage(
+      String firstMediaLink,
+      List<MediaFileResponseDTO> imagesLink
   ) {
-    return new MediaFileResponseDTO(null, mediaLink, null, null, null, null, images);
+    return new MediaFileResponseDTO(null, firstMediaLink, null, null, null, null, imagesLink);
   }
 
-  // 요약된 미디어 파일 정보 생성
-  public static MediaFileResponseDTO mediaFileSummary(Long mediaFileId, String mediaLink, Double latitude, Double longitude) {
-    return new MediaFileResponseDTO(mediaFileId, mediaLink, null, null, latitude, longitude, null);
+  // 핀포인트 이미지 링크 및 촬영일자
+  public static MediaFileResponseDTO mediaFileSummary(String mediaLink, LocalDateTime recordDate) {
+    return new MediaFileResponseDTO(null, mediaLink, null, recordDate, null, null, null);
   }
 }

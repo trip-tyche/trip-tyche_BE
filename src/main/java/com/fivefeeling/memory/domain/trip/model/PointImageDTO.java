@@ -8,7 +8,7 @@ public record PointImageDTO(
     Double longitude,
     String startDate,
     String endDate,
-    MediaFileResponseDTO firstImage
+    MediaFileResponseDTO images
 ) {
 
 }
