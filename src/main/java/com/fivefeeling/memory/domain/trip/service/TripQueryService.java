@@ -135,39 +135,42 @@ public class TripQueryService {
       throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
     }
 
+    String startDate = DateFormatter.formatLocalDateTimeToString(
+        mediaFiles.stream()
+            .map(MediaFile::getRecordDate)
+            .min(LocalDateTime::compareTo)
+            .orElse(null)
+    );
+
+    String endDate = DateFormatter.formatLocalDateTimeToString(
+        mediaFiles.stream()
+            .map(MediaFile::getRecordDate)
+            .max(LocalDateTime::compareTo)
+            .orElse(null)
+    );
+
     String firstMediaLink = mediaFiles.get(0).getMediaLink();
 
-    List<MediaFileResponseDTO> images = mediaFiles.stream()
-        .map(file -> MediaFileResponseDTO.detailed(
-            file.getMediaFileId(),
+    List<MediaFileResponseDTO> imagesLink = mediaFiles.stream()
+        .map(file -> MediaFileResponseDTO.mediaFileSummary(
             file.getMediaLink(),
-            null,
-            null,
-            null,
-            null
+            file.getRecordDate()
         ))
         .collect(Collectors.toList());
 
+    MediaFileResponseDTO images = MediaFileResponseDTO.imagesAndFirstImage(
+        firstMediaLink,
+        imagesLink
+    );
     return new PointImageDTO(
         pinPoint.getPinPointId(),
         pinPoint.getLatitude(),
         pinPoint.getLongitude(),
-        DateFormatter.formatLocalDateTimeToString(
-            mediaFiles.stream()
-                .map(MediaFile::getRecordDate)
-                .min(LocalDateTime::compareTo)
-                .orElse(null)
-        ),
-        DateFormatter.formatLocalDateTimeToString(
-            mediaFiles.stream()
-                .map(MediaFile::getRecordDate)
-                .max(LocalDateTime::compareTo)
-                .orElse(null)
-        ),
-        MediaFileResponseDTO.firstImageAndImages(firstMediaLink, images)
+        startDate,
+        endDate,
+        images
     );
   }
-
 
   @Transactional(readOnly = true)
   public MediaFileResponseDTO getImagesByDate(Long tripId, String date) {
