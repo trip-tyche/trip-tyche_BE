@@ -12,6 +12,7 @@ import com.fivefeeling.memory.domain.user.repository.UserRepository;
 import com.fivefeeling.memory.global.common.ResultCode;
 import com.fivefeeling.memory.global.exception.CustomException;
 import java.time.LocalDate;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,7 +65,8 @@ public class TripManagementService {
         updatedTrip.getCountry(),
         formatLocalDateToString(updatedTrip.getStartDate()),
         formatLocalDateToString(updatedTrip.getEndDate()),
-        updatedTrip.getHashtagsAsList()
+        updatedTrip.getHashtagsAsList(),
+        List.of()
     );
   }
 

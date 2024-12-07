@@ -52,7 +52,8 @@ public class TripQueryService {
             trip.getCountry(),
             formatLocalDateToString(trip.getStartDate()),
             formatLocalDateToString(trip.getEndDate()),
-            trip.getHashtagsAsList()
+            trip.getHashtagsAsList(),
+            List.of()
         ))
         .collect(Collectors.toList());
     return UserTripInfoResponseDTO.withoutPinPoints(
@@ -66,13 +67,24 @@ public class TripQueryService {
     Trip trip = tripRepository.findByTripId(tripId)
         .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
 
+    List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripId(tripId);
+
+    List<String> imagesDate = mediaFiles.stream()
+        .map(MediaFile::getRecordDate)
+        .map(LocalDateTime::toLocalDate)
+        .distinct()
+        .sorted()
+        .map(DateFormatter::formatLocalDateToString)
+        .toList();
+
     return new TripInfoResponseDTO(
         trip.getTripId(),
         trip.getTripTitle(),
         trip.getCountry(),
         formatLocalDateToString(trip.getStartDate()),
         formatLocalDateToString(trip.getEndDate()),
-        trip.getHashtagsAsList()
+        trip.getHashtagsAsList(),
+        imagesDate
     );
   }
 

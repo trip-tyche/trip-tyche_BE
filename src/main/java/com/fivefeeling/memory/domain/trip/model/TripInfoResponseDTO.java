@@ -8,7 +8,8 @@ public record TripInfoResponseDTO(
     String country,
     String startDate,
     String endDate,
-    List<String> hashtags
+    List<String> hashtags,
+    List<String> imagesDate
 ) {
 
   public static TripInfoResponseDTO withoutHashtags(
@@ -18,11 +19,46 @@ public record TripInfoResponseDTO(
       String startDate,
       String endDate
   ) {
-    return new TripInfoResponseDTO(tripId, tripTitle, country, startDate, endDate, null);
+    return new TripInfoResponseDTO(
+        tripId,
+        tripTitle,
+        country,
+        startDate,
+        endDate,
+        null,
+        null);
   }
 
   // tripId만 반환하는 메서드
   public static TripInfoResponseDTO tripIdOnly(Long tripId) {
-    return new TripInfoResponseDTO(tripId, null, null, null, null, null);
+    return new TripInfoResponseDTO(
+        tripId,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    );
+  }
+
+  public static TripInfoResponseDTO withImagesDate(
+      Long tripId,
+      String tripTitle,
+      String country,
+      String startDate,
+      String endDate,
+      List<String> hashtags,
+      List<String> imagesDate
+  ) {
+    return new TripInfoResponseDTO(
+        tripId,
+        tripTitle,
+        country,
+        startDate,
+        endDate,
+        hashtags,
+        imagesDate
+    );
   }
 }
