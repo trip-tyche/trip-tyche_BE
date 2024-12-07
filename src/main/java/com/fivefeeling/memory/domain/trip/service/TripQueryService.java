@@ -77,7 +77,7 @@ public class TripQueryService {
         .map(DateFormatter::formatLocalDateToString)
         .toList();
 
-    return new TripInfoResponseDTO(
+    return TripInfoResponseDTO.withImagesDate(
         trip.getTripId(),
         trip.getTripTitle(),
         trip.getCountry(),
@@ -97,7 +97,7 @@ public class TripQueryService {
         .map(pinPointFirstImage())
         .collect(Collectors.toList());
 
-    TripInfoResponseDTO tripInfo = TripInfoResponseDTO.withoutHashtags(
+    TripInfoResponseDTO tripInfo = TripInfoResponseDTO.withoutOptionalFields(
         trip.getTripId(),
         trip.getTripTitle(),
         trip.getCountry(),
