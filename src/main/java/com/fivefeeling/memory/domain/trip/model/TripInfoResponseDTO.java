@@ -12,7 +12,7 @@ public record TripInfoResponseDTO(
     List<String> imagesDate
 ) {
 
-  public static TripInfoResponseDTO withoutHashtags(
+  public static TripInfoResponseDTO withoutOptionalFields(
       Long tripId,
       String tripTitle,
       String country,
