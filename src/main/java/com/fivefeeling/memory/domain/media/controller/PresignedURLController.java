@@ -39,5 +39,6 @@ public class PresignedURLController {
         .collect(Collectors.toList());
 
     return RestResponse.success(new FilePresignedResponse(presignedUrls));
+
   }
 }

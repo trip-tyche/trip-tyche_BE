@@ -47,7 +47,10 @@ public enum ResultCode {
   FILE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, 5004, "업로드된 파일 삭제에 실패했습니다."),
 
   // 날짜별 정보 조회 관련 오류 코드 (6000번대)
-  DATE_TRIP_NOT_FOUND(HttpStatus.NOT_FOUND, 6000, "해당 날짜의 여행 정보가 존재하지 않습니다.");
+  DATE_TRIP_NOT_FOUND(HttpStatus.NOT_FOUND, 6000, "해당 날짜의 여행 정보가 존재하지 않습니다."),
+
+  //
+  DATA_NOT_FOUND(HttpStatus.NOT_FOUND, 7000, "데이터를 찾을 수 없습니다.");
 
 
   private final HttpStatus httpStatus;

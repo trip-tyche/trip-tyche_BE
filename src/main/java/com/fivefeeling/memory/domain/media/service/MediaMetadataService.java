@@ -25,6 +25,7 @@ public class MediaMetadataService {
   private final TripRepository tripRepository;
   private final MediaFileRepository mediaFileRepository;
   private final PinPointService pinPointService;
+  private final RedisDataService redisDataService;
 
   @Value("${spring.cloud.aws.s3.bucketName}")
   private String bucketName;
@@ -53,7 +54,21 @@ public class MediaMetadataService {
         })
         .collect(Collectors.toList());
 
-    mediaFileRepository.saveAll(mediaFiles);
+    List<MediaFile> saveMediaFiles = mediaFileRepository.saveAll(mediaFiles);
+
+    saveMediaFiles.forEach(savedMediaFile -> {
+      Long mediaFileId = savedMediaFile.getMediaFileId();
+
+      // Redis에 저장
+      if (savedMediaFile.getLatitude() == 0.0 && savedMediaFile.getLongitude() == 0.0) {
+        redisDataService.saveZeroLocationData(
+            tripId,
+            mediaFileId,
+            savedMediaFile.getMediaLink(),
+            savedMediaFile.getRecordDate().toString()
+        );
+      }
+    });
   }
 
   private String extractMediaKey(String mediaLink) {
