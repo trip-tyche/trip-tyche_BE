@@ -111,10 +111,6 @@ spring:
     redis:
       host: redis
       port: 6379
-<<<<<<< Updated upstream
-      password:
-=======
->>>>>>> Stashed changes
       timeout: 1000
   jpa:
     hibernate:
@@ -200,14 +196,8 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
   data:
     redis:
-<<<<<<< Updated upstream
-      host: redis
-      port: 6379
-      password:
-=======
       host: redis-staging
       port: 6379
->>>>>>> Stashed changes
       timeout: 1000
   jpa:
     hibernate:
