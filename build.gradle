@@ -68,6 +68,11 @@ dependencies {
 
     // Actuator
     implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    // Redis 설정
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.session:spring-session-data-redis'
+
 }
 
 tasks.named('test') {

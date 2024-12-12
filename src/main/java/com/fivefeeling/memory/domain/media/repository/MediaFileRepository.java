@@ -4,6 +4,7 @@ import com.fivefeeling.memory.domain.media.model.MediaFile;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -26,4 +27,10 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
   List<MediaFile> findAllByTrip(Trip trip);
 
   List<MediaFile> findByTripTripId(Long tripId);
+
+  // 특정 tripId의 첫 번째 MediaFile 조회
+  Optional<MediaFile> findFirstByTripTripIdOrderByMediaFileIdAsc(Long tripId);
+
+  // 0, 0 좌표 데이터를 조회하는 메서드
+  List<MediaFile> findByLatitudeAndLongitude(Double latitude, Double longitude);
 }
