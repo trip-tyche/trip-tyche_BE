@@ -15,7 +15,9 @@ public class RedisConfig {
   @Bean
   public RedisConnectionFactory redisConnectionFactory() {
     // Lettuce를 Redis 연결팩토리로 사용
-    return new LettuceConnectionFactory();
+    LettuceConnectionFactory factory = new LettuceConnectionFactory("redis", 6379);
+    factory.afterPropertiesSet();
+    return factory;
   }
 
   @Bean

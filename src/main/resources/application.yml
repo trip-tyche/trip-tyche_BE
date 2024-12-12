@@ -109,7 +109,6 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
   data:
     redis:
-      host: redis
       port: 6379
       timeout: 1000
   jpa:
@@ -173,6 +172,7 @@ spring:
       export:
         prometheus:
           enabled: true
+
 logging:
   level:
     org.springframework.security: DEBUG
