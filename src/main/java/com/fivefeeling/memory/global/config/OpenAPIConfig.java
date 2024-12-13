@@ -1,7 +1,10 @@
 package com.fivefeeling.memory.global.config;
 
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.tags.Tag;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
@@ -16,14 +19,14 @@ public class OpenAPIConfig {
         .info(new Info()
             .title("Trip Tyche API")
             .version("1.0"))
-//        .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
-//        .components(new Components()
-//            .addSecuritySchemes("bearerAuth",
-//                new SecurityScheme()
-//                    .name("bearerAuth")
-//                    .type(SecurityScheme.Type.HTTP)
-//                    .scheme("bearer")
-//                    .bearerFormat("JWT")))
+        .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+        .components(new Components()
+            .addSecuritySchemes("bearerAuth",
+                new SecurityScheme()
+                    .name("bearerAuth")
+                    .type(SecurityScheme.Type.HTTP)
+                    .scheme("bearer")
+                    .bearerFormat("JWT")))
         .tags(List.of(
             new Tag().name("1. 메인 페이지 API"),
             new Tag().name("2. 여행관리 페이지 API"),
