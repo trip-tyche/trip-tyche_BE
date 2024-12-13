@@ -21,7 +21,7 @@ public class MediaMetadataController {
 
   private final MediaMetadataService mediaMetadataService;
 
-  @Operation(summary = "미디어 메타데이터 등록", description = "https://www.notion.so/maristadev/15066958e5b3806ab0d7d567c80c975b?pvs=4' target='_blank'>API 명세서</a>")
+  @Operation(summary = "미디어 메타데이터 등록", description = "<a  https://www.notion.so/maristadev/15066958e5b3806ab0d7d567c80c975b?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping("/{tripId}/media-files")
   public RestResponse<String> processMetadata(
       @PathVariable("tripId") Long tripId,
