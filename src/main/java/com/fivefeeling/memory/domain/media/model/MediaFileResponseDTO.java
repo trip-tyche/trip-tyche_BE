@@ -51,4 +51,8 @@ public record MediaFileResponseDTO(
   public static MediaFileResponseDTO mediaFileSummary(String mediaLink, LocalDateTime recordDate) {
     return new MediaFileResponseDTO(null, mediaLink, null, recordDate, null, null, null);
   }
+
+  public static MediaFileResponseDTO imageLocation(Double latitude, Double longitude) {
+    return new MediaFileResponseDTO(null, null, null, null, latitude, longitude, null);
+  }
 }

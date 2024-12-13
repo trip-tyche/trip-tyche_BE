@@ -5,6 +5,8 @@ import com.fivefeeling.memory.domain.media.dto.FilePresignedResponse;
 import com.fivefeeling.memory.domain.media.dto.FilePresignedResponse.PresignedUrlDetail;
 import com.fivefeeling.memory.global.common.RestResponse;
 import com.fivefeeling.memory.global.s3.PresignedURLService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,11 +19,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "3. 여행등록 페이지 API")
 @RequestMapping("/api/trips")
 public class PresignedURLController {
 
   private final PresignedURLService presignedURLService;
 
+  @Operation(summary = "Presigned URL 요청", description = "https://www.notion.so/maristadev/15066958e5b380cb92cec07208539ca8?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping("{tripId}/presigned-url")
   public RestResponse<FilePresignedResponse> generatePresignedUrl(
       @PathVariable Long tripId,

@@ -7,6 +7,8 @@ import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.global.common.ResultCode;
 import com.fivefeeling.memory.global.exception.CustomException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -25,6 +27,8 @@ public class FileUploadController {
   private final MediaProcessingService mediaProcessingService;
   private final TripRepository tripRepository;
 
+  @Tag(name = "사용하지 않는 API")
+  @Operation(deprecated = true)
   @PostMapping("/api/trips/{tripId}/upload")
   public CompletableFuture<ResponseEntity<List<MediaFileResponseDTO>>> uploadMediaFiles(
       @RequestParam("files") List<MultipartFile> files, // 여러 파일을 받을 수 있도록 변경

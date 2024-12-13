@@ -38,6 +38,7 @@ public enum ResultCode {
   PINPOINT_NOT_FOUND(HttpStatus.NOT_FOUND, 4003, "해당 핀포인트가 존재하지 않습니다."),
   MEDIA_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, 4004, "해당 미디어 파일이 존재하지 않습니다."),
   INVALID_DATE_FORMAT(HttpStatus.BAD_REQUEST, 4005, "잘못된 날짜 형식입니다. yyyy-MM-dd 형식으로 입력해주세요."),
+  INVALID_COORDINATE(HttpStatus.BAD_REQUEST, 4006, "잘못된 좌표 형식입니다."),
 
   // 파일 업로드 및 처리 관련 오류 코드 (5000번대)
   S3_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, 5000, "S3 업로드에 실패했습니다."),
@@ -50,7 +51,8 @@ public enum ResultCode {
   DATE_TRIP_NOT_FOUND(HttpStatus.NOT_FOUND, 6000, "해당 날짜의 여행 정보가 존재하지 않습니다."),
 
   //
-  DATA_NOT_FOUND(HttpStatus.NOT_FOUND, 7000, "데이터를 찾을 수 없습니다.");
+  DATA_NOT_FOUND(HttpStatus.NOT_FOUND, 7000, "해당 tripId의 위도 경도가 없거나 전부 0,0 입니다."),
+  ;
 
 
   private final HttpStatus httpStatus;
