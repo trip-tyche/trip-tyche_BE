@@ -52,6 +52,7 @@ public enum ResultCode {
 
   //
   DATA_NOT_FOUND(HttpStatus.NOT_FOUND, 7000, "해당 tripId의 위도 경도가 없거나 전부 0,0 입니다."),
+  EDIT_DATA_NOT_FOUND(HttpStatus.NOT_FOUND, 7001, "수정할 데이터가 없습니다."),
   ;
 
 

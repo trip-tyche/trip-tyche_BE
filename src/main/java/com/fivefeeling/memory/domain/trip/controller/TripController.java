@@ -29,7 +29,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -196,14 +195,14 @@ public class TripController {
   @Tag(name = "6. 위치정보 없는 수정 페이지 API")
   @Operation(summary = "위치정보 없는 이미지 조회(Redis)", description = "<a href='https://www.notion.so/maristadev/f15de88a76ff49da85d3d970d8e64aff?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}/images/unlocated")
-  public ResponseEntity<List<UnlocatedImageResponseDTO>> getUnlocatedImages(@PathVariable Long tripId) {
+  public RestResponse<List<UnlocatedImageResponseDTO>> getUnlocatedImages(@PathVariable Long tripId) {
     String redisKey = "trip:" + tripId;
 
     Map<Object, Object> redisData = imageQueueService.getImageQueue(redisKey);
 
     // 데이터가 없을 경우
     if (redisData.isEmpty()) {
-      return ResponseEntity.noContent().build();
+      return RestResponse.error(ResultCode.EDIT_DATA_NOT_FOUND);
     }
 
     // 날짜별로 데이터를 그룹화
@@ -228,13 +227,13 @@ public class TripController {
         .map(entry -> new UnlocatedImageResponseDTO(entry.getKey(), entry.getValue()))
         .collect(Collectors.toList());
 
-    return ResponseEntity.ok(response);
+    return RestResponse.success(response);
   }
 
   @Tag(name = "6. 위치정보 없는 수정 페이지 API")
   @Operation(summary = "위치정보 수정", description = "<a href='https://www.notion.so/maristadev/15b66958e5b380a4bbfafbe23b0f28b0?pvs=4' target='_blank'>API 명세서</a>")
   @PutMapping("/api/trips/{tripId}/images/unlocated/{mediaFileId}")
-  public ResponseEntity<String> updateImageLocation(
+  public RestResponse<String> updateImageLocation(
       @PathVariable Long tripId,
       @PathVariable Long mediaFileId,
       @RequestBody MediaFileRequestDTO mediaFileRequestDTO) {
@@ -273,13 +272,13 @@ public class TripController {
     String redisKey = "trip:" + tripId;
     imageQueueService.deleteFromImageQueue(redisKey, String.valueOf(mediaFileId));
 
-    return ResponseEntity.ok("이미지 위치 정보가 업데이트 되었습니다.");
+    return RestResponse.success("이미지 위치 정보가 업데이트 되었습니다.");
   }
 
   @Tag(name = "6. 위치정보 없는 수정 페이지 API")
   @Operation(summary = "첫번째 이미지 위도 경도 조회", description = "<a href='https://www.notion.so/maristadev/15b66958e5b3805dbedacd23536dc98f?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}/images/firstimage")
-  public ResponseEntity<RestResponse<MediaFileResponseDTO>> getImagesFirstimage(
+  public RestResponse<MediaFileResponseDTO> getImagesFirstimage(
       @PathVariable Long tripId) {
     Optional<MediaFile> firstMediaFile = mediaFileRepository.findFirstByTripTripIdOrderByMediaFileIdAsc(tripId);
     if (firstMediaFile.isEmpty() || firstMediaFile.get().getLongitude() == 0.0 || firstMediaFile.get().getLatitude() == 0.0) {
@@ -287,6 +286,6 @@ public class TripController {
     }
     MediaFile mediaFile = firstMediaFile.get();
     MediaFileResponseDTO response = MediaFileResponseDTO.imageLocation(mediaFile.getLatitude(), mediaFile.getLongitude());
-    return ResponseEntity.ok(RestResponse.success(response));
+    return RestResponse.success(response);
   }
 }
