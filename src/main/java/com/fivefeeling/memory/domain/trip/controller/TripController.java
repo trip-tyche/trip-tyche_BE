@@ -6,12 +6,12 @@ import com.fivefeeling.memory.domain.media.model.MediaFile;
 import com.fivefeeling.memory.domain.media.model.MediaFileResponseDTO;
 import com.fivefeeling.memory.domain.media.repository.MediaFileRepository;
 import com.fivefeeling.memory.domain.pinpoint.model.PinPoint;
-import com.fivefeeling.memory.domain.pinpoint.model.PinPointTripInfoResponseDTO;
 import com.fivefeeling.memory.domain.pinpoint.service.PinPointService;
 import com.fivefeeling.memory.domain.trip.model.PointImageDTO;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.model.TripInfoRequestDTO;
 import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
+import com.fivefeeling.memory.domain.trip.model.TripResponseDTO;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.trip.service.TripManagementService;
 import com.fivefeeling.memory.domain.trip.service.TripQueryService;
@@ -163,8 +163,8 @@ public class TripController {
   @Tag(name = "4. Map 페이지 API")
   @Operation(summary = "지도위 페이지 여행 정보 조회", description = "<a href='https://www.notion.so/maristadev/fc14909a1ec5481ca37b58924637be20?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}/info")
-  public RestResponse<PinPointTripInfoResponseDTO> getTripInfo(@PathVariable Long tripId) {
-    PinPointTripInfoResponseDTO tripInfo = tripQueryService.getTripInfoById(tripId);
+  public RestResponse<TripResponseDTO> getTripInfo(@PathVariable Long tripId) {
+    TripResponseDTO tripInfo = tripQueryService.getTripInfoById(tripId);
     return RestResponse.success(tripInfo);
   }
 

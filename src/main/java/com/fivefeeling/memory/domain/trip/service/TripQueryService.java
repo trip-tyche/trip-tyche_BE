@@ -8,11 +8,11 @@ import com.fivefeeling.memory.domain.media.model.MediaFileResponseDTO;
 import com.fivefeeling.memory.domain.media.repository.MediaFileRepository;
 import com.fivefeeling.memory.domain.pinpoint.model.PinPoint;
 import com.fivefeeling.memory.domain.pinpoint.model.PinPointResponseDTO;
-import com.fivefeeling.memory.domain.pinpoint.model.PinPointTripInfoResponseDTO;
 import com.fivefeeling.memory.domain.pinpoint.repository.PinPointRepository;
 import com.fivefeeling.memory.domain.trip.model.PointImageDTO;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
+import com.fivefeeling.memory.domain.trip.model.TripResponseDTO;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.user.model.User;
 import com.fivefeeling.memory.domain.user.model.UserTripInfoResponseDTO;
@@ -25,7 +25,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -89,52 +88,71 @@ public class TripQueryService {
   }
 
 
-  public PinPointTripInfoResponseDTO getTripInfoById(Long tripId) {
+  public TripResponseDTO getTripInfoById(Long tripId) {
     Trip trip = tripRepository.findById(tripId)
         .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
 
-    List<PinPointResponseDTO> pinPoints = pinPointRepository.findByTripTripId(tripId).stream()
-        .map(pinPointFirstImage())
-        .collect(Collectors.toList());
+//    List<PinPointResponseDTO> pinPoints = pinPointRepository.findByTripTripId(tripId).stream()
+//        .map(pinPointFirstImage())
+//        .collect(Collectors.toList());
 
-    TripInfoResponseDTO tripInfo = TripInfoResponseDTO.withoutOptionalFields(
-        trip.getTripId(),
+    List<PinPointResponseDTO> pinPoints = pinPointRepository.findFirstMediaFileByTripId(tripId);
+    List<MediaFileResponseDTO> mediaFiles = pinPointRepository.findMediaFilesByTripId(tripId);
+
+//    TripInfoResponseDTO tripInfo = TripInfoResponseDTO.withoutOptionalFields(
+//        trip.getTripId(),
+//        trip.getTripTitle(),
+//        trip.getCountry(),
+//        formatLocalDateToString(trip.getStartDate()),
+//        formatLocalDateToString(trip.getEndDate())
+//    );
+//
+//    List<MediaFileResponseDTO> mediaFiles = mediaFileRepository.findByTripTripId(tripId)
+//        .stream()
+//        .map(mediaFile -> MediaFileResponseDTO.detailed(
+//            mediaFile.getMediaFileId(),
+//            mediaFile.getMediaLink(),
+//            mediaFile.getMediaType(),
+//            mediaFile.getRecordDate(),
+//            mediaFile.getLatitude(),
+//            mediaFile.getLongitude()
+//        ))
+//        .collect(Collectors.toList());
+//
+//    return PinPointTripInfoResponseDTO.from(tripInfo, pinPoints, mediaFiles);
+
+    return new TripResponseDTO(
         trip.getTripTitle(),
-        trip.getCountry(),
         formatLocalDateToString(trip.getStartDate()),
-        formatLocalDateToString(trip.getEndDate())
+        formatLocalDateToString(trip.getEndDate()),
+        pinPoints.stream()
+            .map(pinPoint -> new PinPointResponseDTO(
+                pinPoint.pinPointId(),
+                pinPoint.latitude(),
+                pinPoint.longitude(),
+                pinPoint.recordDate(),
+                pinPoint.mediaLink()
+            ))
+            .toList(),
+        mediaFiles
     );
-
-    List<MediaFileResponseDTO> mediaFiles = mediaFileRepository.findByTripTripId(tripId)
-        .stream()
-        .map(mediaFile -> MediaFileResponseDTO.detailed(
-            mediaFile.getMediaFileId(),
-            mediaFile.getMediaLink(),
-            mediaFile.getMediaType(),
-            mediaFile.getRecordDate(),
-            mediaFile.getLatitude(),
-            mediaFile.getLongitude()
-        ))
-        .collect(Collectors.toList());
-
-    return PinPointTripInfoResponseDTO.from(tripInfo, pinPoints, mediaFiles);
   }
 
-  private Function<PinPoint, PinPointResponseDTO> pinPointFirstImage() {
-    return pinPoint -> {
-      MediaFile mediaFile = pinPoint.getMediaFiles().stream()
-          .findFirst()
-          .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
-
-      return new PinPointResponseDTO(
-          pinPoint.getPinPointId(),
-          mediaFile.getLatitude(),
-          mediaFile.getLongitude(),
-          formatLocalDateTimeToString(mediaFile.getRecordDate()),
-          mediaFile.getMediaLink()
-      );
-    };
-  }
+//  private Function<PinPoint, PinPointResponseDTO> pinPointFirstImage() {
+//    return pinPoint -> {
+//      MediaFile mediaFile = pinPoint.getMediaFiles().stream()
+//          .findFirst()
+//          .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
+//
+//      return new PinPointResponseDTO(
+//          pinPoint.getPinPointId(),
+//          mediaFile.getLatitude(),
+//          mediaFile.getLongitude(),
+//          formatLocalDateTimeToString(mediaFile.getRecordDate()),
+//          mediaFile.getMediaLink()
+//      );
+//    };
+//  }
 
 
   @Transactional(readOnly = true)
@@ -147,14 +165,14 @@ public class TripQueryService {
       throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
     }
 
-    String startDate = DateFormatter.formatLocalDateTimeToString(
+    String startDate = formatLocalDateTimeToString(
         mediaFiles.stream()
             .map(MediaFile::getRecordDate)
             .min(LocalDateTime::compareTo)
             .orElse(null)
     );
 
-    String endDate = DateFormatter.formatLocalDateTimeToString(
+    String endDate = formatLocalDateTimeToString(
         mediaFiles.stream()
             .map(MediaFile::getRecordDate)
             .max(LocalDateTime::compareTo)
