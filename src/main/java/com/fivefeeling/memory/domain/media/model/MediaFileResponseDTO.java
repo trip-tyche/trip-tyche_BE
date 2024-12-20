@@ -1,15 +1,15 @@
 package com.fivefeeling.memory.domain.media.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.LocalDateTime;
 import java.util.List;
-import net.minidev.json.annotate.JsonIgnore;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(value = {"mediaType"})
 public record MediaFileResponseDTO(
     Long mediaFileId,
     String mediaLink,
-    @JsonIgnore
     String mediaType,
     LocalDateTime recordDate,
     Double latitude,
