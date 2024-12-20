@@ -51,6 +51,7 @@ public class TripController {
   private final MediaFileRepository mediaFileRepository;
   private final PinPointService pinPointService;
   private final TripRepository tripRepository;
+  private final Object lock = new Object();
 
   @Tag(name = "2. 여행관리 페이지 API")
   @Operation(summary = "tripId 생성", description = "<a href='https://www.notion.so/maristadev/12d66958e5b380c8b6c2ca99cbc2f752?pvs=4' target='_blank'>API 명세서</a>")
@@ -238,41 +239,48 @@ public class TripController {
       @PathVariable Long mediaFileId,
       @RequestBody MediaFileRequestDTO mediaFileRequestDTO) {
 
-    MediaFileRequestDTO latLngOnlyDTO = MediaFileRequestDTO.fromLatitudeAndLongitude(
-        mediaFileRequestDTO.latitude(),
-        mediaFileRequestDTO.longitude()
-    );
+    synchronized (lock) {
+      MediaFileRequestDTO latLngOnlyDTO = MediaFileRequestDTO.fromLatitudeAndLongitude(
+          mediaFileRequestDTO.latitude(),
+          mediaFileRequestDTO.longitude()
+      );
 
-    // 요청 데이터에서 위도와 경도 가져오기
-    Double newLatitude = latLngOnlyDTO.latitude();
-    Double newLongitude = latLngOnlyDTO.longitude();
+//    MediaFileRequestDTO latLngOnlyDTO = MediaFileRequestDTO.fromLatitudeAndLongitude(
+//        mediaFileRequestDTO.latitude(),
+//        mediaFileRequestDTO.longitude()
+//    );
 
-    if (newLatitude == null || newLongitude == null) {
-      throw new CustomException(ResultCode.INVALID_COORDINATE);
+      // 요청 데이터에서 위도와 경도 가져오기
+      Double newLatitude = latLngOnlyDTO.latitude();
+      Double newLongitude = latLngOnlyDTO.longitude();
+
+      if (newLatitude == null || newLongitude == null) {
+        throw new CustomException(ResultCode.INVALID_COORDINATE);
+      }
+
+      // Trip 조회
+      Trip trip = tripRepository.findById(tripId)
+          .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+
+      // MediaFile 조회
+      MediaFile mediaFile = mediaFileRepository.findById(mediaFileId)
+          .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
+
+      // PinPoint 찾기 또는 생성
+      PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, newLatitude, newLongitude);
+
+      // MediaFile 업데이트
+      mediaFile.setLatitude(newLatitude);
+      mediaFile.setLongitude(newLongitude);
+      mediaFile.setPinPoint(pinPoint);
+      mediaFileRepository.save(mediaFile);
+
+      // Redis에서 데이터 삭제
+      String redisKey = "trip:" + tripId;
+      imageQueueService.deleteFromImageQueue(redisKey, String.valueOf(mediaFileId));
+
+      return RestResponse.success("이미지 위치 정보가 업데이트 되었습니다.");
     }
-
-    // Trip 조회
-    Trip trip = tripRepository.findById(tripId)
-        .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
-
-    // MediaFile 조회
-    MediaFile mediaFile = mediaFileRepository.findById(mediaFileId)
-        .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
-
-    // PinPoint 찾기 또는 생성
-    PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, newLatitude, newLongitude);
-
-    // MediaFile 업데이트
-    mediaFile.setLatitude(newLatitude);
-    mediaFile.setLongitude(newLongitude);
-    mediaFile.setPinPoint(pinPoint);
-    mediaFileRepository.save(mediaFile);
-
-    // Redis에서 데이터 삭제
-    String redisKey = "trip:" + tripId;
-    imageQueueService.deleteFromImageQueue(redisKey, String.valueOf(mediaFileId));
-
-    return RestResponse.success("이미지 위치 정보가 업데이트 되었습니다.");
   }
 
   @Tag(name = "6. 위치정보 없는 수정 페이지 API")
