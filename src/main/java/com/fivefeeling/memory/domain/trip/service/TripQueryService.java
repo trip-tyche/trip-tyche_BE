@@ -91,7 +91,7 @@ public class TripQueryService {
     Trip trip = tripRepository.findById(tripId)
         .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
 
-    List<PinPointResponseDTO> pinPoints = pinPointRepository.findFirstMediaFileByTripId(tripId);
+    List<PinPointResponseDTO> pinPoints = pinPointRepository.findEarliestSingleMediaFileForEachPinPointByTripId(tripId);
     List<MediaFileResponseDTO> mediaFiles = pinPointRepository.findMediaFilesByTripId(tripId);
 
     return new TripResponseDTO(

@@ -15,24 +15,30 @@ public interface PinPointRepository extends JpaRepository<PinPoint, Long> {
   List<PinPoint> findByTripTripId(Long tripId);
 
   @Query("""
-            SELECT new com.fivefeeling.memory.domain.pinpoint.model.PinPointResponseDTO(
-                p.pinPointId,
-                CAST(COALESCE(mf.latitude, 0.0) AS double),
-                CAST(COALESCE(mf.longitude, 0.0) AS double),
-                mf.recordDate,
-                mf.mediaLink
-            )
-            FROM PinPoint p
-            LEFT JOIN p.mediaFiles mf
-            WHERE p.trip.tripId = :tripId
-        AND EXISTS (
-            SELECT 1
-            FROM MediaFile mf2
-            WHERE mf2.pinPoint.pinPointId = p.pinPointId
-            AND mf2.mediaFileId = mf.mediaFileId
+      SELECT new com.fivefeeling.memory.domain.pinpoint.model.PinPointResponseDTO(
+          p.pinPointId,
+          CAST(COALESCE(mf.latitude, 0.0) AS double),
+          CAST(COALESCE(mf.longitude, 0.0) AS double),
+          mf.recordDate,
+          mf.mediaLink
+      )
+      FROM PinPoint p
+      JOIN p.mediaFiles mf
+      WHERE p.trip.tripId = :tripId
+        AND mf.recordDate = (
+          SELECT MIN(mf2.recordDate)
+          FROM MediaFile mf2
+          WHERE mf2.pinPoint = p
         )
+        AND mf.mediaFileId = (
+          SELECT MIN(mf3.mediaFileId)
+          FROM MediaFile mf3
+          WHERE mf3.pinPoint = p
+            AND mf3.recordDate = mf.recordDate
+        )
+      ORDER BY mf.recordDate ASC
       """)
-  List<PinPointResponseDTO> findFirstMediaFileByTripId(@Param("tripId") Long tripId);
+  List<PinPointResponseDTO> findEarliestSingleMediaFileForEachPinPointByTripId(@Param("tripId") Long tripId);
 
   @Query("""
           SELECT new com.fivefeeling.memory.domain.media.model.MediaFileResponseDTO(
