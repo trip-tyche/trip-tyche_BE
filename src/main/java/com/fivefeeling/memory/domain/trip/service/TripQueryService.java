@@ -87,39 +87,12 @@ public class TripQueryService {
     );
   }
 
-
   public TripResponseDTO getTripInfoById(Long tripId) {
     Trip trip = tripRepository.findById(tripId)
         .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
 
-//    List<PinPointResponseDTO> pinPoints = pinPointRepository.findByTripTripId(tripId).stream()
-//        .map(pinPointFirstImage())
-//        .collect(Collectors.toList());
-
     List<PinPointResponseDTO> pinPoints = pinPointRepository.findFirstMediaFileByTripId(tripId);
     List<MediaFileResponseDTO> mediaFiles = pinPointRepository.findMediaFilesByTripId(tripId);
-
-//    TripInfoResponseDTO tripInfo = TripInfoResponseDTO.withoutOptionalFields(
-//        trip.getTripId(),
-//        trip.getTripTitle(),
-//        trip.getCountry(),
-//        formatLocalDateToString(trip.getStartDate()),
-//        formatLocalDateToString(trip.getEndDate())
-//    );
-//
-//    List<MediaFileResponseDTO> mediaFiles = mediaFileRepository.findByTripTripId(tripId)
-//        .stream()
-//        .map(mediaFile -> MediaFileResponseDTO.detailed(
-//            mediaFile.getMediaFileId(),
-//            mediaFile.getMediaLink(),
-//            mediaFile.getMediaType(),
-//            mediaFile.getRecordDate(),
-//            mediaFile.getLatitude(),
-//            mediaFile.getLongitude()
-//        ))
-//        .collect(Collectors.toList());
-//
-//    return PinPointTripInfoResponseDTO.from(tripInfo, pinPoints, mediaFiles);
 
     return new TripResponseDTO(
         trip.getTripTitle(),
@@ -133,7 +106,7 @@ public class TripQueryService {
                 pinPoint.recordDate(),
                 pinPoint.mediaLink()
             ))
-            .toList(),
+            .collect(Collectors.toList()),
         mediaFiles
     );
   }

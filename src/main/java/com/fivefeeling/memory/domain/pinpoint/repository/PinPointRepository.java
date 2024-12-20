@@ -35,11 +35,14 @@ public interface PinPointRepository extends JpaRepository<PinPoint, Long> {
   List<PinPointResponseDTO> findFirstMediaFileByTripId(@Param("tripId") Long tripId);
 
   @Query("""
-          SELECT new com.fivefeeling.memory.domain.media.dto.SimplifiedMediaFileResponseDTO(
-              mf.mediaFileId, 
-              mf.mediaLink, 
-              mf.latitude, 
-              mf.longitude
+          SELECT new com.fivefeeling.memory.domain.media.model.MediaFileResponseDTO(
+              mf.mediaFileId,
+              mf.mediaLink,
+              mf.mediaType,
+              mf.recordDate,
+              mf.latitude,
+              mf.longitude,
+              null
           )
           FROM MediaFile mf
           WHERE mf.pinPoint.trip.tripId = :tripId
