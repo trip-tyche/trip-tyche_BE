@@ -29,8 +29,7 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
   List<MediaFile> findByTripTripId(Long tripId);
 
   // 특정 tripId의 첫 번째 MediaFile 조회
-  Optional<MediaFile> findFirstByTripTripIdOrderByMediaFileIdAsc(Long tripId);
+  Optional<MediaFile> findFirstByTripTripIdAndLatitudeNotAndLongitudeNotOrderByMediaFileIdAsc(
+      Long tripId, Double latitude, Double longitude);
 
-  // 0, 0 좌표 데이터를 조회하는 메서드
-  List<MediaFile> findByLatitudeAndLongitude(Double latitude, Double longitude);
 }

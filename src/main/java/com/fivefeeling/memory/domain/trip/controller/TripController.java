@@ -288,7 +288,8 @@ public class TripController {
   @GetMapping("/api/trips/{tripId}/images/firstimage")
   public RestResponse<MediaFileResponseDTO> getImagesFirstimage(
       @PathVariable Long tripId) {
-    Optional<MediaFile> firstMediaFile = mediaFileRepository.findFirstByTripTripIdOrderByMediaFileIdAsc(tripId);
+    Optional<MediaFile> firstMediaFile = mediaFileRepository
+        .findFirstByTripTripIdAndLatitudeNotAndLongitudeNotOrderByMediaFileIdAsc(tripId, 0.0, 0.0);
     if (firstMediaFile.isEmpty() || firstMediaFile.get().getLongitude() == 0.0 || firstMediaFile.get().getLatitude() == 0.0) {
       throw new CustomException(ResultCode.DATA_NOT_FOUND);
     }
