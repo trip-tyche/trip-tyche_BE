@@ -290,9 +290,11 @@ public class TripController {
       @PathVariable Long tripId) {
     Optional<MediaFile> firstMediaFile = mediaFileRepository
         .findFirstByTripTripIdAndLatitudeNotAndLongitudeNotOrderByMediaFileIdAsc(tripId, 0.0, 0.0);
-    if (firstMediaFile.isEmpty() || firstMediaFile.get().getLongitude() == 0.0 || firstMediaFile.get().getLatitude() == 0.0) {
+
+    if (firstMediaFile.isEmpty()) {
       throw new CustomException(ResultCode.DATA_NOT_FOUND);
     }
+
     MediaFile mediaFile = firstMediaFile.get();
     MediaFileResponseDTO response = MediaFileResponseDTO.imageLocation(mediaFile.getLatitude(), mediaFile.getLongitude());
     return RestResponse.success(response);
