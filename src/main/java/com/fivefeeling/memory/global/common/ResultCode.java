@@ -19,6 +19,7 @@ public enum ResultCode {
   INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 1004, "서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."),
   DATA_SAVE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 1005, "데이터 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."),
   INVALID_REQUEST(HttpStatus.BAD_REQUEST, 1006, "요청 형식이 잘못되었습니다."),
+
   // 인증 및 로그인 관련 오류 코드 (2000번대)
   EMAIL_ALREADY_REGISTERED(HttpStatus.CONFLICT, 2000, "이미 가입된 이메일입니다."),
   OAUTH_SERVICE_FAILURE(HttpStatus.BAD_REQUEST, 2001, "OAuth 서비스 연동에 실패했습니다."),
@@ -28,31 +29,28 @@ public enum ResultCode {
   JWT_PARSING_ERROR(HttpStatus.BAD_REQUEST, 2005, "토큰 파싱 중 오류가 발생했습니다."),
   USER_SAVE_FAILURE(HttpStatus.INTERNAL_SERVER_ERROR, 2006, "사용자 정보를 저장하는 데 실패했습니다."),
   INVALID_PROVIDER(HttpStatus.BAD_REQUEST, 2007, "유효하지 않은 OAuth 제공자입니다."),
+
   // 사용자 관련 오류 코드 (3000번대)
   USER_NOT_FOUND(HttpStatus.NOT_FOUND, 3000, "사용자 정보를 찾을 수 없습니다."),
+  INVALID_USER_NICKNAME(HttpStatus.BAD_REQUEST, 3001, "유효하지 않은 닉네임입니다."),
+  USER_NICKNAME_DUPLICATED(HttpStatus.CONFLICT, 3002, "이미 사용 중인 닉네임입니다."),
 
   // 여행 관련 오류 코드 (4000번대)
-  TRIP_NOT_FOUND(HttpStatus.NOT_FOUND, 4000, "해당 여행 정보가 존재하지 않습니다."),
-  TRIP_INFO_LOAD_FAILURE(HttpStatus.INTERNAL_SERVER_ERROR, 4001, "여행 정보를 불러오는 데 실패했습니다. 잠시 후 다시 시도해 주세요."),
-  INVALID_UPDATE_DATA(HttpStatus.BAD_REQUEST, 4002, "유효하지 않은 수정 정보입니다."),
-  PINPOINT_NOT_FOUND(HttpStatus.NOT_FOUND, 4003, "해당 핀포인트가 존재하지 않습니다."),
-  MEDIA_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, 4004, "해당 미디어 파일이 존재하지 않습니다."),
-  INVALID_DATE_FORMAT(HttpStatus.BAD_REQUEST, 4005, "잘못된 날짜 형식입니다. yyyy-MM-dd 형식으로 입력해주세요."),
-  INVALID_COORDINATE(HttpStatus.BAD_REQUEST, 4006, "잘못된 좌표 형식입니다."),
+  TRIP_NOT_FOUND(HttpStatus.NOT_FOUND, 4000, "해당 여행 정보가 존재하지 않습니다."), TRIP_INFO_LOAD_FAILURE(HttpStatus.INTERNAL_SERVER_ERROR, 4001,
+      "여행 정보를 불러오는 데 실패했습니다. 잠시 후 다시 시도해 주세요."), INVALID_UPDATE_DATA(HttpStatus.BAD_REQUEST, 4002, "유효하지 않은 수정 정보입니다."), PINPOINT_NOT_FOUND(
+      HttpStatus.NOT_FOUND, 4003, "해당 핀포인트가 존재하지 않습니다."), MEDIA_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, 4004, "해당 미디어 파일이 존재하지 않습니다."), INVALID_DATE_FORMAT(
+      HttpStatus.BAD_REQUEST, 4005, "잘못된 날짜 형식입니다. yyyy-MM-dd 형식으로 입력해주세요."), INVALID_COORDINATE(HttpStatus.BAD_REQUEST, 4006, "잘못된 좌표 형식입니다."),
 
   // 파일 업로드 및 처리 관련 오류 코드 (5000번대)
-  S3_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, 5000, "S3 업로드에 실패했습니다."),
-  FILE_READ_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 5001, "파일 읽기 중 오류가 발생했습니다."),
-  METADATA_EXTRACTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, 5002, "메타데이터를 추출하는 데 실패했습니다."),
-  FILE_PROCESSING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 5003, "파일 처리 중 오류가 발생했습니다."),
-  FILE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, 5004, "업로드된 파일 삭제에 실패했습니다."),
+  S3_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, 5000, "S3 업로드에 실패했습니다."), FILE_READ_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 5001,
+      "파일 읽기 중 오류가 발생했습니다."), METADATA_EXTRACTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, 5002, "메타데이터를 추출하는 데 실패했습니다."), FILE_PROCESSING_ERROR(
+      HttpStatus.INTERNAL_SERVER_ERROR, 5003, "파일 처리 중 오류가 발생했습니다."), FILE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, 5004, "업로드된 파일 삭제에 실패했습니다."),
 
   // 날짜별 정보 조회 관련 오류 코드 (6000번대)
   DATE_TRIP_NOT_FOUND(HttpStatus.NOT_FOUND, 6000, "해당 날짜의 여행 정보가 존재하지 않습니다."),
 
   //
-  DATA_NOT_FOUND(HttpStatus.NOT_FOUND, 7000, "해당 tripId의 위도 경도가 없거나 전부 0,0 입니다."),
-  EDIT_DATA_NOT_FOUND(HttpStatus.NOT_FOUND, 7001, "수정할 데이터가 없습니다."),
+  DATA_NOT_FOUND(HttpStatus.NOT_FOUND, 7000, "해당 tripId의 위도 경도가 없거나 전부 0,0 입니다."), EDIT_DATA_NOT_FOUND(HttpStatus.NOT_FOUND, 7001, "수정할 데이터가 없습니다."),
   ;
 
 
