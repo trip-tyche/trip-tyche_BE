@@ -9,8 +9,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
-import io.jsonwebtoken.security.Keys;
-import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Base64;
@@ -19,75 +17,57 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
+/**
+ * JwtTokenProvider<br>
+ * - JWT 생성, 검증, 파싱을 담당하는 클래스<br>
+ * - Secret Key는 JwtSecretKeyManager를 통해 관리<br>
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class JwtTokenProvider {
 
-  @Value("${KAKAO_OAUTH_CLIENT_SECRET}")
-  private String kakaoSecretKey;
+  private final JwtSecretKeyManager jwtSecretKeyManager;
 
-  @Value("${GOOGLE_OAUTH_CLIENT_SECRET}")
-  private String googleSecretKey;
-
-  private Key KAKAO_SECRET_KEY;
-  private Key GOOGLE_SECRET_KEY;
-
-  @PostConstruct
-  private void init() {
-    try {
-      this.KAKAO_SECRET_KEY = Keys.hmacShaKeyFor(kakaoSecretKey.getBytes());
-      this.GOOGLE_SECRET_KEY = Keys.hmacShaKeyFor(googleSecretKey.getBytes());
-    } catch (Exception e) {
-      System.err.println("Error initializing JWT keys: " + e.getMessage());
-      throw e;
-    }
-  }
-
+  /**
+   * JWT 토큰 생성
+   *
+   * @param userEmail 사용자 이메일
+   * @param roles 사용자 권한 목록
+   * @param provider OAuth2 제공자 이름
+   * @return 생성된 JWT 토큰
+   */
   public String createToken(String userEmail, List<String> roles, String provider) {
     Claims claims = Jwts.claims().setSubject(userEmail);
     claims.put("roles", roles);
     claims.put("provider", provider);
 
     Date now = new Date();
-    Date validity = new Date(now.getTime() + 3600000);
+    Date validity = new Date(now.getTime() + 3600000); // 1시간
 
-    Key secretKey;
-    if ("kakao".equals(provider)) {
-      secretKey = KAKAO_SECRET_KEY;
-    } else if ("google".equals(provider)) {
-      secretKey = GOOGLE_SECRET_KEY;
-    } else {
-      throw new CustomException(ResultCode.INVALID_PROVIDER);
-    }
-
-    return Jwts.builder()
-        .setClaims(claims)
-        .setIssuedAt(now)
-        .setExpiration(validity)
-        .signWith(secretKey, SignatureAlgorithm.HS256)
-        .compact();
+    return Jwts.builder().setClaims(claims).setIssuedAt(now).setExpiration(validity)
+        .signWith(jwtSecretKeyManager.getSecretKey(provider), SignatureAlgorithm.HS256).compact();
   }
 
+  /**
+   * JWT 유효성 검증
+   *
+   * @param token 클라이언트에서 전달받은 JWT
+   * @return 검증 성공 여부 (true: 성공)
+   * @throws CustomException 검증 실패 시 적절한 예외를 던진다.
+   */
   public boolean validateToken(String token) {
     try {
       // Step 1: 토큰에서 provider 추출
       String provider = extractProviderFromToken(token);
       log.debug("추출된 provider: {}", provider);
 
-      // Step 2: provider에 맞는 secretKey 할당
-      Key secretKey = getSecretKeyByProvider(provider);
-
-      // Step 3: 할당된 키로 서명 검증
-      Jwts.parserBuilder()
-          .setSigningKey(secretKey)
-          .build()
-          .parseClaimsJws(token);
+      // Step 2: 할당된 키로 서명 검증
+      Jwts.parserBuilder().setSigningKey(jwtSecretKeyManager.getSecretKey(provider)).build().parseClaimsJws(token);
 
       log.debug("토큰 검증 성공. provider: {}", provider);
       return true;
@@ -109,17 +89,18 @@ public class JwtTokenProvider {
     }
   }
 
+  /**
+   * JWT에서 사용자 이메일 추출
+   *
+   * @param token 클라이언트에서 전달받은 JWT
+   * @return JWT에 저장된 사용자 이메일
+   */
   public String getUserEmailFromToken(String token) {
     try {
       String provider = extractProviderFromToken(token);
-      Key secretKey = getSecretKeyByProvider(provider);
+      Key secretKey = jwtSecretKeyManager.getSecretKey(provider);
 
-      String userEmail = Jwts.parserBuilder()
-          .setSigningKey(secretKey)
-          .build()
-          .parseClaimsJws(token)
-          .getBody()
-          .getSubject();
+      String userEmail = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody().getSubject();
 
       log.debug("추출된 사용자 이메일: {}", userEmail);
       return userEmail;
@@ -129,16 +110,18 @@ public class JwtTokenProvider {
     }
   }
 
+  /**
+   * JWT에서 사용자 권한 목록 추출
+   *
+   * @param token 클라이언트에서 전달받은 JWT
+   * @return JWT에 저장된 사용자 권한 목록
+   */
   public List<GrantedAuthority> getAuthorities(String token) {
     try {
       String provider = extractProviderFromToken(token);
-      Key secretKey = getSecretKeyByProvider(provider);
+      Key secretKey = jwtSecretKeyManager.getSecretKey(provider);
 
-      Claims claims = Jwts.parserBuilder()
-          .setSigningKey(secretKey)
-          .build()
-          .parseClaimsJws(token)
-          .getBody();
+      Claims claims = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody();
 
       List<String> roles = (List<String>) claims.get("roles");
       return roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
@@ -147,6 +130,13 @@ public class JwtTokenProvider {
     }
   }
 
+  /**
+   * JWT에서 제공자(provider) 정보 추출
+   *
+   * @param token 클라이언트에서 전달받은 JWT
+   * @return JWT에 저장된 제공자(provider) 정보
+   * @throws CustomException JWT 형식 오류나 파싱 오류 발생 시
+   */
   private String extractProviderFromToken(String token) {
     try {
       String[] chunks = token.split("\\.");
@@ -162,17 +152,6 @@ public class JwtTokenProvider {
     } catch (Exception e) {
       log.error("JWT에서 provider 추출 중 오류 발생: {}", e.getMessage());
       throw new CustomException(ResultCode.JWT_PARSING_ERROR);
-    }
-  }
-
-  private Key getSecretKeyByProvider(String provider) {
-    if ("kakao".equals(provider)) {
-      return KAKAO_SECRET_KEY;
-    } else if ("google".equals(provider)) {
-      return GOOGLE_SECRET_KEY;
-    } else {
-      log.error("알 수 없는 provider: {}", provider);
-      throw new CustomException(ResultCode.INVALID_PROVIDER);
     }
   }
 }

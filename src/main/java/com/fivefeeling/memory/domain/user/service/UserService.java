@@ -16,11 +16,25 @@ public class UserService {
   private final UserRepository userRepository;
 
   public void updateUserNickNameByEmail(String userEmail, String userNickName) {
-    User user = userRepository.findByUserEmail(userEmail.trim().toLowerCase())
-        .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+    User user = userRepository.findByUserEmail(userEmail.trim().toLowerCase()).orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
     user.updateUserNickName(userNickName);
     userRepository.save(user);
   }
 
+  /**
+   * 닉네임 중복 확인
+   *
+   * @param userNickName 확인할 닉네임
+   */
+  public void validateAndCheckNickname(String userNickName) {
+    if (userNickName == null || userNickName.trim().isEmpty()) {
+      throw new CustomException(ResultCode.INVALID_USER_NICKNAME);
+    }
+
+    boolean isDuplicate = userRepository.existsByUserNickName(userNickName.trim());
+    if (isDuplicate) {
+      throw new CustomException(ResultCode.USER_NICKNAME_DUPLICATED);
+    }
+  }
 }
