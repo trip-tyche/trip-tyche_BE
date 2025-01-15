@@ -67,11 +67,14 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.0'
 
     // Actuator
-    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'io.micrometer:micrometer-registry-prometheus:1.11.0'
 
     // Redis 설정
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.session:spring-session-data-redis'
+
+    // hibernate
+    implementation 'org.hibernate.common:hibernate-commons-annotations:6.0.6.Final'
 
 }
 
