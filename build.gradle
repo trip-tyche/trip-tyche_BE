@@ -76,6 +76,9 @@ dependencies {
     // hibernate
     implementation 'org.hibernate.common:hibernate-commons-annotations:6.0.6.Final'
 
+    // Kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+
 }
 
 tasks.named('test') {

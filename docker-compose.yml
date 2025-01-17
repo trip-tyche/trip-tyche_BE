@@ -6,6 +6,10 @@ services:
     build: .
     depends_on:
       - db
+      - redis
+      - kafka
+      - zookeeper
+      - flyway
     image: maristadev/feeling-memory-app:prod
     environment:
       SPRING_PROFILES_ACTIVE: prod
@@ -19,15 +23,17 @@ services:
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
       AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
       AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     ports:
-      - "80:8080"
+      - "8080:8080"
     restart: always
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
-
+    networks:
+      - app-network
 
   db:
     build:
@@ -37,8 +43,79 @@ services:
     environment:
       MYSQL_DATABASE: feeling_memory
       MYSQL_ROOT_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     volumes:
       - ./database/config:/etc/mysql/conf.d
+      - db_data:/var/lib/mysql
     ports:
       - "3306:3306"
+    networks:
+      - app-network
     restart: always
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    command: [ "redis-server", "--appendonly", "yes" ]
+    restart: always
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - app-network
+    restart: always
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    networks:
+      - app-network
+    restart: always
+
+  flyway:
+    image: flyway/flyway:latest
+    container_name: flyway
+    depends_on:
+      - db
+    command:
+      - -url=jdbc:mysql://db:3306/feeling_memory?useSSL=false&allowPublicKeyRetrieval=true
+      - -user=root
+      - -password=${SPRING_DATASOURCE_PASSWORD}
+      - -schemas=feeling_memory
+      - -baselineOnMigrate=true
+      - migrate
+    environment:
+      FLYWAY_PLACEHOLDERS_MYSQL_DATABASE: feeling_memory
+    volumes:
+      - ./database/migration:/flyway/sql
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db_data:
+  redis_data:
