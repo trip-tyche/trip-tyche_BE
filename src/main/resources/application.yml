@@ -204,6 +204,7 @@ logging:
     org.springframework.security: DEBUG
     com.fivefeeling.memory.global.oauth: DEBUG
     com.fivefeeling.memory.global.s3: info
+    org.apache.kafka: TRACE
   #    software.amazon.awssdk: DEBUG
   file:
     path: /var/log/spring-boot/
