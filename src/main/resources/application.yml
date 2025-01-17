@@ -12,13 +12,16 @@ spring:
       on-profile: local
   kafka:
     bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     consumer:
-      group-id: "share-consumer-group"  # 혹은 Consumer 클래스에서 명시
+      group-id: share-consumer-group
       auto-offset-reset: earliest
-    properties:
-      key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value.deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      spring.json.trusted.packages: "*"
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -114,13 +117,16 @@ spring:
       on-profile: prod
   kafka:
     bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     consumer:
-      group-id: "share-consumer-group"
+      group-id: share-consumer-group
       auto-offset-reset: earliest
-    properties:
-      key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value.deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      spring.json.trusted.packages: "*"
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://feeling-memory-database:3306/feeling_memory
@@ -211,13 +217,16 @@ spring:
       on-profile: staging
   kafka:
     bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     consumer:
-      group-id: "share-consumer-group"  # staging 전용 Consumer 그룹 ID
+      group-id: share-consumer-group
       auto-offset-reset: earliest
-    properties:
-      key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value.deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      spring.json.trusted.packages: "*"
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://staging-trip-tyche-database:3306/trip_tyche
