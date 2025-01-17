@@ -11,7 +11,7 @@ spring:
     activate:
       on-profile: local
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: kafka:9092
     consumer:
       group-id: "share-consumer-group"  # 혹은 Consumer 클래스에서 명시
       auto-offset-reset: earliest

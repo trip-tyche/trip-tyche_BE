@@ -35,9 +35,7 @@ jobs:
       # Step 5: Docker 이미지를 빌드하고 Docker Hub에 푸시하는 단계입니다.
       - name: Build and Push Docker Image
         run: |
-          # Docker 이미지를 빌드
           docker build -t maristadev/feeling-memory-app:prod .
-          # Docker Hub에 푸시
           docker push maristadev/feeling-memory-app:prod
         env:
           # GitHub Secrets를 통해 환경 변수 관리
