@@ -11,7 +11,7 @@ spring:
     activate:
       on-profile: local
   kafka:
-    bootstrap-servers: kafka:9092
+    bootstrap-servers: localhost:9092
     consumer:
       group-id: "share-consumer-group"  # 혹은 Consumer 클래스에서 명시
       auto-offset-reset: earliest
@@ -113,9 +113,9 @@ spring:
     activate:
       on-profile: prod
   kafka:
-    bootstrap-servers: kafka:9092
+    bootstrap-servers: localhost:9092
     consumer:
-      group-id: "prod-share-consumer-group"  # prod 전용 Consumer 그룹 ID
+      group-id: "share-consumer-group"
       auto-offset-reset: earliest
     properties:
       key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -210,9 +210,9 @@ spring:
     activate:
       on-profile: staging
   kafka:
-    bootstrap-servers: kafka:9092
+    bootstrap-servers: localhost:9092
     consumer:
-      group-id: "staging-share-consumer-group"  # staging 전용 Consumer 그룹 ID
+      group-id: "share-consumer-group"  # staging 전용 Consumer 그룹 ID
       auto-offset-reset: earliest
     properties:
       key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
