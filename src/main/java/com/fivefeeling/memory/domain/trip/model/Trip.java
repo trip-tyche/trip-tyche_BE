@@ -32,19 +32,19 @@ public class Trip {
   private Long tripId;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
-  @Column(name = "tripTitle")
+  @Column(name = "trip_title")
   private String tripTitle;
 
   @Column(name = "country")
   private String country;
 
-  @Column(name = "startDate")
+  @Column(name = "start_date")
   private LocalDate startDate;
 
-  @Column(name = "endDate")
+  @Column(name = "end_date")
   private LocalDate endDate;
 
   @Column(name = "hashtags", length = 255)

@@ -36,22 +36,32 @@ public enum ResultCode {
   USER_NICKNAME_DUPLICATED(HttpStatus.CONFLICT, 3002, "이미 사용 중인 닉네임입니다."),
 
   // 여행 관련 오류 코드 (4000번대)
-  TRIP_NOT_FOUND(HttpStatus.NOT_FOUND, 4000, "해당 여행 정보가 존재하지 않습니다."), TRIP_INFO_LOAD_FAILURE(HttpStatus.INTERNAL_SERVER_ERROR, 4001,
-      "여행 정보를 불러오는 데 실패했습니다. 잠시 후 다시 시도해 주세요."), INVALID_UPDATE_DATA(HttpStatus.BAD_REQUEST, 4002, "유효하지 않은 수정 정보입니다."), PINPOINT_NOT_FOUND(
-      HttpStatus.NOT_FOUND, 4003, "해당 핀포인트가 존재하지 않습니다."), MEDIA_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, 4004, "해당 미디어 파일이 존재하지 않습니다."), INVALID_DATE_FORMAT(
-      HttpStatus.BAD_REQUEST, 4005, "잘못된 날짜 형식입니다. yyyy-MM-dd 형식으로 입력해주세요."), INVALID_COORDINATE(HttpStatus.BAD_REQUEST, 4006, "잘못된 좌표 형식입니다."),
+  TRIP_NOT_FOUND(HttpStatus.NOT_FOUND, 4000, "해당 여행 정보가 존재하지 않습니다."), TRIP_INFO_LOAD_FAILURE(
+          HttpStatus.INTERNAL_SERVER_ERROR, 4001,
+          "여행 정보를 불러오는 데 실패했습니다. 잠시 후 다시 시도해 주세요."), INVALID_UPDATE_DATA(HttpStatus.BAD_REQUEST, 4002,
+          "유효하지 않은 수정 정보입니다."), PINPOINT_NOT_FOUND(
+          HttpStatus.NOT_FOUND, 4003, "해당 핀포인트가 존재하지 않습니다."), MEDIA_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, 4004,
+          "해당 미디어 파일이 존재하지 않습니다."), INVALID_DATE_FORMAT(
+          HttpStatus.BAD_REQUEST, 4005, "잘못된 날짜 형식입니다. yyyy-MM-dd 형식으로 입력해주세요."), INVALID_COORDINATE(
+          HttpStatus.BAD_REQUEST, 4006, "잘못된 좌표 형식입니다."),
 
   // 파일 업로드 및 처리 관련 오류 코드 (5000번대)
-  S3_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, 5000, "S3 업로드에 실패했습니다."), FILE_READ_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 5001,
-      "파일 읽기 중 오류가 발생했습니다."), METADATA_EXTRACTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, 5002, "메타데이터를 추출하는 데 실패했습니다."), FILE_PROCESSING_ERROR(
-      HttpStatus.INTERNAL_SERVER_ERROR, 5003, "파일 처리 중 오류가 발생했습니다."), FILE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, 5004, "업로드된 파일 삭제에 실패했습니다."),
+  S3_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, 5000, "S3 업로드에 실패했습니다."), FILE_READ_ERROR(
+          HttpStatus.INTERNAL_SERVER_ERROR, 5001,
+          "파일 읽기 중 오류가 발생했습니다."), METADATA_EXTRACTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, 5002,
+          "메타데이터를 추출하는 데 실패했습니다."), FILE_PROCESSING_ERROR(
+          HttpStatus.INTERNAL_SERVER_ERROR, 5003, "파일 처리 중 오류가 발생했습니다."), FILE_DELETE_FAILED(
+          HttpStatus.INTERNAL_SERVER_ERROR, 5004, "업로드된 파일 삭제에 실패했습니다."),
 
   // 날짜별 정보 조회 관련 오류 코드 (6000번대)
   DATE_TRIP_NOT_FOUND(HttpStatus.NOT_FOUND, 6000, "해당 날짜의 여행 정보가 존재하지 않습니다."),
 
-  //
-  DATA_NOT_FOUND(HttpStatus.NOT_FOUND, 7000, "해당 tripId의 위도 경도가 없거나 전부 0,0 입니다."), EDIT_DATA_NOT_FOUND(HttpStatus.NOT_FOUND, 7001, "수정할 데이터가 없습니다."),
-  ;
+  // 위치등록 관련 오류 코드 (7000번대)
+  DATA_NOT_FOUND(HttpStatus.NOT_FOUND, 7000, "해당 tripId의 위도 경도가 없거나 전부 0,0 입니다."), EDIT_DATA_NOT_FOUND(
+          HttpStatus.NOT_FOUND, 7001, "수정할 데이터가 없습니다."),
+
+  // 공유 관련 오류 코드 (8000번대)
+  SHARE_ALREADY_EXIST(HttpStatus.CONFLICT, 8000, "이미 공유된 여행입니다.");
 
 
   private final HttpStatus httpStatus;
