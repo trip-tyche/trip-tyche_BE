@@ -112,6 +112,15 @@ spring:
   config:
     activate:
       on-profile: prod
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: "prod-share-consumer-group"  # prod 전용 Consumer 그룹 ID
+      auto-offset-reset: earliest
+    properties:
+      key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value.deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      spring.json.trusted.packages: "*"
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://feeling-memory-database:3306/feeling_memory
@@ -200,6 +209,15 @@ spring:
   config:
     activate:
       on-profile: staging
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: "staging-share-consumer-group"  # staging 전용 Consumer 그룹 ID
+      auto-offset-reset: earliest
+    properties:
+      key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value.deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      spring.json.trusted.packages: "*"
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://staging-trip-tyche-database:3306/trip_tyche
