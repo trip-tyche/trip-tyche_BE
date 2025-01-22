@@ -1,3 +1,4 @@
+/*
 package com.fivefeeling.memory.domain.media.controller;
 
 import com.fivefeeling.memory.domain.media.model.MediaFile;
@@ -57,3 +58,4 @@ public class FileUploadController {
     });
   }
 }
+*/

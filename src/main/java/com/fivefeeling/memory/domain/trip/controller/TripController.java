@@ -54,10 +54,11 @@ public class TripController {
   private final Object lock = new Object();
 
   @Tag(name = "2. 여행관리 페이지 API")
-  @Operation(summary = "tripId 생성", description = "<a href='https://www.notion.so/maristadev/12d66958e5b380c8b6c2ca99cbc2f752?pvs=4' target='_blank'>API 명세서</a>")
+  @Operation(summary = "tripId 생성", description = "<a href='https://www.notion"
+          + ".so/maristadev/12d66958e5b380c8b6c2ca99cbc2f752?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping("/api/trips")
   public RestResponse<TripInfoResponseDTO> createTrip(
-      @RequestHeader("Authorization") String authorizationHeader) {
+          @RequestHeader("Authorization") String authorizationHeader) {
 
     if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
       throw new CustomException(ResultCode.INVALID_JWT);
@@ -73,9 +74,11 @@ public class TripController {
   }
 
   @Tag(name = "2. 여행관리 페이지 API")
-  @Operation(summary = "여행관리페이지 사용자의 여행 정보 조회", description = "<a href='https://www.notion.so/maristadev/680d29996d0941b9aa742a280e2b3b27?pvs=4' target='_blank'>API 명세서</a>")
+  @Operation(summary = "여행관리페이지 사용자의 여행 정보 조회", description = "<a href='https://www.notion"
+          + ".so/maristadev/680d29996d0941b9aa742a280e2b3b27?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips")
-  public RestResponse<UserTripInfoResponseDTO> getUserTrips(@RequestHeader("Authorization") String authorizationHeader) {
+  public RestResponse<UserTripInfoResponseDTO> getUserTrips(
+          @RequestHeader("Authorization") String authorizationHeader) {
 
     if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
       log.error("유효하지 않은 Authorization 헤더 형식입니다: {}", authorizationHeader);
@@ -90,7 +93,8 @@ public class TripController {
   }
 
   @Tag(name = "2. 여행관리 페이지 API")
-  @Operation(summary = "여행정보 수정을 위한 {tripId} 여행정보 조회", description = "<a href='https://www.notion.so/maristadev/10d66958e5b3803f8dddf7b02d4e83f5?pvs=4' target='_blank'>API 명세서</a>")
+  @Operation(summary = "여행정보 수정을 위한 {tripId} 여행정보 조회", description = "<a href='https://www.notion"
+          + ".so/maristadev/10d66958e5b3803f8dddf7b02d4e83f5?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}")
   public RestResponse<TripInfoResponseDTO> getTripById(@PathVariable Long tripId) {
     TripInfoResponseDTO tripInfo = tripQueryService.getTripById(tripId);
@@ -99,12 +103,13 @@ public class TripController {
   }
 
   @Tag(name = "2. 여행관리 페이지 API")
-  @Operation(summary = "여행 정보 수정", description = "<a href='https://www.notion.so/maristadev/f928c3dc6c2444c9883b8777eadcefc9?pvs=4' target='_blank'>API 명세서</a>")
+  @Operation(summary = "여행 정보 수정", description = "<a href='https://www.notion"
+          + ".so/maristadev/f928c3dc6c2444c9883b8777eadcefc9?pvs=4' target='_blank'>API 명세서</a>")
   @PutMapping("/api/trips/{tripId}")
   public RestResponse<TripInfoResponseDTO> updateTrip(
-      @RequestHeader("Authorization") String authorizationHeader,
-      @PathVariable Long tripId,
-      @RequestBody TripInfoRequestDTO tripInfoRequestDTO) {
+          @RequestHeader("Authorization") String authorizationHeader,
+          @PathVariable Long tripId,
+          @RequestBody TripInfoRequestDTO tripInfoRequestDTO) {
 
     if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
       log.error("유효하지 않은 Authorization 헤더 형식입니다: {}", authorizationHeader);
@@ -120,11 +125,12 @@ public class TripController {
   }
 
   @Tag(name = "2. 여행관리 페이지 API")
-  @Operation(summary = "여행 정보 삭제", description = "<a href='https://www.notion.so/maristadev/38909993a1654e0c9034287a27a483fe?pvs=4' target='_blank'>API 명세서</a>")
+  @Operation(summary = "여행 정보 삭제", description = "<a href='https://www.notion"
+          + ".so/maristadev/38909993a1654e0c9034287a27a483fe?pvs=4' target='_blank'>API 명세서</a>")
   @DeleteMapping("/api/trips/{tripId}")
   public RestResponse<String> deleteTrip(
-      @RequestHeader("Authorization") String authorizationHeader,
-      @PathVariable Long tripId) {
+          @RequestHeader("Authorization") String authorizationHeader,
+          @PathVariable Long tripId) {
 
     if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
       log.error("유효하지 않은 Authorization 헤더 형식입니다: {}", authorizationHeader);
@@ -139,8 +145,10 @@ public class TripController {
     return RestResponse.success("성공적으로 삭제되었습니다.");
   }
 
+/*
   @Tag(name = "사용하지 않는 API")
-  @Operation(deprecated = true, summary = "사용자 여행 정보 저장", description = " <a href='https://www.notion.so/maristadev/d7dbe3f4a6684a07b9285c6a72272f36?pvs=4' target='_blank'>API 명세서</a>")
+  @Operation(deprecated = true, summary = "사용자 여행 정보 저장", description = " <a href='https://www.notion
+  .so/maristadev/d7dbe3f4a6684a07b9285c6a72272f36?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping("/api/trips/{tripId}/info")
   public RestResponse<TripInfoResponseDTO> createTripInfo(
       @RequestHeader("Authorization") String authorizationHeader,
@@ -159,10 +167,12 @@ public class TripController {
 
     return RestResponse.success(createdTripInfo);
   }
+*/
 
 
   @Tag(name = "4. Map 페이지 API")
-  @Operation(summary = "지도위 페이지 여행 정보 조회", description = "<a href='https://www.notion.so/maristadev/fc14909a1ec5481ca37b58924637be20?pvs=4' target='_blank'>API 명세서</a>")
+  @Operation(summary = "지도위 페이지 여행 정보 조회", description = "<a href='https://www.notion"
+          + ".so/maristadev/fc14909a1ec5481ca37b58924637be20?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}/info")
   public RestResponse<TripResponseDTO> getTripInfo(@PathVariable Long tripId) {
     TripResponseDTO tripInfo = tripQueryService.getTripInfoById(tripId);
@@ -170,11 +180,12 @@ public class TripController {
   }
 
   @Tag(name = "4. Map 페이지 API")
-  @Operation(summary = "핀포인트별 슬라이드 쇼를 위한 이미지 조회", description = "<a href='https://www.notion.so/maristadev/d172149814414943866df2f04f409970?pvs=4' target='_blank'>API 명세서</a>")
+  @Operation(summary = "핀포인트별 슬라이드 쇼를 위한 이미지 조회", description = "<a href='https://www.notion"
+          + ".so/maristadev/d172149814414943866df2f04f409970?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}/pinpoints/{pinPointId}/images")
   public RestResponse<PointImageDTO> getPointImages(
-      @PathVariable Long tripId,
-      @PathVariable Long pinPointId) {
+          @PathVariable Long tripId,
+          @PathVariable Long pinPointId) {
 
     PointImageDTO pointImageDTO = tripQueryService.getPointImages(tripId, pinPointId);
 
@@ -182,11 +193,12 @@ public class TripController {
   }
 
   @Tag(name = "5. 날짜별 페이지 API")
-  @Operation(summary = "날짜별 이미지 조회", description = "<a href='https://www.notion.so/maristadev/de630f9fd0424f1ca1d521037730d296?pvs=4' target='_blank'>API 명세서</a>")
+  @Operation(summary = "날짜별 이미지 조회", description = "<a href='https://www.notion"
+          + ".so/maristadev/de630f9fd0424f1ca1d521037730d296?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}/map")
   public RestResponse<MediaFileResponseDTO> getImagesByDate(
-      @PathVariable Long tripId,
-      @RequestParam String date) {
+          @PathVariable Long tripId,
+          @RequestParam String date) {
 
     MediaFileResponseDTO dateImageDTO = tripQueryService.getImagesByDate(tripId, date);
 
@@ -194,7 +206,8 @@ public class TripController {
   }
 
   @Tag(name = "6. 위치정보 없는 수정 페이지 API")
-  @Operation(summary = "위치정보 없는 이미지 조회(Redis)", description = "<a href='https://www.notion.so/maristadev/f15de88a76ff49da85d3d970d8e64aff?pvs=4' target='_blank'>API 명세서</a>")
+  @Operation(summary = "위치정보 없는 이미지 조회(Redis)", description = "<a href='https://www.notion"
+          + ".so/maristadev/f15de88a76ff49da85d3d970d8e64aff?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}/images/unlocated")
   public RestResponse<List<UnlocatedImageResponseDTO>> getUnlocatedImages(@PathVariable Long tripId) {
     String redisKey = "trip:" + tripId;
@@ -208,41 +221,42 @@ public class TripController {
 
     // 날짜별로 데이터를 그룹화
     Map<String, List<UnlocatedImageResponseDTO.Media>> groupedByDate = redisData.entrySet().stream()
-        .map(entry -> {
-          Long mediaFileId = Long.valueOf(entry.getKey().toString());
-          Map<String, Object> imageData = (Map<String, Object>) entry.getValue();
+            .map(entry -> {
+              Long mediaFileId = Long.valueOf(entry.getKey().toString());
+              Map<String, Object> imageData = (Map<String, Object>) entry.getValue();
 
-          String mediaLink = (String) imageData.get("mediaLink");
-          String recordDate = (String) imageData.get("recordDate");
+              String mediaLink = (String) imageData.get("mediaLink");
+              String recordDate = (String) imageData.get("recordDate");
 
-          return Map.entry(recordDate, new UnlocatedImageResponseDTO.Media(mediaFileId, mediaLink));
-        })
-        .collect(Collectors.groupingBy(
-            Map.Entry::getKey,
-            Collectors.mapping(Map.Entry::getValue, Collectors.toList())
-        ));
+              return Map.entry(recordDate, new UnlocatedImageResponseDTO.Media(mediaFileId, mediaLink));
+            })
+            .collect(Collectors.groupingBy(
+                    Map.Entry::getKey,
+                    Collectors.mapping(Map.Entry::getValue, Collectors.toList())
+            ));
 
     // 날짜별로 UnlocatedImageResponseDTO 생성
     List<UnlocatedImageResponseDTO> response = groupedByDate.entrySet().stream()
-        .sorted(Map.Entry.comparingByKey())
-        .map(entry -> new UnlocatedImageResponseDTO(entry.getKey(), entry.getValue()))
-        .collect(Collectors.toList());
+            .sorted(Map.Entry.comparingByKey())
+            .map(entry -> new UnlocatedImageResponseDTO(entry.getKey(), entry.getValue()))
+            .collect(Collectors.toList());
 
     return RestResponse.success(response);
   }
 
   @Tag(name = "6. 위치정보 없는 수정 페이지 API")
-  @Operation(summary = "위치정보 수정", description = "<a href='https://www.notion.so/maristadev/15b66958e5b380a4bbfafbe23b0f28b0?pvs=4' target='_blank'>API 명세서</a>")
+  @Operation(summary = "위치정보 수정", description = "<a href='https://www.notion"
+          + ".so/maristadev/15b66958e5b380a4bbfafbe23b0f28b0?pvs=4' target='_blank'>API 명세서</a>")
   @PutMapping("/api/trips/{tripId}/images/unlocated/{mediaFileId}")
   public RestResponse<String> updateImageLocation(
-      @PathVariable Long tripId,
-      @PathVariable Long mediaFileId,
-      @RequestBody MediaFileRequestDTO mediaFileRequestDTO) {
+          @PathVariable Long tripId,
+          @PathVariable Long mediaFileId,
+          @RequestBody MediaFileRequestDTO mediaFileRequestDTO) {
 
     synchronized (lock) {
       MediaFileRequestDTO latLngOnlyDTO = MediaFileRequestDTO.fromLatitudeAndLongitude(
-          mediaFileRequestDTO.latitude(),
-          mediaFileRequestDTO.longitude()
+              mediaFileRequestDTO.latitude(),
+              mediaFileRequestDTO.longitude()
       );
 
 //    MediaFileRequestDTO latLngOnlyDTO = MediaFileRequestDTO.fromLatitudeAndLongitude(
@@ -260,11 +274,11 @@ public class TripController {
 
       // Trip 조회
       Trip trip = tripRepository.findById(tripId)
-          .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+              .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
 
       // MediaFile 조회
       MediaFile mediaFile = mediaFileRepository.findById(mediaFileId)
-          .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
+              .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
 
       // PinPoint 찾기 또는 생성
       PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, newLatitude, newLongitude);
@@ -284,19 +298,21 @@ public class TripController {
   }
 
   @Tag(name = "6. 위치정보 없는 수정 페이지 API")
-  @Operation(summary = "첫번째 이미지 위도 경도 조회", description = "<a href='https://www.notion.so/maristadev/15b66958e5b3805dbedacd23536dc98f?pvs=4' target='_blank'>API 명세서</a>")
+  @Operation(summary = "첫번째 이미지 위도 경도 조회", description = "<a href='https://www.notion"
+          + ".so/maristadev/15b66958e5b3805dbedacd23536dc98f?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}/images/firstimage")
   public RestResponse<MediaFileResponseDTO> getImagesFirstimage(
-      @PathVariable Long tripId) {
+          @PathVariable Long tripId) {
     Optional<MediaFile> firstMediaFile = mediaFileRepository
-        .findFirstByTripTripIdAndLatitudeNotAndLongitudeNotOrderByMediaFileIdAsc(tripId, 0.0, 0.0);
+            .findFirstByTripTripIdAndLatitudeNotAndLongitudeNotOrderByMediaFileIdAsc(tripId, 0.0, 0.0);
 
     if (firstMediaFile.isEmpty()) {
       throw new CustomException(ResultCode.DATA_NOT_FOUND);
     }
 
     MediaFile mediaFile = firstMediaFile.get();
-    MediaFileResponseDTO response = MediaFileResponseDTO.imageLocation(mediaFile.getLatitude(), mediaFile.getLongitude());
+    MediaFileResponseDTO response = MediaFileResponseDTO.imageLocation(mediaFile.getLatitude(),
+            mediaFile.getLongitude());
     return RestResponse.success(response);
   }
 }

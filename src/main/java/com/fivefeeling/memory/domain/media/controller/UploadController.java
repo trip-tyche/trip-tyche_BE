@@ -1,3 +1,4 @@
+/*
 package com.fivefeeling.memory.domain.media.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,3 +19,4 @@ public class UploadController {
     return "upload";
   }
 }
+*/
