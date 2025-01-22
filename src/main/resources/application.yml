@@ -202,6 +202,7 @@ logging:
     #    org.springframework.security: DEBUG
     #    com.fivefeeling.memory.global.oauth: DEBUG
     com.fivefeeling.memory.global.s3: info
+    root: debug
   #    org.apache.kafka: DEBUG
   #    software.amazon.awssdk: DEBUG
   file:
