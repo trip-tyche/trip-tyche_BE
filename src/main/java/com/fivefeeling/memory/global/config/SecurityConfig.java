@@ -40,39 +40,43 @@ public class SecurityConfig {
   private final CustomOAuth2AuthenticationFailureHandler customOAuth2AuthenticationFailureHandler;
 
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtTokenProvider jwtTokenProvider) throws Exception {
+  public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtTokenProvider jwtTokenProvider)
+          throws Exception {
     http
-        .csrf(csrf -> csrf.disable())
-        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers(
-                "/swagger-ui/**",
-                "/v3/api-docs/**",
-                "/swagger-resources/**",
-                "/webjars/**",
-                "/oauth2/**",
-                "/api/**",
-                "/login/oauth2/code/**",
-                "/upload/**",
-                "/oauth2/success",
-                "/oauth2/authorization/**",
-                "/actuator/**")
-            .permitAll()
-            .anyRequest().authenticated()
-        )
-        .oauth2Login(oauth2 -> oauth2
-            .userInfoEndpoint(userInfo -> userInfo
-                .userService(oAuth2Service)
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .authorizeHttpRequests(auth -> auth
+                    .requestMatchers(
+                            "/swagger-ui/**",
+                            "/v3/api-docs/**",
+                            "/swagger-resources/**",
+                            "/webjars/**",
+                            "/oauth2/**",
+                            "/api/**",
+                            "/login/oauth2/code/**",
+                            "/upload/**",
+                            "/oauth2/success",
+                            "/oauth2/authorization/**",
+                            "/actuator/**",
+                            "/ws/**",
+                            "/app/**",
+                            "/topic/**")
+                    .permitAll()
+                    .anyRequest().authenticated()
             )
-            .successHandler(oAuth2LoginSuccessHandler)
-            .failureHandler(customOAuth2AuthenticationFailureHandler)
-        )
-        .exceptionHandling(exceptionHandling -> exceptionHandling
-            .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
-        .logout(logout -> logout.logoutSuccessUrl("/"))
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
-        .addFilterBefore(new JWTAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
-        .addFilterBefore(new IPLoggingFilter(), JWTAuthenticationFilter.class);
+            .oauth2Login(oauth2 -> oauth2
+                    .userInfoEndpoint(userInfo -> userInfo
+                            .userService(oAuth2Service)
+                    )
+                    .successHandler(oAuth2LoginSuccessHandler)
+                    .failureHandler(customOAuth2AuthenticationFailureHandler)
+            )
+            .exceptionHandling(exceptionHandling -> exceptionHandling
+                    .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+            .logout(logout -> logout.logoutSuccessUrl("/"))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+            .addFilterBefore(new JWTAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(new IPLoggingFilter(), JWTAuthenticationFilter.class);
 
     return http.build();
   }
@@ -81,11 +85,12 @@ public class SecurityConfig {
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
     configuration.setAllowedOrigins(
-        List.of("http://localhost:3000",
-            "http://trip-tyche-fe.s3-website.ap-northeast-2.amazonaws.com",
-            "https://triptyche.world",
-            "http://ec2-43-200-110-25.ap-northeast-2.compute.amazonaws.com",
-            "http://ec2-43-200-110-25.ap-northeast-2.compute.amazonaws.com:3000"));
+            List.of("http://localhost:3000",
+                    "http://127.0.0.1:5500",
+                    "http://trip-tyche-fe.s3-website.ap-northeast-2.amazonaws.com",
+                    "https://triptyche.world",
+                    "http://ec2-43-200-110-25.ap-northeast-2.compute.amazonaws.com",
+                    "http://ec2-43-200-110-25.ap-northeast-2.compute.amazonaws.com:3000"));
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(List.of("*"));
     configuration.setAllowCredentials(true);
@@ -93,6 +98,7 @@ public class SecurityConfig {
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/actuator/**", configuration);
     source.registerCorsConfiguration("/**", configuration);
+    source.registerCorsConfiguration("/ws/**", configuration); // WebSocket 경로 허용
     return source;
   }
 
@@ -103,7 +109,7 @@ public class SecurityConfig {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-        throws ServletException, IOException, java.io.IOException {
+            throws ServletException, IOException, java.io.IOException {
       String clientIp = request.getRemoteAddr();
       logger.info("요청 IP: {}", clientIp);
       filterChain.doFilter(request, response);

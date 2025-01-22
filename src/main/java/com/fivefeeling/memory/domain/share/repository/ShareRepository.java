@@ -10,5 +10,4 @@ public interface ShareRepository extends JpaRepository<Share, Long> {
 
   boolean existsByTripAndRecipientId(Trip trip, Long recipientId);
 
-  
 }

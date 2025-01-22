@@ -1,3 +1,4 @@
+/*
 package com.fivefeeling.memory.domain.share.kafka;
 
 import com.fivefeeling.memory.domain.share.kafka.dto.ShareCreatedEvent;
@@ -37,3 +38,4 @@ public class ShareKafkaProducer {
     kafkaTemplate.send(SHARE_CREATE_TOPIC, event);
   }
 }
+*/

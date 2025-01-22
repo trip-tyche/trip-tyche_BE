@@ -19,7 +19,7 @@ public class ShareUserController {
 
   private final UserService userService;
 
-  @Operation(summary = "1. 사용자 검색", description = "<a href='https://www.notion"
+  @Operation(summary = "사용자 검색", description = "<a href='https://www.notion"
           + ".so/maristadev/17766958e5b380e9b22bff0ed697db9d?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/users")
   public RestResponse<UserSearchResponseDTO> findUserByNickName(

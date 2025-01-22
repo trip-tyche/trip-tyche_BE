@@ -1,3 +1,4 @@
+/*
 package com.fivefeeling.memory.global.config;
 
 import com.fivefeeling.memory.domain.share.kafka.dto.ShareCreatedEvent;
@@ -61,10 +62,12 @@ public class KafkaConfig {
   }
 
   @Bean(name = "shareCreatedEventListenerContainerFactory")
-  public ConcurrentKafkaListenerContainerFactory<String, ShareCreatedEvent> shareCreatedEventListenerContainerFactory() {
+  public ConcurrentKafkaListenerContainerFactory<String, ShareCreatedEvent> shareCreatedEventListenerContainerFactory
+  () {
     ConcurrentKafkaListenerContainerFactory<String, ShareCreatedEvent> factory
             = new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(shareCreatedEventConsumerFactory());
     return factory;
   }
 }
+*/
