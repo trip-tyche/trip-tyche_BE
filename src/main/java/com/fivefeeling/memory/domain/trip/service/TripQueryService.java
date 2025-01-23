@@ -24,7 +24,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -50,12 +49,13 @@ public class TripQueryService {
     // 2) 자신이 "공유받은" Trip
     List<Trip> sharedTrips = tripRepository.findAllBySharedUserId(user.getUserId());
 
-    List<Trip> allTrips = new ArrayList<>();
-    allTrips.addAll(ownedTrips);
-    allTrips.addAll(sharedTrips);
+//    List<Trip> allTrips = new ArrayList<>();
+//    allTrips.addAll(ownedTrips);
+//    allTrips.addAll(sharedTrips);
 
 //    List<TripInfoResponseDTO>  = tripRepository.findByUserUserId(user.getUserId()).stream()
-    List<TripInfoResponseDTO> tripDTOs = allTrips.stream()
+    List<TripInfoResponseDTO> tripDTOs = tripRepository.findAllAccessibleTrips(user.getUserId())
+            .stream()
             .map(trip -> new TripInfoResponseDTO(
                     trip.getTripId(),
                     trip.getTripTitle(),
