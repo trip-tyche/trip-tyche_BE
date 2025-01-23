@@ -11,9 +11,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -60,5 +63,19 @@ public class Trip {
 
   public List<String> getHashtagsAsList() {
     return List.of(this.hashtags.split(","));
+  }
+
+  @ManyToMany
+  @JoinTable(
+          name = "trip_shared_users",
+          joinColumns = @JoinColumn(name = "trip_id"),
+          inverseJoinColumns = @JoinColumn(name = "user_id")
+  )
+  private List<User> sharedUsers = new ArrayList<>();
+
+  public void addSharedUser(User user) {
+    if (!this.sharedUsers.contains(user)) {
+      this.sharedUsers.add(user);
+    }
   }
 }

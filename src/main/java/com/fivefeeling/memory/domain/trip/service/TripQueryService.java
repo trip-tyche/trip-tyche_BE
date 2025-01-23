@@ -42,72 +42,83 @@ public class TripQueryService {
 
   public UserTripInfoResponseDTO getUserTripInfo(String userEmail) {
     User user = userRepository.findByUserEmail(userEmail)
-        .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
-    List<TripInfoResponseDTO> trips = tripRepository.findByUserUserId(user.getUserId()).stream()
-        .map(trip -> new TripInfoResponseDTO(
+    // 1) 자신이 "직접 소유한(내가 만든)" Trip
+    List<Trip> ownedTrips = tripRepository.findByUserUserId(user.getUserId());
+    // 2) 자신이 "공유받은" Trip
+    List<Trip> sharedTrips = tripRepository.findAllBySharedUserId(user.getUserId());
+
+//    List<Trip> allTrips = new ArrayList<>();
+//    allTrips.addAll(ownedTrips);
+//    allTrips.addAll(sharedTrips);
+
+//    List<TripInfoResponseDTO>  = tripRepository.findByUserUserId(user.getUserId()).stream()
+    List<TripInfoResponseDTO> tripDTOs = tripRepository.findAllAccessibleTrips(user.getUserId())
+            .stream()
+            .map(trip -> new TripInfoResponseDTO(
+                    trip.getTripId(),
+                    trip.getTripTitle(),
+                    trip.getCountry(),
+                    formatLocalDateToString(trip.getStartDate()),
+                    formatLocalDateToString(trip.getEndDate()),
+                    trip.getHashtagsAsList(),
+                    List.of()
+            ))
+            .collect(Collectors.toList());
+    return UserTripInfoResponseDTO.withoutPinPoints(
+            user.getUserId(),
+            user.getUserNickName(),
+            tripDTOs);
+  }
+
+
+  public TripInfoResponseDTO getTripById(Long tripId) {
+    Trip trip = tripRepository.findByTripId(tripId)
+            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+
+    List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripId(tripId);
+
+    List<String> imagesDate = mediaFiles.stream()
+            .map(MediaFile::getRecordDate)
+            .map(LocalDateTime::toLocalDate)
+            .distinct()
+            .sorted()
+            .map(DateFormatter::formatLocalDateToString)
+            .toList();
+
+    return TripInfoResponseDTO.withImagesDate(
             trip.getTripId(),
             trip.getTripTitle(),
             trip.getCountry(),
             formatLocalDateToString(trip.getStartDate()),
             formatLocalDateToString(trip.getEndDate()),
             trip.getHashtagsAsList(),
-            List.of()
-        ))
-        .collect(Collectors.toList());
-    return UserTripInfoResponseDTO.withoutPinPoints(
-        user.getUserId(),
-        user.getUserNickName(),
-        trips);
-  }
-
-
-  public TripInfoResponseDTO getTripById(Long tripId) {
-    Trip trip = tripRepository.findByTripId(tripId)
-        .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
-
-    List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripId(tripId);
-
-    List<String> imagesDate = mediaFiles.stream()
-        .map(MediaFile::getRecordDate)
-        .map(LocalDateTime::toLocalDate)
-        .distinct()
-        .sorted()
-        .map(DateFormatter::formatLocalDateToString)
-        .toList();
-
-    return TripInfoResponseDTO.withImagesDate(
-        trip.getTripId(),
-        trip.getTripTitle(),
-        trip.getCountry(),
-        formatLocalDateToString(trip.getStartDate()),
-        formatLocalDateToString(trip.getEndDate()),
-        trip.getHashtagsAsList(),
-        imagesDate
+            imagesDate
     );
   }
 
   public TripResponseDTO getTripInfoById(Long tripId) {
     Trip trip = tripRepository.findById(tripId)
-        .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
 
     List<PinPointResponseDTO> pinPoints = pinPointRepository.findEarliestSingleMediaFileForEachPinPointByTripId(tripId);
     List<MediaFileResponseDTO> mediaFiles = pinPointRepository.findMediaFilesByTripId(tripId);
 
     return new TripResponseDTO(
-        trip.getTripTitle(),
-        formatLocalDateToString(trip.getStartDate()),
-        formatLocalDateToString(trip.getEndDate()),
-        pinPoints.stream()
-            .map(pinPoint -> new PinPointResponseDTO(
-                pinPoint.pinPointId(),
-                pinPoint.latitude(),
-                pinPoint.longitude(),
-                pinPoint.recordDate(),
-                pinPoint.mediaLink()
-            ))
-            .collect(Collectors.toList()),
-        mediaFiles
+            trip.getTripTitle(),
+            formatLocalDateToString(trip.getStartDate()),
+            formatLocalDateToString(trip.getEndDate()),
+            pinPoints.stream()
+                    .map(pinPoint -> new PinPointResponseDTO(
+                            pinPoint.pinPointId(),
+                            pinPoint.latitude(),
+                            pinPoint.longitude(),
+                            pinPoint.recordDate(),
+                            pinPoint.mediaLink()
+                    ))
+                    .collect(Collectors.toList()),
+            mediaFiles
     );
   }
 
@@ -131,7 +142,7 @@ public class TripQueryService {
   @Transactional(readOnly = true)
   public PointImageDTO getPointImages(Long tripId, Long pinPointId) {
     PinPoint pinPoint = pinPointRepository.findById(pinPointId)
-        .orElseThrow(() -> new CustomException(ResultCode.PINPOINT_NOT_FOUND));
+            .orElseThrow(() -> new CustomException(ResultCode.PINPOINT_NOT_FOUND));
 
     List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripIdAndPinPointPinPointId(tripId, pinPointId);
     if (mediaFiles.isEmpty()) {
@@ -139,39 +150,39 @@ public class TripQueryService {
     }
 
     String startDate = formatLocalDateTimeToString(
-        mediaFiles.stream()
-            .map(MediaFile::getRecordDate)
-            .min(LocalDateTime::compareTo)
-            .orElse(null)
+            mediaFiles.stream()
+                    .map(MediaFile::getRecordDate)
+                    .min(LocalDateTime::compareTo)
+                    .orElse(null)
     );
 
     String endDate = formatLocalDateTimeToString(
-        mediaFiles.stream()
-            .map(MediaFile::getRecordDate)
-            .max(LocalDateTime::compareTo)
-            .orElse(null)
+            mediaFiles.stream()
+                    .map(MediaFile::getRecordDate)
+                    .max(LocalDateTime::compareTo)
+                    .orElse(null)
     );
 
     String firstMediaLink = mediaFiles.get(0).getMediaLink();
 
     List<MediaFileResponseDTO> imagesLink = mediaFiles.stream()
-        .map(file -> MediaFileResponseDTO.mediaFileSummary(
-            file.getMediaLink(),
-            file.getRecordDate()
-        ))
-        .collect(Collectors.toList());
+            .map(file -> MediaFileResponseDTO.mediaFileSummary(
+                    file.getMediaLink(),
+                    file.getRecordDate()
+            ))
+            .collect(Collectors.toList());
 
     MediaFileResponseDTO images = MediaFileResponseDTO.imagesAndFirstImage(
-        firstMediaLink,
-        imagesLink
+            firstMediaLink,
+            imagesLink
     );
     return new PointImageDTO(
-        pinPoint.getPinPointId(),
-        pinPoint.getLatitude(),
-        pinPoint.getLongitude(),
-        startDate,
-        endDate,
-        images
+            pinPoint.getPinPointId(),
+            pinPoint.getLatitude(),
+            pinPoint.getLongitude(),
+            startDate,
+            endDate,
+            images
     );
   }
 
@@ -188,15 +199,15 @@ public class TripQueryService {
       }
 
       List<MediaFileResponseDTO> images = mediaFiles.stream()
-          .map(file -> MediaFileResponseDTO.detailed(
-              file.getMediaFileId(),
-              file.getMediaLink(),
-              file.getMediaType(),
-              file.getRecordDate(),
-              file.getLatitude(),
-              file.getLongitude()
-          ))
-          .collect(Collectors.toList());
+              .map(file -> MediaFileResponseDTO.detailed(
+                      file.getMediaFileId(),
+                      file.getMediaLink(),
+                      file.getMediaType(),
+                      file.getRecordDate(),
+                      file.getLatitude(),
+                      file.getLongitude()
+              ))
+              .collect(Collectors.toList());
 
       return MediaFileResponseDTO.withImages(startOfDay, images);
 

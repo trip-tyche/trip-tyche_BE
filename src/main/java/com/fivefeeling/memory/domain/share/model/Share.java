@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "share")
@@ -36,6 +37,7 @@ public class Share {
   @Column(name = "recipientId", nullable = false)
   private Long recipientId;
 
+  @Setter
   @Column(name = "shareStatus", nullable = false)
   private ShareStatus shareStatus;
 
@@ -58,4 +60,5 @@ public class Share {
   protected void onPreUpdate() {
     this.updatedAt = LocalDateTime.now();
   }
+
 }
