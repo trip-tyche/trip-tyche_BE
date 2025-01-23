@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 public interface ShareRepository extends JpaRepository<Share, Long> {
 
   boolean existsByTripAndRecipientId(Trip trip, Long recipientId);
-  
+
   List<Share> findAllByRecipientId(Long recipientId);
+
 }
