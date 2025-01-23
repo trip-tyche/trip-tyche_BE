@@ -1,3 +1,4 @@
+/*
 package com.fivefeeling.memory.global.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,3 +20,4 @@ public class ObjectMapperConfig {
     return objectMapper;
   }
 }
+*/
