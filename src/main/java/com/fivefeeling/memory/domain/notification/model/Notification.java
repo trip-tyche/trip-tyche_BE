@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
@@ -37,6 +38,10 @@ public class Notification {
   @Enumerated(EnumType.STRING)
   private NotificationStatus status;
 
+  @Setter
+  @Column(name = "streamMessageId")
+  private String streamMessageId;
+
   @Column(name = "createdAt", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
@@ -48,5 +53,9 @@ public class Notification {
   public enum NotificationStatus {
     UNREAD,
     READ
+  }
+
+  public void markAsRead() {
+    this.status = NotificationStatus.READ;
   }
 }

@@ -3,6 +3,8 @@ package com.fivefeeling.memory.domain.share.model;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -39,6 +41,7 @@ public class Share {
 
   @Setter
   @Column(name = "shareStatus", nullable = false)
+  @Enumerated(EnumType.STRING)
   private ShareStatus shareStatus;
 
   @Column(name = "createdAt", updatable = false)

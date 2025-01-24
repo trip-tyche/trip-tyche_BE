@@ -62,8 +62,10 @@ public enum ResultCode {
 
   // 공유 관련 오류 코드 (8000번대)
   SHARE_ALREADY_EXIST(HttpStatus.CONFLICT, 8000, "이미 공유된 여행입니다."),
-  SHARE_NOT_FOUND(HttpStatus.NOT_FOUND, 8001, "공유된 여행이 없습니다.");
+  SHARE_NOT_FOUND(HttpStatus.NOT_FOUND, 8001, "공유된 여행이 없습니다."),
 
+  // 알림 관련 오류 코드 (9000번대)
+  NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, 9000, "해당 알림이 존재하지 않습니다.");
 
   private final HttpStatus httpStatus;
   private final int code;

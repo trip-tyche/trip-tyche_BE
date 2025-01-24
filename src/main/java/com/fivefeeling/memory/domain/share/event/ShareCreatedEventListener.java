@@ -6,6 +6,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +29,7 @@ public class ShareCreatedEventListener {
               "shareId", event.getShareId(),
               "tripId", event.getTripId()
       );
-      redisTemplate.opsForStream().add("shareRequests", eventMap);
+      RecordId recordId = redisTemplate.opsForStream().add("shareRequests", eventMap);
       log.info("Redis Stream에 이벤트 저장 및 발행 완료: {}", event);
 
       // 알림 메시지 DB 저장
@@ -36,6 +37,7 @@ public class ShareCreatedEventListener {
               .userId(event.getRecipientId())
               .message("새로운 공유 요청이 도착했습니다.")
               .status(Notification.NotificationStatus.UNREAD)
+              .streamMessageId(recordId.getValue())
               .build();
       notificationRepository.save(notification);
       log.info("DB에 알림 메시지 저장 완료: {}", notification);
