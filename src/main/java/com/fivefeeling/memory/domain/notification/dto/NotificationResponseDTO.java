@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public record NotificationResponseDTO(
         Long notificationId,
-        String title,
+        String message,
         String status,
         LocalDateTime createdAt
 ) {
