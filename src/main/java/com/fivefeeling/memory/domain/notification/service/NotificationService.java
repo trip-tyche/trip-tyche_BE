@@ -55,7 +55,7 @@ public class NotificationService {
                 RecordId.of(notification.getStreamMessageId())
         );
       } catch (Exception e) {
-        throw new RuntimeException("Redis Stream 삭제 중 오류가 발생했습니다." + e.getMessage());
+        throw new RuntimeException("Redis Stream 삭제 중 오류가 발생했습니다." + e);
       }
     }
 
