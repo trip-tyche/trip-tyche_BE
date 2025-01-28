@@ -149,6 +149,9 @@ jobs:
             # 최신 Docker 이미지를 가져옵니다.
             docker pull maristadev/feeling-memory-app:staging
             
+            # MySQL 이미지 재빌드
+            docker-compose build db
+            
             # 기존의 Docker Compose 서비스를 중지합니다.
             docker-compose down -v
             
