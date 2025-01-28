@@ -232,6 +232,7 @@ spring:
     url: jdbc:mysql://staging-trip-tyche-database:3306/trip_tyche
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
+    data: classpath:db/data-staging.sql
   data:
     redis:
       host: redis-staging
