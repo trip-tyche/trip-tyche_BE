@@ -1,5 +1,6 @@
 package com.fivefeeling.memory.domain.trip.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fivefeeling.memory.domain.media.dto.MediaFileRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.UnlocatedImageResponseDTO;
 import com.fivefeeling.memory.domain.media.model.MediaFile;
@@ -20,9 +21,11 @@ import com.fivefeeling.memory.global.common.RestResponse;
 import com.fivefeeling.memory.global.common.ResultCode;
 import com.fivefeeling.memory.global.exception.CustomException;
 import com.fivefeeling.memory.global.redis.ImageQueueService;
+import com.fivefeeling.memory.global.util.DateFormatter;
 import com.fivefeeling.memory.global.util.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -219,16 +222,27 @@ public class TripController {
       return RestResponse.error(ResultCode.EDIT_DATA_NOT_FOUND);
     }
 
+    ObjectMapper objectMapper = new ObjectMapper();
+
     // 날짜별로 데이터를 그룹화
     Map<String, List<UnlocatedImageResponseDTO.Media>> groupedByDate = redisData.entrySet().stream()
             .map(entry -> {
-              Long mediaFileId = Long.valueOf(entry.getKey().toString());
-              Map<String, Object> imageData = (Map<String, Object>) entry.getValue();
+              try {
+                Long mediaFileId = Long.valueOf(entry.getKey().toString());
 
-              String mediaLink = (String) imageData.get("mediaLink");
-              String recordDate = (String) imageData.get("recordDate");
+//              Map<String, Object> imageData = (Map<String, Object>) entry.getValue();
+                Map<String, Object> imageData = objectMapper.readValue(entry.getValue().toString(), Map.class);
 
-              return Map.entry(recordDate, new UnlocatedImageResponseDTO.Media(mediaFileId, mediaLink));
+                String mediaLink = (String) imageData.get("mediaLink");
+                String recordDateString = (String) imageData.get("recordDate");
+
+                LocalDateTime recordDateTime = LocalDateTime.parse(recordDateString);
+                String formattedDate = DateFormatter.formatLocalDateToString(recordDateTime.toLocalDate());
+
+                return Map.entry(formattedDate, new UnlocatedImageResponseDTO.Media(mediaFileId, mediaLink));
+              } catch (Exception e) {
+                throw new RuntimeException("Json 파싱 오류", e);
+              }
             })
             .collect(Collectors.groupingBy(
                     Map.Entry::getKey,
