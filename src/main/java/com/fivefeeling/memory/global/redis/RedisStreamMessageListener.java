@@ -3,10 +3,13 @@ package com.fivefeeling.memory.global.redis;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fivefeeling.memory.domain.notification.model.NotificationType;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Range;
 import org.springframework.data.redis.connection.stream.MapRecord;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
@@ -17,7 +20,33 @@ import org.springframework.stereotype.Component;
 public class RedisStreamMessageListener implements StreamListener<String, MapRecord<String, String, String>> {
 
   private final SimpMessagingTemplate messagingTemplate;
+  private final StringRedisTemplate redisTemplate;
   private final ObjectMapper objectMapper = new ObjectMapper();
+
+  public int getUnreadNotificationCount(String recipientId) {
+    String streamKey = "shareRequests";
+
+    try {
+      List<MapRecord<String, Object, Object>> records = redisTemplate
+              .opsForStream()
+              .range(streamKey, Range.unbounded());
+
+      if (records == null) {
+        return 0;
+      }
+
+      long count = records.stream()
+              .filter(record -> {
+                Object value = record.getValue().get("recipientId");
+                return value != null && recipientId.equals(String.valueOf(value));
+              })
+              .count();
+      return (int) count;
+    } catch (Exception e) {
+      log.error("Redis Streams에서 알림 개수 조회 실패: recipientId={}", recipientId, e);
+      return 0;
+    }
+  }
 
   @Override
   public void onMessage(MapRecord<String, String, String> message) {
