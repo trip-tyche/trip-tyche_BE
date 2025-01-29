@@ -11,7 +11,6 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer.StreamMessageListenerContainerOptions;
@@ -38,8 +37,10 @@ public class RedisConfig {
     redisTemplate.setKeySerializer(new StringRedisSerializer());
     redisTemplate.setHashKeySerializer(new StringRedisSerializer());
     // Value 직렬화: JSON 형식
-    redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
-    redisTemplate.setHashValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
+//    redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
+    redisTemplate.setValueSerializer(new StringRedisSerializer());
+//    redisTemplate.setHashValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
+    redisTemplate.setHashValueSerializer(new StringRedisSerializer());
     redisTemplate.afterPropertiesSet();
     return redisTemplate;
   }

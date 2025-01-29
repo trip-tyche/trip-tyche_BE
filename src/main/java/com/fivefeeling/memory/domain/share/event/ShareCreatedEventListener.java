@@ -1,6 +1,8 @@
 package com.fivefeeling.memory.domain.share.event;
 
 import com.fivefeeling.memory.domain.notification.model.Notification;
+import com.fivefeeling.memory.domain.notification.model.NotificationStatus;
+import com.fivefeeling.memory.domain.notification.model.NotificationType;
 import com.fivefeeling.memory.domain.notification.repository.NotificationRepository;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +27,8 @@ public class ShareCreatedEventListener {
       log.info("처리 중인 이벤트: {}", event);
 
       Map<String, Object> eventMap = Map.of(
-              "recipientId", event.getRecipientId(),
-              "shareId", event.getShareId(),
-              "tripId", event.getTripId()
+              "recipientId", String.valueOf(event.getRecipientId()),
+              "messageType", String.valueOf(NotificationType.SHARED_REQUEST)
       );
       RecordId recordId = redisTemplate.opsForStream().add("shareRequests", eventMap);
       log.info("Redis Stream에 이벤트 저장 및 발행 완료: {}", event);
@@ -35,8 +36,8 @@ public class ShareCreatedEventListener {
       // 알림 메시지 DB 저장
       Notification notification = Notification.builder()
               .userId(event.getRecipientId())
-              .message("새로운 공유 요청이 도착했습니다.")
-              .status(Notification.NotificationStatus.UNREAD)
+              .message(NotificationType.SHARED_REQUEST)
+              .status(NotificationStatus.UNREAD)
               .streamMessageId(recordId.getValue())
               .build();
       notificationRepository.save(notification);
