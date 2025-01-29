@@ -1,7 +1,7 @@
 package com.fivefeeling.memory.domain.notification.repository;
 
 import com.fivefeeling.memory.domain.notification.model.Notification;
-import com.fivefeeling.memory.domain.notification.model.Notification.NotificationStatus;
+import com.fivefeeling.memory.domain.notification.model.NotificationStatus;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 

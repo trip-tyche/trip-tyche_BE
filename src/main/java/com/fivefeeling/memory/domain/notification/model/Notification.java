@@ -32,7 +32,8 @@ public class Notification {
   private Long userId;
 
   @Column(name = "message", nullable = false)
-  private String message;
+  @Enumerated(EnumType.STRING)
+  private NotificationType message;
 
   @Column(name = "status", nullable = false)
   @Enumerated(EnumType.STRING)
@@ -50,10 +51,10 @@ public class Notification {
     this.createdAt = LocalDateTime.now();
   }
 
-  public enum NotificationStatus {
-    UNREAD,
-    READ
-  }
+//  public enum NotificationStatus {
+//    UNREAD,
+//    READ
+//  }
 
   public void markAsRead() {
     this.status = NotificationStatus.READ;

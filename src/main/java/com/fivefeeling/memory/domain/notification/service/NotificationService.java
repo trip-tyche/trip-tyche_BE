@@ -2,7 +2,7 @@ package com.fivefeeling.memory.domain.notification.service;
 
 import com.fivefeeling.memory.domain.notification.dto.NotificationResponseDTO;
 import com.fivefeeling.memory.domain.notification.model.Notification;
-import com.fivefeeling.memory.domain.notification.model.Notification.NotificationStatus;
+import com.fivefeeling.memory.domain.notification.model.NotificationStatus;
 import com.fivefeeling.memory.domain.notification.repository.NotificationRepository;
 import com.fivefeeling.memory.global.common.ResultCode;
 import com.fivefeeling.memory.global.exception.CustomException;
@@ -23,13 +23,13 @@ public class NotificationService {
 
   public List<NotificationResponseDTO> getUnreadNotifications(Long userId) {
     List<Notification> notifications = notificationRepository.findByUserIdAndStatus(
-            userId, Notification.NotificationStatus.UNREAD
+            userId, NotificationStatus.UNREAD
     );
 
     return notifications.stream()
             .map(notification -> new NotificationResponseDTO(
                     notification.getNotificationId(),
-                    notification.getMessage(),
+                    notification.getMessage().name(),
                     notification.getStatus().name(),
                     notification.getCreatedAt()
             ))
@@ -68,7 +68,7 @@ public class NotificationService {
   private NotificationResponseDTO toDTO(Notification notification) {
     return new NotificationResponseDTO(
             notification.getNotificationId(),
-            notification.getMessage(),
+            notification.getMessage().toString(),
             notification.getStatus().toString(),
             notification.getCreatedAt()
     );

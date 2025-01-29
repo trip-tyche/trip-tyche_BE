@@ -1,6 +1,7 @@
 package com.fivefeeling.memory.domain.share.event;
 
 import com.fivefeeling.memory.domain.notification.model.Notification;
+import com.fivefeeling.memory.domain.notification.model.NotificationStatus;
 import com.fivefeeling.memory.domain.notification.model.NotificationType;
 import com.fivefeeling.memory.domain.notification.repository.NotificationRepository;
 import java.util.Map;
@@ -35,8 +36,8 @@ public class ShareCreatedEventListener {
       // 알림 메시지 DB 저장
       Notification notification = Notification.builder()
               .userId(event.getRecipientId())
-              .message("새로운 공유 요청이 도착했습니다.")
-              .status(Notification.NotificationStatus.UNREAD)
+              .message(NotificationType.SHARED_REQUEST)
+              .status(NotificationStatus.UNREAD)
               .streamMessageId(recordId.getValue())
               .build();
       notificationRepository.save(notification);
