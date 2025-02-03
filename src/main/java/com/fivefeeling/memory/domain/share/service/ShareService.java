@@ -3,6 +3,7 @@ package com.fivefeeling.memory.domain.share.service;
 import com.fivefeeling.memory.domain.share.dto.ShareCreateRequestDTO;
 import com.fivefeeling.memory.domain.share.dto.ShareCreateResponseDTO;
 import com.fivefeeling.memory.domain.share.dto.ShareResponseDTO;
+import com.fivefeeling.memory.domain.share.event.ShareApprovedEvent;
 import com.fivefeeling.memory.domain.share.event.ShareCreatedEvent;
 import com.fivefeeling.memory.domain.share.model.Share;
 import com.fivefeeling.memory.domain.share.model.ShareStatus;
@@ -94,6 +95,13 @@ public class ShareService {
       Trip trip = share.getTrip();
       trip.addSharedUser(recipient);
       tripRepository.save(trip);
+
+      Long ownerId = trip.getUser().getUserId();
+      eventPublisher.publishEvent(new ShareApprovedEvent(
+              share.getShareId(),
+              trip.getTripId(),
+              ownerId
+      ));
     }
 
     return ShareResponseDTO.builder()
@@ -105,4 +113,3 @@ public class ShareService {
             .build();
   }
 }
-
