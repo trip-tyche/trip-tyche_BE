@@ -26,9 +26,6 @@ public class TripImagesService {
             .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
 
     List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripId(tripId);
-    if (mediaFiles.isEmpty()) {
-      throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
-    }
 
     List<ImageFileResponseDTO> mediaFileDTOs = mediaFiles.stream()
             .map(mediaFile -> new ImageFileResponseDTO(
