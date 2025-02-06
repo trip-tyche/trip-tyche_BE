@@ -173,7 +173,7 @@ public class TripController {
 */
 
 
-  @Tag(name = "4. Map 페이지 API")
+  @Tag(name = "5. Map 페이지 API")
   @Operation(summary = "지도위 페이지 여행 정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/fc14909a1ec5481ca37b58924637be20?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}/info")
@@ -182,7 +182,7 @@ public class TripController {
     return RestResponse.success(tripInfo);
   }
 
-  @Tag(name = "4. Map 페이지 API")
+  @Tag(name = "5. Map 페이지 API")
   @Operation(summary = "핀포인트별 슬라이드 쇼를 위한 이미지 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/d172149814414943866df2f04f409970?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}/pinpoints/{pinPointId}/images")
@@ -195,7 +195,7 @@ public class TripController {
     return RestResponse.success(pointImageDTO);
   }
 
-  @Tag(name = "5. 날짜별 페이지 API")
+  @Tag(name = "6. 날짜별 페이지 API")
   @Operation(summary = "날짜별 이미지 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/de630f9fd0424f1ca1d521037730d296?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}/map")
@@ -208,7 +208,7 @@ public class TripController {
     return RestResponse.success(dateImageDTO);
   }
 
-  @Tag(name = "6. 위치정보 없는 수정 페이지 API")
+  @Tag(name = "7. 위치정보 없는 수정 페이지 API")
   @Operation(summary = "위치정보 없는 이미지 조회(Redis)", description = "<a href='https://www.notion"
           + ".so/maristadev/f15de88a76ff49da85d3d970d8e64aff?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}/images/unlocated")
@@ -258,7 +258,7 @@ public class TripController {
     return RestResponse.success(response);
   }
 
-  @Tag(name = "6. 위치정보 없는 수정 페이지 API")
+  @Tag(name = "7. 위치정보 없는 수정 페이지 API")
   @Operation(summary = "위치정보 수정", description = "<a href='https://www.notion"
           + ".so/maristadev/15b66958e5b380a4bbfafbe23b0f28b0?pvs=4' target='_blank'>API 명세서</a>")
   @PutMapping("/api/trips/{tripId}/images/unlocated/{mediaFileId}")
@@ -311,7 +311,7 @@ public class TripController {
     }
   }
 
-  @Tag(name = "6. 위치정보 없는 수정 페이지 API")
+  @Tag(name = "7. 위치정보 없는 수정 페이지 API")
   @Operation(summary = "첫번째 이미지 위도 경도 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/15b66958e5b3805dbedacd23536dc98f?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}/images/firstimage")

@@ -31,10 +31,11 @@ public class OpenAPIConfig {
                     new Tag().name("1. 메인 페이지 API"),
                     new Tag().name("2. 여행관리 페이지 API"),
                     new Tag().name("3. 여행등록 페이지 API"),
-                    new Tag().name("4. Map 페이지 API"),
-                    new Tag().name("5. 날짜별 페이지 API"),
-                    new Tag().name("6. 위치정보 없는 수정 페이지 API"),
-                    new Tag().name("7. 공유 관련 API"),
+                    new Tag().name("4. 이미지 수정 페이지 API"),
+                    new Tag().name("5. Map 페이지 API"),
+                    new Tag().name("6. 날짜별 페이지 API"),
+                    new Tag().name("7. 위치정보 없는 수정 페이지 API"),
+                    new Tag().name("8. 공유 관련 API"),
                     new Tag().name("사용하지 않는 API")));
   }
 }
