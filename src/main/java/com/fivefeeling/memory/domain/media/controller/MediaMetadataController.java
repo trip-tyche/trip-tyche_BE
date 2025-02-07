@@ -1,6 +1,7 @@
 package com.fivefeeling.memory.domain.media.controller;
 
 import com.fivefeeling.memory.domain.media.dto.MediaFileBatchDeleteRequestDTO;
+import com.fivefeeling.memory.domain.media.dto.MediaFileBatchUpdateRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.MediaFileRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.MediaFileUpdateRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.TripImagesResponseDTO;
@@ -53,7 +54,8 @@ public class MediaMetadataController {
 
 
   @Tag(name = "4. 이미지 수정 페이지 API")
-  @Operation(summary = "해당 여행 이미지 수정", description = "<a href='' target='_blank'>API 명세서</a>")
+  @Operation(summary = "단일 이미지 수정", description = "<a href='https://www.notion"
+          + ".so/maristadev/aad7b34cc1404a19a3a6870d99f431c9?pvs=4' target='_blank'>API 명세서</a>")
   @PatchMapping("/{tripId}/media-files/{mediaFileId}")
   public RestResponse<String> updateMediaFile(
           @PathVariable Long tripId,
@@ -63,6 +65,19 @@ public class MediaMetadataController {
     mediaMetadataService.updateMediaFileMetadata(tripId, mediaFileId, requestDTO);
     return RestResponse.success("이미지 정보가 성공적으로 수정되었습니다.");
   }
+
+  @Tag(name = "4. 이미지 수정 페이지 API")
+  @Operation(summary = "여러 개 이미지 수정", description = "<a href='https://www.notion"
+          + ".so/maristadev/19366958e5b380809038c6c23bd83689?pvs=4' target='_blank'>API 명세서</a>")
+  @PatchMapping("/{tripId}/media-files")
+  public RestResponse<String> updateMultipleMediaFiles(
+          @PathVariable Long tripId,
+          @RequestBody MediaFileBatchUpdateRequestDTO requestDTO
+  ) {
+    int updatedCount = mediaMetadataService.updateMultipleMediaFiles(tripId, requestDTO);
+    return RestResponse.success(updatedCount + "개의 이미지 정보가 성공적으로 수정되었습니다.");
+  }
+
 
   @Tag(name = "4. 이미지 수정 페이지 API")
   @Operation(summary = "단일 이미지 삭제", description = "<a href='https://www.notion"

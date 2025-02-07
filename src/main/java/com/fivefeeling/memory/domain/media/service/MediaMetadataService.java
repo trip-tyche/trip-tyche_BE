@@ -1,6 +1,7 @@
 package com.fivefeeling.memory.domain.media.service;
 
 import com.fivefeeling.memory.domain.media.dto.MediaFileBatchDeleteRequestDTO;
+import com.fivefeeling.memory.domain.media.dto.MediaFileBatchUpdateRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.MediaFileRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.MediaFileUpdateRequestDTO;
 import com.fivefeeling.memory.domain.media.model.MediaFile;
@@ -94,6 +95,32 @@ public class MediaMetadataService {
     mediaFile.setPinPoint(pinPoint);
 
     mediaFileRepository.save(mediaFile);
+  }
+
+  @Transactional
+  public int updateMultipleMediaFiles(Long tripId, MediaFileBatchUpdateRequestDTO requestDTO) {
+    Trip trip = tripRepository.findById(tripId)
+            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+
+    List<MediaFile> updatedMediaFiles = requestDTO.mediaFiles().stream()
+            .map(request -> {
+              MediaFile mediaFile = mediaFileRepository.findById(request.mediaFileId())
+                      .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
+
+              PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, request.latitude(),
+                      request.longitude());
+
+              mediaFile.setRecordDate(request.recordDate());
+              mediaFile.setLatitude(request.latitude());
+              mediaFile.setLongitude(request.longitude());
+              mediaFile.setPinPoint(pinPoint);
+
+              return mediaFile;
+            })
+            .toList();
+    mediaFileRepository.saveAll(updatedMediaFiles);
+
+    return updatedMediaFiles.size();
   }
 
   @Transactional
