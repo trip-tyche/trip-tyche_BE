@@ -86,6 +86,10 @@ spring:
           enabled: true
       server:
         base-path: /actuator
+springdoc:
+  swagger-ui:
+    operationsSorter: method
+
 
 #  kafka:
 #    bootstrap-servers: localhost:9092
@@ -318,3 +322,6 @@ logging:
   file:
     path: /var/log/spring-boot/
     max-history: 2
+springdoc:
+  swagger-ui:
+    operationsSorter: method

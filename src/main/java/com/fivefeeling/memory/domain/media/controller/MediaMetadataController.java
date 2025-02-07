@@ -1,5 +1,6 @@
 package com.fivefeeling.memory.domain.media.controller;
 
+import com.fivefeeling.memory.domain.media.dto.MediaFileBatchDeleteRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.MediaFileRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.MediaFileUpdateRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.TripImagesResponseDTO;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -51,8 +53,7 @@ public class MediaMetadataController {
 
 
   @Tag(name = "4. 이미지 수정 페이지 API")
-  @Operation(summary = "해당 여행 이미지 수정", description = "<a href='https://www.notion"
-          + ".so/maristadev/389c7561d6514feba1b5b008909ed9d3?pvs=4' target='_blank'>API 명세서</a>")
+  @Operation(summary = "해당 여행 이미지 수정", description = "<a href='' target='_blank'>API 명세서</a>")
   @PatchMapping("/{tripId}/media-files/{mediaFileId}")
   public RestResponse<String> updateMediaFile(
           @PathVariable Long tripId,
@@ -61,5 +62,29 @@ public class MediaMetadataController {
   ) {
     mediaMetadataService.updateMediaFileMetadata(tripId, mediaFileId, requestDTO);
     return RestResponse.success("이미지 정보가 성공적으로 수정되었습니다.");
+  }
+
+  @Tag(name = "4. 이미지 수정 페이지 API")
+  @Operation(summary = "단일 이미지 삭제", description = "<a href='https://www.notion"
+          + ".so/maristadev/e5c93ad0f80c4be5ad1a211f14116e85?pvs=4' target='_blank'>API 명세서</a>")
+  @DeleteMapping("/{tripId}/media-files/{mediaFileId}")
+  public RestResponse<String> deleteSingleMediaFile(
+          @PathVariable Long tripId,
+          @PathVariable Long mediaFileId
+  ) {
+    mediaMetadataService.deleteSingleMediaFile(tripId, mediaFileId);
+    return RestResponse.success("이미지가 성공적으로 삭제되었습니다.");
+  }
+
+  @Tag(name = "4. 이미지 수정 페이지 API")
+  @Operation(summary = "여러 개 이미지 삭제", description = "<a href='https://www.notion"
+          + ".so/maristadev/19366958e5b380be8918d23a17810f09?pvs=4' target='_blank'>API 명세서</a>")
+  @DeleteMapping("/{tripId}/media-files")
+  public RestResponse<String> deleteMultipleMediaFiles(
+          @PathVariable Long tripId,
+          @RequestBody MediaFileBatchDeleteRequestDTO requestDTO
+  ) {
+    int deleteCount = mediaMetadataService.deleteMultipleMediaFiles(tripId, requestDTO);
+    return RestResponse.success(deleteCount + "개의 이미지가 성공적으로 삭제되었습니다.");
   }
 }
