@@ -38,8 +38,8 @@ public class MediaProcessingService {
   public CompletableFuture<List<MediaFile>> processFileUpload(Trip trip, List<MultipartFile> files) {
     // 각 파일별로 비동기 작업 수행
     List<CompletableFuture<MediaProcessResult>> futures = files.stream()
-        .map(file -> processSingleFileUpload(trip, file))
-        .collect(Collectors.toList());
+            .map(file -> processSingleFileUpload(trip, file))
+            .collect(Collectors.toList());
 
     // 모든 파일의 비동기 작업이 완료될 때까지 기다림
     CompletableFuture<Void> allOfFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
@@ -50,32 +50,33 @@ public class MediaProcessingService {
 
       // 결과 수집
       List<MediaProcessResult> results = futures.stream()
-          .map(CompletableFuture::join)
-          .filter(Objects::nonNull)
-          .collect(Collectors.toList());
+              .map(CompletableFuture::join)
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList());
 
       // 각 결과에 대해 PinPoint 추출 및 MediaFile 저장
       List<MediaFile> mediaFiles = results.stream()
-          .filter(result -> result != null) // 예외 발생한 파일 제외
-          .map(result -> {
-            // PinPoint 찾기 또는 생성
-            PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, result.metadata().latitude(), result.metadata().longitude());
+              .filter(result -> result != null) // 예외 발생한 파일 제외
+              .map(result -> {
+                // PinPoint 찾기 또는 생성
+                PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, result.metadata().latitude(), result
+                        .metadata().longitude());
 
-            // MediaFile DB 저장
-            MediaFile mediaFile = new MediaFile();
-            mediaFile.setTrip(trip);
-            mediaFile.setMediaLink(result.mediaLink());
-            mediaFile.setMediaKey(result.mediaKey());
-            mediaFile.setMediaType(result.metadata().mediaType());
-            LocalDateTime recordDateTime = DateUtil.convertToLocalDateTime(result.metadata().recordDate());
-            mediaFile.setRecordDate(recordDateTime);
-            mediaFile.setLatitude(result.metadata().latitude());
-            mediaFile.setLongitude(result.metadata().longitude());
-            mediaFile.setPinPoint(pinPoint);
+                // MediaFile DB 저장
+                MediaFile mediaFile = new MediaFile();
+                mediaFile.setTrip(trip);
+                mediaFile.setMediaLink(result.mediaLink());
+                mediaFile.setMediaKey(result.mediaKey());
+                mediaFile.setMediaType(result.metadata().mediaType());
+                LocalDateTime recordDateTime = DateUtil.convertToLocalDateTime(result.metadata().recordDate());
+                mediaFile.setRecordDate(recordDateTime);
+                mediaFile.setLatitude(result.metadata().latitude());
+                mediaFile.setLongitude(result.metadata().longitude());
+                mediaFile.setPinPoint(pinPoint);
 
-            return mediaFile;
-          })
-          .collect(Collectors.toList());
+                return mediaFile;
+              })
+              .collect(Collectors.toList());
       mediaFileRepository.saveAll(mediaFiles);
 //      log.info("MediaFile 배치 저장 완료 스레드 {}", Thread.currentThread().getName());
       return mediaFiles;
@@ -100,19 +101,19 @@ public class MediaProcessingService {
 
     // 메타데이터와 S3 업로드가 모두 완료되면 결과를 결합하여 반환
     return metadataFuture.thenCombine(uploadFuture, (metadata, uploadResult) -> new MediaProcessResult(
-            metadata, uploadResult.getMediaLink(), uploadResult.getMediaKey()))
-        .exceptionally(ex -> {
-          log.error("파일 처리 중 오류 발생: {}", ex.getMessage());
-          return null;
-        });
+                    metadata, uploadResult.getMediaLink(), uploadResult.getMediaKey()))
+            .exceptionally(ex -> {
+              log.error("파일 처리 중 오류 발생: {}", ex.getMessage());
+              return null;
+            });
   }
 
   @Transactional
   public void deleteMediaFilesByTrip(Trip trip) {
     List<MediaFile> mediaFiles = mediaFileRepository.findAllByTrip(trip);
     List<String> mediaKeys = mediaFiles.stream()
-        .map(MediaFile::getMediaKey)
-        .collect(Collectors.toList());
+            .map(MediaFile::getMediaKey)
+            .collect(Collectors.toList());
 
     if (!mediaKeys.isEmpty()) {
       s3UploadService.deleteFiles(mediaKeys);
