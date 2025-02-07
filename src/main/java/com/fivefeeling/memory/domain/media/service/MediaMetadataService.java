@@ -1,6 +1,7 @@
 package com.fivefeeling.memory.domain.media.service;
 
 import com.fivefeeling.memory.domain.media.dto.MediaFileRequestDTO;
+import com.fivefeeling.memory.domain.media.dto.MediaFileUpdateRequestDTO;
 import com.fivefeeling.memory.domain.media.model.MediaFile;
 import com.fivefeeling.memory.domain.media.repository.MediaFileRepository;
 import com.fivefeeling.memory.domain.pinpoint.model.PinPoint;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -32,27 +34,27 @@ public class MediaMetadataService {
 
   public void processAndSaveMetadataBatch(Long tripId, List<MediaFileRequestDTO> files) {
     Trip trip = tripRepository.findById(tripId)
-        .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
 
     List<MediaFile> mediaFiles = files.stream()
-        .map(file -> {
-          LocalDateTime recordDateTime = DateUtil.convertToLocalDateTime(file.recordDate());
-          PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, file.latitude(), file.longitude());
+            .map(file -> {
+              LocalDateTime recordDateTime = DateUtil.convertToLocalDateTime(file.recordDate());
+              PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, file.latitude(), file.longitude());
 
-          String mediaKey = extractMediaKey(file.mediaLink());
+              String mediaKey = extractMediaKey(file.mediaLink());
 
-          return MediaFile.builder()
-              .trip(trip)
-              .pinPoint(pinPoint)
-              .mediaType(file.mediaType())
-              .mediaLink(file.mediaLink())
-              .mediaKey(mediaKey)
-              .recordDate(recordDateTime)
-              .latitude(file.latitude())
-              .longitude(file.longitude())
-              .build();
-        })
-        .collect(Collectors.toList());
+              return MediaFile.builder()
+                      .trip(trip)
+                      .pinPoint(pinPoint)
+                      .mediaType(file.mediaType())
+                      .mediaLink(file.mediaLink())
+                      .mediaKey(mediaKey)
+                      .recordDate(recordDateTime)
+                      .latitude(file.latitude())
+                      .longitude(file.longitude())
+                      .build();
+            })
+            .collect(Collectors.toList());
 
     List<MediaFile> saveMediaFiles = mediaFileRepository.saveAll(mediaFiles);
 
@@ -62,13 +64,32 @@ public class MediaMetadataService {
       // Redis에 저장
       if (savedMediaFile.getLatitude() == 0.0 && savedMediaFile.getLongitude() == 0.0) {
         redisDataService.saveZeroLocationData(
-            tripId,
-            mediaFileId,
-            savedMediaFile.getMediaLink(),
-            savedMediaFile.getRecordDate().toString()
+                tripId,
+                mediaFileId,
+                savedMediaFile.getMediaLink(),
+                savedMediaFile.getRecordDate().toString()
         );
       }
     });
+  }
+
+  @Transactional
+  public void updateMediaFileMetadata(Long tripId, Long mediaFileId, MediaFileUpdateRequestDTO request) {
+
+    Trip trip = tripRepository.findById(tripId)
+            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+
+    MediaFile mediaFile = mediaFileRepository.findById(mediaFileId)
+            .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
+
+    PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, request.latitude(), request.longitude());
+
+    mediaFile.setRecordDate(request.recordDate());
+    mediaFile.setLatitude(request.latitude());
+    mediaFile.setLongitude(request.longitude());
+    mediaFile.setPinPoint(pinPoint);
+
+    mediaFileRepository.save(mediaFile);
   }
 
   private String extractMediaKey(String mediaLink) {

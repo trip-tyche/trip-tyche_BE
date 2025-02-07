@@ -1,6 +1,7 @@
 package com.fivefeeling.memory.domain.media.controller;
 
 import com.fivefeeling.memory.domain.media.dto.MediaFileRequestDTO;
+import com.fivefeeling.memory.domain.media.dto.MediaFileUpdateRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.TripImagesResponseDTO;
 import com.fivefeeling.memory.domain.media.service.MediaMetadataService;
 import com.fivefeeling.memory.domain.media.service.TripImagesService;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,5 +47,19 @@ public class MediaMetadataController {
   public RestResponse<TripImagesResponseDTO> getTripImages(@PathVariable Long tripId) {
     TripImagesResponseDTO responseDTO = tripImagesService.getTripImagesByTripId(tripId);
     return RestResponse.success(responseDTO);
+  }
+
+
+  @Tag(name = "4. 이미지 수정 페이지 API")
+  @Operation(summary = "해당 여행 이미지 수정", description = "<a href='https://www.notion"
+          + ".so/maristadev/389c7561d6514feba1b5b008909ed9d3?pvs=4' target='_blank'>API 명세서</a>")
+  @PatchMapping("/{tripId}/media-files/{mediaFileId}")
+  public RestResponse<String> updateMediaFile(
+          @PathVariable Long tripId,
+          @PathVariable Long mediaFileId,
+          @RequestBody MediaFileUpdateRequestDTO requestDTO
+  ) {
+    mediaMetadataService.updateMediaFileMetadata(tripId, mediaFileId, requestDTO);
+    return RestResponse.success("이미지 정보가 성공적으로 수정되었습니다.");
   }
 }
