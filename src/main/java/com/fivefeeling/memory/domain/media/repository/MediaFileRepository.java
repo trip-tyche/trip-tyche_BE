@@ -17,11 +17,12 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
   List<MediaFile> findByTripTripIdAndPinPointPinPointId(Long tripId, Long pinPointId);
 
   // String 형식의 날짜를 Date로 변환하여 조회
-  @Query("SELECT m FROM MediaFile m WHERE m.trip.tripId = :tripId AND m.recordDate BETWEEN :startOfDay AND :endOfDay ORDER BY m.recordDate ASC")
+  @Query("SELECT m FROM MediaFile m WHERE m.trip.tripId = :tripId AND m.recordDate BETWEEN :startOfDay AND :endOfDay "
+          + "ORDER BY m.recordDate ASC")
   List<MediaFile> findByTripTripIdAndRecordDate(
-      @Param("tripId") Long tripId,
-      @Param("startOfDay") LocalDateTime startOfDay,
-      @Param("endOfDay") LocalDateTime endOfDay
+          @Param("tripId") Long tripId,
+          @Param("startOfDay") LocalDateTime startOfDay,
+          @Param("endOfDay") LocalDateTime endOfDay
   );
 
   List<MediaFile> findAllByTrip(Trip trip);
@@ -30,6 +31,5 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
 
   // 특정 tripId의 첫 번째 MediaFile 조회
   Optional<MediaFile> findFirstByTripTripIdAndLatitudeNotAndLongitudeNotOrderByMediaFileIdAsc(
-      Long tripId, Double latitude, Double longitude);
-
+          Long tripId, Double latitude, Double longitude);
 }
