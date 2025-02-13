@@ -14,8 +14,6 @@ import com.fivefeeling.memory.domain.user.model.User;
 import com.fivefeeling.memory.domain.user.repository.UserRepository;
 import com.fivefeeling.memory.global.common.ResultCode;
 import com.fivefeeling.memory.global.exception.CustomException;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -62,34 +60,30 @@ public class ShareService {
   }
 
 
-  public List<ShareResponseDTO> getShareById(Long recipientId) {
+  public ShareResponseDTO getShareDetail(Long shareId) {
+    Share share = shareRepository.findById(shareId)
+            .orElseThrow(() -> new CustomException(ResultCode.SHARE_NOT_FOUND));
 
-    List<Share> shares = shareRepository.findAllByRecipientId(recipientId);
-
-    if (shares.isEmpty()) {
-      throw new CustomException(ResultCode.SHARE_NOT_FOUND);
-    }
-
-    return shares.stream()
-            .map(share -> ShareResponseDTO.builder()
-                    .shareId(share.getShareId())
-                    .tripId(share.getTrip().getTripId())
-                    .tripTitle(share.getTrip().getTripTitle())
-                    .ownerNickname(share.getTrip().getUser().getUserNickName())
-                    .status(share.getShareStatus())
-                    .build())
-            .collect(Collectors.toList());
+    return ShareResponseDTO.builder()
+            .shareId(share.getShareId())
+            .tripId(share.getTrip().getTripId())
+            .tripTitle(share.getTrip().getTripTitle())
+            .ownerNickname(share.getTrip().getUser().getUserNickName())
+            .status(share.getShareStatus())
+            .build();
   }
 
   @Transactional
-  public ShareResponseDTO updateShareStatus(Long recipientId, Long shareId, ShareStatus status) {
+  public ShareResponseDTO updateShareStatus(Long shareId, ShareStatus status) {
     Share share = shareRepository.findById(shareId)
             .orElseThrow(() -> new CustomException(ResultCode.SHARE_NOT_FOUND));
+
     share.setShareStatus(status);
     shareRepository.save(share);
 
     if (status == ShareStatus.APPROVED) {
-      User recipient = userRepository.findById(recipientId)
+      // share에 이미 저장된 recipientId를 사용 수신자 정보를 조회
+      User recipient = userRepository.findById(share.getRecipientId())
               .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
       Trip trip = share.getTrip();

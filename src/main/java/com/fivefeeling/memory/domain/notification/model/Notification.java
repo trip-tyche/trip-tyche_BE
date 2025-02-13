@@ -46,15 +46,13 @@ public class Notification {
   @Column(name = "createdAt", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
+  @Column(name = "shareId")
+  private Long shareId;
+
   @PrePersist
   protected void onPersist() {
     this.createdAt = LocalDateTime.now();
   }
-
-//  public enum NotificationStatus {
-//    UNREAD,
-//    READ
-//  }
 
   public void markAsRead() {
     this.status = NotificationStatus.READ;
