@@ -29,6 +29,7 @@ public class NotificationService {
     return notifications.stream()
             .map(notification -> new NotificationResponseDTO(
                     notification.getNotificationId(),
+                    notification.getShareId(),
                     notification.getMessage().name(),
                     notification.getStatus().name(),
                     notification.getCreatedAt()
@@ -68,6 +69,7 @@ public class NotificationService {
   private NotificationResponseDTO toDTO(Notification notification) {
     return new NotificationResponseDTO(
             notification.getNotificationId(),
+            notification.getShareId(),
             notification.getMessage().toString(),
             notification.getStatus().toString(),
             notification.getCreatedAt()
