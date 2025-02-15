@@ -22,9 +22,7 @@ public class NotificationService {
   private final RedisTemplate<String, Object> redisTemplate;
 
   public List<NotificationResponseDTO> getUnreadNotifications(Long userId) {
-    List<Notification> notifications = notificationRepository.findByUserIdAndStatus(
-            userId, NotificationStatus.UNREAD
-    );
+    List<Notification> notifications = notificationRepository.findByUserId(userId);
 
     return notifications.stream()
             .map(notification -> new NotificationResponseDTO(
