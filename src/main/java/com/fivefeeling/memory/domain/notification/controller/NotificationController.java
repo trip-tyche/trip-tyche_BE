@@ -37,5 +37,6 @@ public class NotificationController {
           @PathVariable Long notificationId
   ) {
     return RestResponse.success(notificationService.markAsRead(notificationId));
+
   }
 }
