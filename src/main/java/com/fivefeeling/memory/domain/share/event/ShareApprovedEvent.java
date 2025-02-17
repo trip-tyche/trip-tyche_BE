@@ -14,4 +14,5 @@ public class ShareApprovedEvent {
   private Long shareId;
   private Long tripId;
   private Long ownerId;
+  private String senderNickname;
 }

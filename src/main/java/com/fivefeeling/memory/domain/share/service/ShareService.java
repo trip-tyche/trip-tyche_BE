@@ -52,7 +52,8 @@ public class ShareService {
     eventPublisher.publishEvent(new ShareCreatedEvent(
             savedShare.getShareId(),
             savedShare.getTrip().getTripId(),
-            savedShare.getRecipientId()
+            savedShare.getRecipientId(),
+            savedShare.getTrip().getUser().getUserNickName()
     ));
 
     return new ShareCreateResponseDTO(
@@ -95,10 +96,12 @@ public class ShareService {
       tripRepository.save(trip);
 
       Long ownerId = trip.getUser().getUserId();
+      String senderNickname = recipient.getUserNickName();
       eventPublisher.publishEvent(new ShareApprovedEvent(
               share.getShareId(),
               trip.getTripId(),
-              ownerId
+              ownerId,
+              senderNickname
       ));
     }
 
