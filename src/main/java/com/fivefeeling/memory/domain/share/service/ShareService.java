@@ -33,6 +33,10 @@ public class ShareService {
     Trip trip = tripRepository.findById(requestDTO.tripId())
             .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
 
+    if (trip.getUser().getUserId().equals(requestDTO.recipientId())) {
+      throw new CustomException(ResultCode.CANNOT_SHARE_TO_SELF);
+    }
+
     boolean alreadyRequested = shareRepository.existsByTripAndRecipientId(trip, requestDTO.recipientId());
     if (alreadyRequested) {
       throw new CustomException(ResultCode.SHARE_ALREADY_EXIST);
