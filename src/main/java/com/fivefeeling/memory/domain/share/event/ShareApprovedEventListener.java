@@ -39,6 +39,8 @@ public class ShareApprovedEventListener {
               .message(NotificationType.SHARED_APPROVE)
               .status(NotificationStatus.UNREAD)
               .streamMessageId(recordId.getValue())
+              .referenceId(event.getShareId())
+              .senderNickname(event.getSenderNickname())
               .build();
       notificationRepository.save(notification);
       log.info("DB에 알림 메시지 저장 완료: {}", notification);

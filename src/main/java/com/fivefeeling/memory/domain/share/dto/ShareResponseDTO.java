@@ -6,10 +6,14 @@ import lombok.Builder;
 @Builder
 public record ShareResponseDTO(
         Long shareId,
-        Long tripId,
         String tripTitle,
         String ownerNickname,
-        ShareStatus status
+        String recipientNickname,
+        ShareStatus status,
+        String country,
+        String startDate,
+        String endDate,
+        String hashtags
 ) {
 
 }

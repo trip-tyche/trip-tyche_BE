@@ -28,7 +28,7 @@ public class Notification {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long notificationId;
 
-  @Column(name = "userId", nullable = false)
+  @Column(name = "user_id", nullable = false)
   private Long userId;
 
   @Column(name = "message", nullable = false)
@@ -40,14 +40,17 @@ public class Notification {
   private NotificationStatus status;
 
   @Setter
-  @Column(name = "streamMessageId")
+  @Column(name = "stream_message_id")
   private String streamMessageId;
 
-  @Column(name = "createdAt", nullable = false, updatable = false)
+  @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
-  @Column(name = "shareId")
-  private Long shareId;
+  @Column(name = "reference_id")
+  private Long referenceId;
+
+  @Column(name = "sender_nickname")
+  private String senderNickname;
 
   @PrePersist
   protected void onPersist() {
@@ -56,5 +59,9 @@ public class Notification {
 
   public void markAsRead() {
     this.status = NotificationStatus.READ;
+  }
+
+  public void markAsDeleted() {
+    this.status = NotificationStatus.DELETE;
   }
 }

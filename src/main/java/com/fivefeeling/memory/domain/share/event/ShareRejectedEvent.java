@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ShareApprovedEvent {
+public class ShareRejectedEvent {
 
   private Long shareId;
   private Long tripId;

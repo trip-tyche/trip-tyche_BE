@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,7 +31,7 @@ public class NotificationController {
     return RestResponse.success(notificationService.getUnreadNotifications(userId));
   }
 
-  @Operation(summary = "알림 상태 변경", description = "<a href='https://www.notion"
+  @Operation(summary = "알림 상태 변경(UNREAD -> READ)", description = "<a href='https://www.notion"
           + ".so/maristadev/18566958e5b3801ea257fcfbe2d9e2e0?pvs=4' target='_blank'>API 명세서</a>")
   @PatchMapping("/{notificationId}")
   public RestResponse<NotificationResponseDTO> markAsRead(
@@ -39,4 +40,15 @@ public class NotificationController {
     return RestResponse.success(notificationService.markAsRead(notificationId));
 
   }
+
+  @Operation(summary = "알림 상태 변경 (READ -> DELETE)",
+          description = "알림 상태가 READ인 경우 DELETE 상태로 변경합니다. 알림 ID 배열을 받아 일괄 처리합니다.")
+  @PatchMapping("/delete")
+  public RestResponse<List<NotificationResponseDTO>> markAsDeleted(
+          @RequestBody List<Long> notificationIds
+  ) {
+    return RestResponse.success(notificationService.markAsDeleted(notificationIds));
+  }
+
+
 }

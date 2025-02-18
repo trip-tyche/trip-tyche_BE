@@ -4,9 +4,10 @@ import java.time.LocalDateTime;
 
 public record NotificationResponseDTO(
         Long notificationId,
-        Long shareId,
+        Long referenceId,
         String message,
         String status,
+        String senderNickname,
         LocalDateTime createdAt
 ) {
 
