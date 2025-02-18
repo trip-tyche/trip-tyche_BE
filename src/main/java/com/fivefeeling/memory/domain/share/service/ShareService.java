@@ -94,11 +94,10 @@ public class ShareService {
     share.setShareStatus(status);
     shareRepository.save(share);
 
+    User recipient = userRepository.findById(share.getRecipientId())
+            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
     if (status == ShareStatus.APPROVED) {
       // APPROVED인 경우: 수신자 정보를 조회하고 공유 사용자로 추가 후 이벤트 발행
-      User recipient = userRepository.findById(share.getRecipientId())
-              .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-
       Trip trip = share.getTrip();
       trip.addSharedUser(recipient);
       tripRepository.save(trip);
@@ -113,9 +112,6 @@ public class ShareService {
       ));
     } else if (status == ShareStatus.REJECTED) {
       // REJECTED인 경우: 수신자 정보를 조회한 후 이벤트 발행 (공유 요청 거절)
-      User recipient = userRepository.findById(share.getRecipientId())
-              .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-
       Trip trip = share.getTrip();
       Long ownerId = trip.getUser().getUserId();
       String senderNickname = recipient.getUserNickName();
@@ -126,9 +122,7 @@ public class ShareService {
               senderNickname
       ));
     }
-    User recipient = userRepository.findById(share.getRecipientId())
-            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-
+    
     return ShareResponseDTO.builder()
             .shareId(share.getShareId())
             .tripTitle(share.getTrip().getTripTitle())
