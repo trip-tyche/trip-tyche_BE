@@ -5,6 +5,7 @@ import com.fivefeeling.memory.domain.share.dto.ShareCreateResponseDTO;
 import com.fivefeeling.memory.domain.share.dto.ShareResponseDTO;
 import com.fivefeeling.memory.domain.share.event.ShareApprovedEvent;
 import com.fivefeeling.memory.domain.share.event.ShareCreatedEvent;
+import com.fivefeeling.memory.domain.share.event.ShareRejectedEvent;
 import com.fivefeeling.memory.domain.share.model.Share;
 import com.fivefeeling.memory.domain.share.model.ShareStatus;
 import com.fivefeeling.memory.domain.share.repository.ShareRepository;
@@ -94,7 +95,7 @@ public class ShareService {
     shareRepository.save(share);
 
     if (status == ShareStatus.APPROVED) {
-      // share에 이미 저장된 recipientId를 사용 수신자 정보를 조회
+      // APPROVED인 경우: 수신자 정보를 조회하고 공유 사용자로 추가 후 이벤트 발행
       User recipient = userRepository.findById(share.getRecipientId())
               .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
@@ -105,6 +106,20 @@ public class ShareService {
       Long ownerId = trip.getUser().getUserId();
       String senderNickname = recipient.getUserNickName();
       eventPublisher.publishEvent(new ShareApprovedEvent(
+              share.getShareId(),
+              trip.getTripId(),
+              ownerId,
+              senderNickname
+      ));
+    } else if (status == ShareStatus.REJECTED) {
+      // REJECTED인 경우: 수신자 정보를 조회한 후 이벤트 발행 (공유 요청 거절)
+      User recipient = userRepository.findById(share.getRecipientId())
+              .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+
+      Trip trip = share.getTrip();
+      Long ownerId = trip.getUser().getUserId();
+      String senderNickname = recipient.getUserNickName();
+      eventPublisher.publishEvent(new ShareRejectedEvent(
               share.getShareId(),
               trip.getTripId(),
               ownerId,
