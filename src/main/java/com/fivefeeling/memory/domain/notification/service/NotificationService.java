@@ -66,6 +66,20 @@ public class NotificationService {
     return toDTO(saved);
   }
 
+
+  public List<NotificationResponseDTO> markAsDeleted(List<Long> notificationIds) {
+    return notificationIds.stream().map(id -> {
+      Notification notification = notificationRepository.findById(id)
+              .orElseThrow(() -> new CustomException(ResultCode.NOTIFICATION_NOT_FOUND));
+
+      if (notification.getStatus() == NotificationStatus.READ) {
+        notification.markAsDeleted();
+        notification = notificationRepository.save(notification);
+      }
+      return toDTO(notification);
+    }).toList();
+  }
+
   private NotificationResponseDTO toDTO(Notification notification) {
     return new NotificationResponseDTO(
             notification.getNotificationId(),

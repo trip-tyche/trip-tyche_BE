@@ -60,4 +60,8 @@ public class Notification {
   public void markAsRead() {
     this.status = NotificationStatus.READ;
   }
+
+  public void markAsDeleted() {
+    this.status = NotificationStatus.DELETE;
+  }
 }
