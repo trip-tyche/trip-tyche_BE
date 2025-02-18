@@ -69,12 +69,19 @@ public class ShareService {
     Share share = shareRepository.findById(shareId)
             .orElseThrow(() -> new CustomException(ResultCode.SHARE_NOT_FOUND));
 
+    User recipient = userRepository.findById(share.getRecipientId())
+            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+
     return ShareResponseDTO.builder()
             .shareId(share.getShareId())
-            .tripId(share.getTrip().getTripId())
             .tripTitle(share.getTrip().getTripTitle())
             .ownerNickname(share.getTrip().getUser().getUserNickName())
+            .recipientNickname(recipient.getUserNickName())
             .status(share.getShareStatus())
+            .country(share.getTrip().getCountry())
+            .startDate(share.getTrip().getStartDate().toString())
+            .endDate(share.getTrip().getEndDate().toString())
+            .hashtags(share.getTrip().getHashtags())
             .build();
   }
 
@@ -104,13 +111,19 @@ public class ShareService {
               senderNickname
       ));
     }
+    User recipient = userRepository.findById(share.getRecipientId())
+            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
     return ShareResponseDTO.builder()
             .shareId(share.getShareId())
-            .tripId(share.getTrip().getTripId())
             .tripTitle(share.getTrip().getTripTitle())
             .ownerNickname(share.getTrip().getUser().getUserNickName())
+            .recipientNickname(recipient.getUserNickName())
             .status(share.getShareStatus())
+            .country(share.getTrip().getCountry())
+            .startDate(share.getTrip().getStartDate().toString())
+            .endDate(share.getTrip().getEndDate().toString())
+            .hashtags(share.getTrip().getHashtags())
             .build();
   }
 }
