@@ -32,13 +32,13 @@ public class ShareController {
   }
 
   @Operation(summary = "공유요청 상세조회", description = "<a href='https://www.notion"
-          + ".so/maristadev/17766958e5b380139607e90275d52298?pvs=4' target='_blank'>API 명세서</a>")
+          + ".so/maristadev/17766958e5b380e48caef8641b873c04?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/shares/{shareId}")
   public RestResponse<ShareResponseDTO> getShareInfo(@PathVariable Long shareId) {
     return RestResponse.success(shareService.getShareDetail(shareId));
   }
 
-  @Operation(summary = "공유요청 수락", description = "<a href='https://www.notion"
+  @Operation(summary = "공유요청 상태변경[`APPROVED` `REJECTED`]", description = "<a href='https://www.notion"
           + ".so/maristadev/17766958e5b3800fa0ecf89667bdaf03?pvs=4' target='_blank'>API 명세서</a>")
   @PatchMapping("/api/shares/{shareId}")
   public RestResponse<ShareResponseDTO> updateShareStatus(

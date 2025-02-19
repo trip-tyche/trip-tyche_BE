@@ -41,8 +41,8 @@ public class NotificationController {
 
   }
 
-  @Operation(summary = "알림 상태 변경 (READ -> DELETE)",
-          description = "알림 상태가 READ인 경우 DELETE 상태로 변경합니다. 알림 ID 배열을 받아 일괄 처리합니다.")
+  @Operation(summary = "알림 상태 변경 (READ -> DELETE)", description = "<a href='https://www.notion"
+          + ".so/maristadev/READ-DELETE-19f66958e5b380b4ab36dd53d3b4f26e?pvs=4' target='_blank'>API 명세서</a>")
   @PatchMapping("/delete")
   public RestResponse<List<NotificationResponseDTO>> markAsDeleted(
           @RequestBody List<Long> notificationIds

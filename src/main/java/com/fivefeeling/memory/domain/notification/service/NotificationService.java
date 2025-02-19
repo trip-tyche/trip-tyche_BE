@@ -32,7 +32,7 @@ public class NotificationService {
                     notification.getMessage().name(),
                     notification.getStatus().name(),
                     notification.getSenderNickname(),
-                    notification.getCreatedAt()
+                    notification.getCreatedAt().toString()
             ))
             .collect(Collectors.toList());
   }
@@ -87,7 +87,7 @@ public class NotificationService {
             notification.getMessage().toString(),
             notification.getStatus().toString(),
             notification.getSenderNickname(),
-            notification.getCreatedAt()
+            notification.getCreatedAt().toString()
     );
   }
 }
