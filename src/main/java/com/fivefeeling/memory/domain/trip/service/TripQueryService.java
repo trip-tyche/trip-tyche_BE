@@ -44,27 +44,28 @@ public class TripQueryService {
     User user = userRepository.findByUserEmail(userEmail)
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
-    // 1) 자신이 "직접 소유한(내가 만든)" Trip
-    List<Trip> ownedTrips = tripRepository.findByUserUserId(user.getUserId());
-    // 2) 자신이 "공유받은" Trip
-    List<Trip> sharedTrips = tripRepository.findAllBySharedUserId(user.getUserId());
-
-//    List<Trip> allTrips = new ArrayList<>();
-//    allTrips.addAll(ownedTrips);
-//    allTrips.addAll(sharedTrips);
-
-//    List<TripInfoResponseDTO>  = tripRepository.findByUserUserId(user.getUserId()).stream()
     List<TripInfoResponseDTO> tripDTOs = tripRepository.findAllAccessibleTrips(user.getUserId())
             .stream()
-            .map(trip -> new TripInfoResponseDTO(
-                    trip.getTripId(),
-                    trip.getTripTitle(),
-                    trip.getCountry(),
-                    formatLocalDateToString(trip.getStartDate()),
-                    formatLocalDateToString(trip.getEndDate()),
-                    trip.getHashtagsAsList(),
-                    List.of()
-            ))
+            .map(trip -> {
+              String ownerNickname = trip.getUser().getUserNickName();
+
+              List<String> sharedUserNicknames = trip.getSharedUsers()
+                      .stream()
+                      .map(User::getUserNickName)
+                      .toList();
+
+              return TripInfoResponseDTO.withOwnerAndSharedUsers(
+                      trip.getTripId(),
+                      trip.getTripTitle(),
+                      trip.getCountry(),
+                      formatLocalDateToString(trip.getStartDate()),
+                      formatLocalDateToString(trip.getEndDate()),
+                      trip.getHashtagsAsList(),
+                      List.of(),
+                      ownerNickname,
+                      sharedUserNicknames
+              );
+            })
             .collect(Collectors.toList());
     return UserTripInfoResponseDTO.withoutPinPoints(
             user.getUserId(),
