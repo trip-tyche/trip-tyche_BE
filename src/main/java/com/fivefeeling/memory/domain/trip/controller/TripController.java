@@ -147,32 +147,7 @@ public class TripController {
 
     return RestResponse.success("성공적으로 삭제되었습니다.");
   }
-
-/*
-  @Tag(name = "사용하지 않는 API")
-  @Operation(deprecated = true, summary = "사용자 여행 정보 저장", description = " <a href='https://www.notion
-  .so/maristadev/d7dbe3f4a6684a07b9285c6a72272f36?pvs=4' target='_blank'>API 명세서</a>")
-  @PostMapping("/api/trips/{tripId}/info")
-  public RestResponse<TripInfoResponseDTO> createTripInfo(
-      @RequestHeader("Authorization") String authorizationHeader,
-      @PathVariable Long tripId,
-      @RequestBody TripInfoRequestDTO tripInfoRequestDTO) {
-
-    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-      log.error("유효하지 않은 Authorization 헤더 형식입니다: {}", authorizationHeader);
-      throw new CustomException(ResultCode.INVALID_JWT);
-    }
-
-    String token = authorizationHeader.substring(7);
-    String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
-
-    TripInfoResponseDTO createdTripInfo = tripManagementService.updateTrip(userEmail, tripId, tripInfoRequestDTO);
-
-    return RestResponse.success(createdTripInfo);
-  }
-*/
-
-
+  
   @Tag(name = "5. Map 페이지 API")
   @Operation(summary = "지도위 페이지 여행 정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/fc14909a1ec5481ca37b58924637be20?pvs=4' target='_blank'>API 명세서</a>")

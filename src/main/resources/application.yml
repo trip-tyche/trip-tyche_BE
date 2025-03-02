@@ -311,14 +311,14 @@ logging:
     com.fivefeeling.memory.global.oauth: DEBUG
     com.fivefeeling.memory.global.s3: DEBUG
     software.amazon.awssdk: DEBUG
+    org.springframework.web.socket: DEBUG
+    org.springframework.web.socket.messaging: DEBUG
     org.hibernate:
       sql: debug
       type:
         descriptor:
           sql:
             BasicBinder: trace
-
-
   file:
     path: /var/log/spring-boot/
     max-history: 2
