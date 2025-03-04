@@ -73,7 +73,16 @@ public class RedisStreamMessageListener implements StreamListener<String, MapRec
       // WebSocket으로 알림 메시지 전송
       Map<String, Object> notificationMessage = new HashMap<>();
       notificationMessage.put("recipientId", Long.parseLong(recipientId));
-      notificationMessage.put("type", typeString);
+
+      // 메시지 타입에 따라 다른 필드를 추가합니다.
+      if ("NOTIFICATION_COUNT".equals(typeString)) {
+        // unreadCount를 조회하는 메서드를 호출하여 값을 넣습니다.
+        int unreadCount = getUnreadNotificationCount(recipientId);
+        notificationMessage.put("unreadCount", unreadCount);
+      } else {
+        // 다른 타입의 경우 type 필드를 그대로 사용
+        notificationMessage.put("type", typeString);
+      }
 
       String jsonPayload = objectMapper.writeValueAsString(notificationMessage);
 
