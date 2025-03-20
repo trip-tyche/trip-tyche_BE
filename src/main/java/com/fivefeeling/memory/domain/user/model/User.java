@@ -26,16 +26,16 @@ public class User {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "userId")
+  @Column(name = "user_id")
   private Long userId;
 
-  @Column(name = "userName", nullable = false, length = 255)
+  @Column(name = "user_name", nullable = false, length = 255)
   private String userName;
 
-  @Column(name = "userNickName", length = 255)
+  @Column(name = "user_nick_name", length = 255)
   private String userNickName;
 
-  @Column(name = "userEmail", nullable = false, length = 255, unique = true)
+  @Column(name = "user_email", nullable = false, length = 255, unique = true)
   private String userEmail;
 
   @Column(name = "provider", nullable = false)
@@ -44,14 +44,12 @@ public class User {
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Trip> trips;
 
-  public User updateUser(String userName, String userEmail) {
+  public void updateUser(String userName, String userEmail) {
     this.userName = userName;
     this.userEmail = userEmail;
-    return this;
   }
 
-  public User updateUserNickName(String userNickName) {
+  public void updateUserNickName(String userNickName) {
     this.userNickName = userNickName;
-    return this;
   }
 }
