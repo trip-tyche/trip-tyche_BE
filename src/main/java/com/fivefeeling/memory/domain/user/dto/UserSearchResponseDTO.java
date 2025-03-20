@@ -1,4 +1,6 @@
-package com.fivefeeling.memory.domain.user.model;
+package com.fivefeeling.memory.domain.user.dto;
+
+import com.fivefeeling.memory.domain.user.model.User;
 
 public record UserSearchResponseDTO(
         Long userId,

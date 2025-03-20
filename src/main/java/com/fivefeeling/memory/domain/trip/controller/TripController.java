@@ -16,7 +16,7 @@ import com.fivefeeling.memory.domain.trip.model.TripResponseDTO;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.trip.service.TripManagementService;
 import com.fivefeeling.memory.domain.trip.service.TripQueryService;
-import com.fivefeeling.memory.domain.user.model.UserTripInfoResponseDTO;
+import com.fivefeeling.memory.domain.user.dto.UserTripInfoResponseDTO;
 import com.fivefeeling.memory.global.common.RestResponse;
 import com.fivefeeling.memory.global.common.ResultCode;
 import com.fivefeeling.memory.global.exception.CustomException;
@@ -147,7 +147,7 @@ public class TripController {
 
     return RestResponse.success("성공적으로 삭제되었습니다.");
   }
-  
+
   @Tag(name = "5. Map 페이지 API")
   @Operation(summary = "지도위 페이지 여행 정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/fc14909a1ec5481ca37b58924637be20?pvs=4' target='_blank'>API 명세서</a>")

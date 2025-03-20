@@ -1,6 +1,6 @@
 package com.fivefeeling.memory.domain.user.controller;
 
-import com.fivefeeling.memory.domain.user.model.UserSearchResponseDTO;
+import com.fivefeeling.memory.domain.user.dto.UserSearchResponseDTO;
 import com.fivefeeling.memory.domain.user.service.UserService;
 import com.fivefeeling.memory.global.common.RestResponse;
 import io.swagger.v3.oas.annotations.Operation;
