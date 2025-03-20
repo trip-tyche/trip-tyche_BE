@@ -1,7 +1,7 @@
 package com.fivefeeling.memory.domain.user.service;
 
+import com.fivefeeling.memory.domain.user.dto.UserSearchResponseDTO;
 import com.fivefeeling.memory.domain.user.model.User;
-import com.fivefeeling.memory.domain.user.model.UserSearchResponseDTO;
 import com.fivefeeling.memory.domain.user.repository.UserRepository;
 import com.fivefeeling.memory.global.common.ResultCode;
 import com.fivefeeling.memory.global.exception.CustomException;
