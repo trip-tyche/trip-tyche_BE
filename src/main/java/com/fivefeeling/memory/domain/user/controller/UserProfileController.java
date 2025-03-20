@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "1. 메인 페이지 API")
 @RestController
-@RequestMapping("/v1/users")
+@RequestMapping("/v1")
 @RequiredArgsConstructor
 public class UserProfileController {
 
@@ -29,7 +29,7 @@ public class UserProfileController {
 
   @Operation(summary = "사용자 닉네임 업데이트", description = "<a href='https://www.notion"
           + ".so/maristadev/865a54c429e649fe8646be7da6954a4a?pvs=4' target='_blank'>API 명세서</a>")
-  @PatchMapping("/me")
+  @PatchMapping("/users/me")
   @ResponseBody
   public RestResponse<String> updateNickName(
           @RequestHeader("Authorization") String authorizationHeader,
@@ -46,9 +46,9 @@ public class UserProfileController {
 
   @Operation(summary = "닉네임 중복 확인", description = "<a href='https://www.notion"
           + ".so/maristadev/17766958e5b380afad4ef68810296b0b?pvs=4' target='_blank'>API 명세서</a>")
-  @GetMapping("/check-nickname")
-  public RestResponse<String> checkNicknameAvailability(@RequestParam String userNickName) {
-    userService.validateAndCheckNickname(userNickName);
+  @GetMapping("/nicknames")
+  public RestResponse<String> checkNicknameAvailability(@RequestParam("nickname") String nickname) {
+    userService.validateAndCheckNickname(nickname);
     return RestResponse.success("사용 가능한 닉네임입니다.");
   }
 }
