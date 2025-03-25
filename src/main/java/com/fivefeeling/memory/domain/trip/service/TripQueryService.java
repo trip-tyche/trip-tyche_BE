@@ -9,12 +9,12 @@ import com.fivefeeling.memory.domain.media.repository.MediaFileRepository;
 import com.fivefeeling.memory.domain.pinpoint.model.PinPoint;
 import com.fivefeeling.memory.domain.pinpoint.model.PinPointResponseDTO;
 import com.fivefeeling.memory.domain.pinpoint.repository.PinPointRepository;
+import com.fivefeeling.memory.domain.trip.dto.TripsResponseDTO;
 import com.fivefeeling.memory.domain.trip.model.PointImageDTO;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
 import com.fivefeeling.memory.domain.trip.model.TripResponseDTO;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
-import com.fivefeeling.memory.domain.user.dto.UserTripInfoResponseDTO;
 import com.fivefeeling.memory.domain.user.model.User;
 import com.fivefeeling.memory.domain.user.repository.UserRepository;
 import com.fivefeeling.memory.global.common.ResultCode;
@@ -40,6 +40,38 @@ public class TripQueryService {
   private final MediaFileRepository mediaFileRepository;
 
 
+  public TripsResponseDTO getTripsByUserEmail(String userEmail) {
+    User user = userRepository.findByUserEmail(userEmail)
+            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+
+    List<com.fivefeeling.memory.domain.trip.dto.TripInfoResponseDTO> tripDTOs = tripRepository.findAllAccessibleTrips(
+                    user.getUserId())
+            .stream()
+            .map(trip -> {
+              String ownerNickname = trip.getUser().getUserNickName();
+
+              List<String> sharedUserNicknames = trip.getSharedUsers()
+                      .stream()
+                      .map(User::getUserNickName)
+                      .toList();
+
+              return new com.fivefeeling.memory.domain.trip.dto.TripInfoResponseDTO(
+                      trip.getTripId(),
+                      trip.getTripTitle(),
+                      trip.getCountry(),
+                      formatLocalDateToString(trip.getStartDate()),
+                      formatLocalDateToString(trip.getEndDate()),
+                      trip.getHashtagsAsList(),
+                      ownerNickname,
+                      sharedUserNicknames
+              );
+            })
+            .collect(Collectors.toList());
+    return new TripsResponseDTO(tripDTOs);
+  }
+
+
+/*
   public UserTripInfoResponseDTO getUserTripInfo(String userEmail) {
     User user = userRepository.findByUserEmail(userEmail)
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
@@ -72,6 +104,7 @@ public class TripQueryService {
             user.getUserNickName(),
             tripDTOs);
   }
+*/
 
 
   public TripInfoResponseDTO getTripById(Long tripId) {
