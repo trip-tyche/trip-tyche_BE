@@ -8,6 +8,7 @@ import com.fivefeeling.memory.domain.media.model.MediaFileResponseDTO;
 import com.fivefeeling.memory.domain.media.repository.MediaFileRepository;
 import com.fivefeeling.memory.domain.pinpoint.model.PinPoint;
 import com.fivefeeling.memory.domain.pinpoint.service.PinPointService;
+import com.fivefeeling.memory.domain.trip.dto.TripsResponseDTO;
 import com.fivefeeling.memory.domain.trip.model.PointImageDTO;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.model.TripInfoRequestDTO;
@@ -16,7 +17,6 @@ import com.fivefeeling.memory.domain.trip.model.TripResponseDTO;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.trip.service.TripManagementService;
 import com.fivefeeling.memory.domain.trip.service.TripQueryService;
-import com.fivefeeling.memory.domain.user.dto.UserTripInfoResponseDTO;
 import com.fivefeeling.memory.global.common.RestResponse;
 import com.fivefeeling.memory.global.common.ResultCode;
 import com.fivefeeling.memory.global.exception.CustomException;
@@ -79,8 +79,8 @@ public class TripController {
   @Tag(name = "2. 여행관리 페이지 API")
   @Operation(summary = "여행관리페이지 사용자의 여행 정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/680d29996d0941b9aa742a280e2b3b27?pvs=4' target='_blank'>API 명세서</a>")
-  @GetMapping("/api/trips")
-  public RestResponse<UserTripInfoResponseDTO> getUserTrips(
+  @GetMapping("/v1/trips")
+  public RestResponse<TripsResponseDTO> getUserTrips(
           @RequestHeader("Authorization") String authorizationHeader) {
 
     if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
@@ -91,8 +91,8 @@ public class TripController {
     String token = authorizationHeader.substring(7);
     String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
 
-    UserTripInfoResponseDTO trips = tripQueryService.getUserTripInfo(userEmail);
-    return RestResponse.success(trips);
+    TripsResponseDTO tripsResponse = tripQueryService.getTripsByUserEmail(userEmail);
+    return RestResponse.success(tripsResponse);
   }
 
   @Tag(name = "2. 여행관리 페이지 API")
