@@ -51,6 +51,7 @@ public class SecurityConfig {
                             "/webjars/**",
                             "/oauth2/**",
                             "/api/**",
+                            "/v1/**",
                             "/login/oauth2/code/**",
                             "/upload/**",
                             "/oauth2/success",
