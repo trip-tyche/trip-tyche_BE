@@ -95,10 +95,10 @@ public class TripController {
   }
 
   @Tag(name = "2. 여행관리 페이지 API")
-  @Operation(summary = "여행 정보 수정", description = "<a href='https://www.notion"
+  @Operation(summary = "여행 정보 최초 등록", description = "<a href='https://www.notion"
           + ".so/maristadev/f928c3dc6c2444c9883b8777eadcefc9?pvs=4' target='_blank'>API 명세서</a>")
   @PutMapping("/api/trips/{tripId}")
-  public RestResponse<TripInfoResponseDTO> updateTrip(
+  public RestResponse<String> updateTrip(
           @RequestHeader("Authorization") String authorizationHeader,
           @PathVariable Long tripId,
           @RequestBody TripInfoRequestDTO tripInfoRequestDTO) {
@@ -111,9 +111,9 @@ public class TripController {
     String token = authorizationHeader.substring(7);
     String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
 
-    TripInfoResponseDTO updatedTrip = tripManagementService.updateTrip(userEmail, tripId, tripInfoRequestDTO);
+    tripManagementService.updateTrip(userEmail, tripId, tripInfoRequestDTO);
 
-    return RestResponse.success(updatedTrip);
+    return RestResponse.success("성공적으로 여행 정보가 등록되었습니다.");
   }
 
   @Tag(name = "2. 여행관리 페이지 API")
