@@ -1,11 +1,8 @@
 package com.fivefeeling.memory.domain.trip.service;
 
-import static com.fivefeeling.memory.global.util.DateFormatter.formatLocalDateToString;
-
 import com.fivefeeling.memory.domain.media.service.MediaProcessingService;
 import com.fivefeeling.memory.domain.trip.dto.TripInfoRequestDTO;
 import com.fivefeeling.memory.domain.trip.model.Trip;
-import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.user.model.User;
 import com.fivefeeling.memory.domain.user.repository.UserRepository;
@@ -43,7 +40,7 @@ public class TripManagementService {
 
   // 사용자 여행 정보 저장 및 수정
   @Transactional
-  public TripInfoResponseDTO updateTrip(String userEmail, Long tripId, TripInfoRequestDTO tripInfoRequestDTO) {
+  public void updateTrip(String userEmail, Long tripId, TripInfoRequestDTO tripInfoRequestDTO) {
     userRepository.findByUserEmail(userEmail)
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
@@ -57,15 +54,6 @@ public class TripManagementService {
     trip.setHashtagsFromList(tripInfoRequestDTO.hashtags());
 
     Trip updatedTrip = tripRepository.save(trip);
-
-    return TripInfoResponseDTO.withoutImagesDate(
-            updatedTrip.getTripId(),
-            updatedTrip.getTripTitle(),
-            updatedTrip.getCountry(),
-            formatLocalDateToString(updatedTrip.getStartDate()),
-            formatLocalDateToString(updatedTrip.getEndDate()),
-            updatedTrip.getHashtagsAsList()
-    );
   }
 
   // 사용자 여행 정보 삭제
