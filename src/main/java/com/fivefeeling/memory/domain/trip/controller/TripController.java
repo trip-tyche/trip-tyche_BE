@@ -1,19 +1,14 @@
 package com.fivefeeling.memory.domain.trip.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fivefeeling.memory.domain.media.dto.MediaFileRequestDTO;
-import com.fivefeeling.memory.domain.media.dto.UnlocatedImageResponseDTO;
-import com.fivefeeling.memory.domain.media.model.MediaFile;
 import com.fivefeeling.memory.domain.media.model.MediaFileResponseDTO;
 import com.fivefeeling.memory.domain.media.repository.MediaFileRepository;
-import com.fivefeeling.memory.domain.pinpoint.model.PinPoint;
 import com.fivefeeling.memory.domain.pinpoint.service.PinPointService;
+import com.fivefeeling.memory.domain.trip.dto.MapViewResponseDTO;
+import com.fivefeeling.memory.domain.trip.dto.PinPointImageGalleryResponseDTO;
+import com.fivefeeling.memory.domain.trip.dto.TripInfoRequestDTO;
 import com.fivefeeling.memory.domain.trip.dto.TripsResponseDTO;
-import com.fivefeeling.memory.domain.trip.model.PointImageDTO;
-import com.fivefeeling.memory.domain.trip.model.Trip;
-import com.fivefeeling.memory.domain.trip.model.TripInfoRequestDTO;
+import com.fivefeeling.memory.domain.trip.dto.UpdateTripInfoResponseDTO;
 import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
-import com.fivefeeling.memory.domain.trip.model.TripResponseDTO;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.trip.service.TripManagementService;
 import com.fivefeeling.memory.domain.trip.service.TripQueryService;
@@ -21,15 +16,9 @@ import com.fivefeeling.memory.global.common.RestResponse;
 import com.fivefeeling.memory.global.common.ResultCode;
 import com.fivefeeling.memory.global.exception.CustomException;
 import com.fivefeeling.memory.global.redis.ImageQueueService;
-import com.fivefeeling.memory.global.util.DateFormatter;
 import com.fivefeeling.memory.global.util.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -99,8 +88,8 @@ public class TripController {
   @Operation(summary = "여행정보 수정을 위한 {tripId} 여행정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/10d66958e5b3803f8dddf7b02d4e83f5?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}")
-  public RestResponse<TripInfoResponseDTO> getTripById(@PathVariable Long tripId) {
-    TripInfoResponseDTO tripInfo = tripQueryService.getTripById(tripId);
+  public RestResponse<UpdateTripInfoResponseDTO> getTripById(@PathVariable Long tripId) {
+    UpdateTripInfoResponseDTO tripInfo = tripQueryService.getTripById(tripId);
 
     return RestResponse.success(tripInfo);
   }
@@ -152,8 +141,8 @@ public class TripController {
   @Operation(summary = "지도위 페이지 여행 정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/fc14909a1ec5481ca37b58924637be20?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}/info")
-  public RestResponse<TripResponseDTO> getTripInfo(@PathVariable Long tripId) {
-    TripResponseDTO tripInfo = tripQueryService.getTripInfoById(tripId);
+  public RestResponse<MapViewResponseDTO> getTripInfo(@PathVariable Long tripId) {
+    MapViewResponseDTO tripInfo = tripQueryService.getTripInfoById(tripId);
     return RestResponse.success(tripInfo);
   }
 
@@ -161,13 +150,13 @@ public class TripController {
   @Operation(summary = "핀포인트별 슬라이드 쇼를 위한 이미지 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/d172149814414943866df2f04f409970?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}/pinpoints/{pinPointId}/images")
-  public RestResponse<PointImageDTO> getPointImages(
+  public RestResponse<PinPointImageGalleryResponseDTO> getPointImages(
           @PathVariable Long tripId,
           @PathVariable Long pinPointId) {
 
-    PointImageDTO pointImageDTO = tripQueryService.getPointImages(tripId, pinPointId);
+    PinPointImageGalleryResponseDTO pinPointImageGalleryResponse = tripQueryService.getPointImages(tripId, pinPointId);
 
-    return RestResponse.success(pointImageDTO);
+    return RestResponse.success(pinPointImageGalleryResponse);
   }
 
   @Tag(name = "6. 날짜별 페이지 API")
@@ -183,125 +172,5 @@ public class TripController {
     return RestResponse.success(dateImageDTO);
   }
 
-  @Tag(name = "7. 위치정보 없는 수정 페이지 API")
-  @Operation(summary = "위치정보 없는 이미지 조회(Redis)", description = "<a href='https://www.notion"
-          + ".so/maristadev/f15de88a76ff49da85d3d970d8e64aff?pvs=4' target='_blank'>API 명세서</a>")
-  @GetMapping("/api/trips/{tripId}/images/unlocated")
-  public RestResponse<List<UnlocatedImageResponseDTO>> getUnlocatedImages(@PathVariable Long tripId) {
-    String redisKey = "trip:" + tripId;
 
-    Map<Object, Object> redisData = imageQueueService.getImageQueue(redisKey);
-
-    // 데이터가 없을 경우
-    if (redisData.isEmpty()) {
-      return RestResponse.error(ResultCode.EDIT_DATA_NOT_FOUND);
-    }
-
-    ObjectMapper objectMapper = new ObjectMapper();
-
-    // 날짜별로 데이터를 그룹화
-    Map<String, List<UnlocatedImageResponseDTO.Media>> groupedByDate = redisData.entrySet().stream()
-            .map(entry -> {
-              try {
-                Long mediaFileId = Long.valueOf(entry.getKey().toString());
-
-//              Map<String, Object> imageData = (Map<String, Object>) entry.getValue();
-                Map<String, Object> imageData = objectMapper.readValue(entry.getValue().toString(), Map.class);
-
-                String mediaLink = (String) imageData.get("mediaLink");
-                String recordDateString = (String) imageData.get("recordDate");
-
-                LocalDateTime recordDateTime = LocalDateTime.parse(recordDateString);
-                String formattedDate = DateFormatter.formatLocalDateToString(recordDateTime.toLocalDate());
-
-                return Map.entry(formattedDate, new UnlocatedImageResponseDTO.Media(mediaFileId, mediaLink));
-              } catch (Exception e) {
-                throw new RuntimeException("Json 파싱 오류", e);
-              }
-            })
-            .collect(Collectors.groupingBy(
-                    Map.Entry::getKey,
-                    Collectors.mapping(Map.Entry::getValue, Collectors.toList())
-            ));
-
-    // 날짜별로 UnlocatedImageResponseDTO 생성
-    List<UnlocatedImageResponseDTO> response = groupedByDate.entrySet().stream()
-            .sorted(Map.Entry.comparingByKey())
-            .map(entry -> new UnlocatedImageResponseDTO(entry.getKey(), entry.getValue()))
-            .collect(Collectors.toList());
-
-    return RestResponse.success(response);
-  }
-
-  @Tag(name = "7. 위치정보 없는 수정 페이지 API")
-  @Operation(summary = "위치정보 수정", description = "<a href='https://www.notion"
-          + ".so/maristadev/15b66958e5b380a4bbfafbe23b0f28b0?pvs=4' target='_blank'>API 명세서</a>")
-  @PutMapping("/api/trips/{tripId}/images/unlocated/{mediaFileId}")
-  public RestResponse<String> updateImageLocation(
-          @PathVariable Long tripId,
-          @PathVariable Long mediaFileId,
-          @RequestBody MediaFileRequestDTO mediaFileRequestDTO) {
-
-    synchronized (lock) {
-      MediaFileRequestDTO latLngOnlyDTO = MediaFileRequestDTO.fromLatitudeAndLongitude(
-              mediaFileRequestDTO.latitude(),
-              mediaFileRequestDTO.longitude()
-      );
-
-//    MediaFileRequestDTO latLngOnlyDTO = MediaFileRequestDTO.fromLatitudeAndLongitude(
-//        mediaFileRequestDTO.latitude(),
-//        mediaFileRequestDTO.longitude()
-//    );
-
-      // 요청 데이터에서 위도와 경도 가져오기
-      Double newLatitude = latLngOnlyDTO.latitude();
-      Double newLongitude = latLngOnlyDTO.longitude();
-
-      if (newLatitude == null || newLongitude == null) {
-        throw new CustomException(ResultCode.INVALID_COORDINATE);
-      }
-
-      // Trip 조회
-      Trip trip = tripRepository.findById(tripId)
-              .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
-
-      // MediaFile 조회
-      MediaFile mediaFile = mediaFileRepository.findById(mediaFileId)
-              .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
-
-      // PinPoint 찾기 또는 생성
-      PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, newLatitude, newLongitude);
-
-      // MediaFile 업데이트
-      mediaFile.setLatitude(newLatitude);
-      mediaFile.setLongitude(newLongitude);
-      mediaFile.setPinPoint(pinPoint);
-      mediaFileRepository.save(mediaFile);
-
-      // Redis에서 데이터 삭제
-      String redisKey = "trip:" + tripId;
-      imageQueueService.deleteFromImageQueue(redisKey, String.valueOf(mediaFileId));
-
-      return RestResponse.success("이미지 위치 정보가 업데이트 되었습니다.");
-    }
-  }
-
-  @Tag(name = "7. 위치정보 없는 수정 페이지 API")
-  @Operation(summary = "첫번째 이미지 위도 경도 조회", description = "<a href='https://www.notion"
-          + ".so/maristadev/15b66958e5b3805dbedacd23536dc98f?pvs=4' target='_blank'>API 명세서</a>")
-  @GetMapping("/api/trips/{tripId}/images/firstimage")
-  public RestResponse<MediaFileResponseDTO> getImagesFirstimage(
-          @PathVariable Long tripId) {
-    Optional<MediaFile> firstMediaFile = mediaFileRepository
-            .findFirstByTripTripIdAndLatitudeNotAndLongitudeNotOrderByMediaFileIdAsc(tripId, 0.0, 0.0);
-
-    if (firstMediaFile.isEmpty()) {
-      throw new CustomException(ResultCode.DATA_NOT_FOUND);
-    }
-
-    MediaFile mediaFile = firstMediaFile.get();
-    MediaFileResponseDTO response = MediaFileResponseDTO.imageLocation(mediaFile.getLatitude(),
-            mediaFile.getLongitude());
-    return RestResponse.success(response);
-  }
 }
