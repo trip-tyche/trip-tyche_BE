@@ -14,24 +14,6 @@ public record TripInfoResponseDTO(
         List<String> sharedUserNicknames
 ) {
 
-  public static TripInfoResponseDTO withoutOptionalFields(
-          Long tripId,
-          String tripTitle,
-          String country,
-          String startDate,
-          String endDate
-  ) {
-    return new TripInfoResponseDTO(
-            tripId,
-            tripTitle,
-            country,
-            startDate,
-            endDate,
-            null,
-            null,
-            null, null
-    );
-  }
 
   // tripId만 반환하는 메서드
   public static TripInfoResponseDTO tripIdOnly(Long tripId) {
@@ -88,30 +70,4 @@ public record TripInfoResponseDTO(
             null
     );
   }
-
-  public static TripInfoResponseDTO withOwnerAndSharedUsers(
-          Long tripId,
-          String tripTitle,
-          String country,
-          String startDate,
-          String endDate,
-          List<String> hashtags,
-          List<String> imagesDate,
-          String ownerNickname,
-          List<String> sharedUserNicknames
-  ) {
-    return new TripInfoResponseDTO(
-            tripId,
-            tripTitle,
-            country,
-            startDate,
-            endDate,
-            hashtags,
-            imagesDate,
-            ownerNickname,
-            sharedUserNicknames
-    );
-  }
-
-
 }

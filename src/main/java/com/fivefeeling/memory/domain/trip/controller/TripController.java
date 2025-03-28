@@ -4,6 +4,7 @@ import com.fivefeeling.memory.domain.media.model.MediaFileResponseDTO;
 import com.fivefeeling.memory.domain.media.repository.MediaFileRepository;
 import com.fivefeeling.memory.domain.pinpoint.service.PinPointService;
 import com.fivefeeling.memory.domain.trip.dto.TripsResponseDTO;
+import com.fivefeeling.memory.domain.trip.dto.UpdateTripInfoResponseDTO;
 import com.fivefeeling.memory.domain.trip.model.PointImageDTO;
 import com.fivefeeling.memory.domain.trip.model.TripInfoRequestDTO;
 import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
@@ -87,8 +88,8 @@ public class TripController {
   @Operation(summary = "여행정보 수정을 위한 {tripId} 여행정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/10d66958e5b3803f8dddf7b02d4e83f5?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}")
-  public RestResponse<TripInfoResponseDTO> getTripById(@PathVariable Long tripId) {
-    TripInfoResponseDTO tripInfo = tripQueryService.getTripById(tripId);
+  public RestResponse<UpdateTripInfoResponseDTO> getTripById(@PathVariable Long tripId) {
+    UpdateTripInfoResponseDTO tripInfo = tripQueryService.getTripById(tripId);
 
     return RestResponse.success(tripInfo);
   }

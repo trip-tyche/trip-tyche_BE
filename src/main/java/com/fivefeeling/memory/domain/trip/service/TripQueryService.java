@@ -10,9 +10,9 @@ import com.fivefeeling.memory.domain.pinpoint.model.PinPoint;
 import com.fivefeeling.memory.domain.pinpoint.model.PinPointResponseDTO;
 import com.fivefeeling.memory.domain.pinpoint.repository.PinPointRepository;
 import com.fivefeeling.memory.domain.trip.dto.TripsResponseDTO;
+import com.fivefeeling.memory.domain.trip.dto.UpdateTripInfoResponseDTO;
 import com.fivefeeling.memory.domain.trip.model.PointImageDTO;
 import com.fivefeeling.memory.domain.trip.model.Trip;
-import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
 import com.fivefeeling.memory.domain.trip.model.TripResponseDTO;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.user.model.User;
@@ -39,7 +39,7 @@ public class TripQueryService {
   private final UserRepository userRepository;
   private final MediaFileRepository mediaFileRepository;
 
-
+  // ✅
   public TripsResponseDTO getTripsByUserEmail(String userEmail) {
     User user = userRepository.findByUserEmail(userEmail)
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
@@ -107,7 +107,7 @@ public class TripQueryService {
 */
 
 
-  public TripInfoResponseDTO getTripById(Long tripId) {
+  public UpdateTripInfoResponseDTO getTripById(Long tripId) {
     Trip trip = tripRepository.findByTripId(tripId)
             .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
 
@@ -121,7 +121,7 @@ public class TripQueryService {
             .map(DateFormatter::formatLocalDateToString)
             .toList();
 
-    return TripInfoResponseDTO.withImagesDate(
+    return new UpdateTripInfoResponseDTO(
             trip.getTripId(),
             trip.getTripTitle(),
             trip.getCountry(),
