@@ -28,7 +28,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -205,7 +204,6 @@ public class TripController {
               try {
                 Long mediaFileId = Long.valueOf(entry.getKey().toString());
 
-//              Map<String, Object> imageData = (Map<String, Object>) entry.getValue();
                 Map<String, Object> imageData = objectMapper.readValue(entry.getValue().toString(), Map.class);
 
                 String mediaLink = (String) imageData.get("mediaLink");
@@ -248,11 +246,6 @@ public class TripController {
               mediaFileRequestDTO.longitude()
       );
 
-//    MediaFileRequestDTO latLngOnlyDTO = MediaFileRequestDTO.fromLatitudeAndLongitude(
-//        mediaFileRequestDTO.latitude(),
-//        mediaFileRequestDTO.longitude()
-//    );
-
       // 요청 데이터에서 위도와 경도 가져오기
       Double newLatitude = latLngOnlyDTO.latitude();
       Double newLongitude = latLngOnlyDTO.longitude();
@@ -286,22 +279,4 @@ public class TripController {
     }
   }
 
-  @Tag(name = "7. 위치정보 없는 수정 페이지 API")
-  @Operation(summary = "첫번째 이미지 위도 경도 조회", description = "<a href='https://www.notion"
-          + ".so/maristadev/15b66958e5b3805dbedacd23536dc98f?pvs=4' target='_blank'>API 명세서</a>")
-  @GetMapping("/api/trips/{tripId}/images/firstimage")
-  public RestResponse<MediaFileResponseDTO> getImagesFirstimage(
-          @PathVariable Long tripId) {
-    Optional<MediaFile> firstMediaFile = mediaFileRepository
-            .findFirstByTripTripIdAndLatitudeNotAndLongitudeNotOrderByMediaFileIdAsc(tripId, 0.0, 0.0);
-
-    if (firstMediaFile.isEmpty()) {
-      throw new CustomException(ResultCode.DATA_NOT_FOUND);
-    }
-
-    MediaFile mediaFile = firstMediaFile.get();
-    MediaFileResponseDTO response = MediaFileResponseDTO.imageLocation(mediaFile.getLatitude(),
-            mediaFile.getLongitude());
-    return RestResponse.success(response);
-  }
 }
