@@ -3,8 +3,8 @@ package com.fivefeeling.memory.domain.trip.service;
 import static com.fivefeeling.memory.global.util.DateFormatter.formatLocalDateToString;
 
 import com.fivefeeling.memory.domain.media.service.MediaProcessingService;
+import com.fivefeeling.memory.domain.trip.dto.TripInfoRequestDTO;
 import com.fivefeeling.memory.domain.trip.model.Trip;
-import com.fivefeeling.memory.domain.trip.model.TripInfoRequestDTO;
 import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.user.model.User;

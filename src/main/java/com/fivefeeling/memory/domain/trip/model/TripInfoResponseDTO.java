@@ -28,28 +28,6 @@ public record TripInfoResponseDTO(
     );
   }
 
-  public static TripInfoResponseDTO withImagesDate(
-          Long tripId,
-          String tripTitle,
-          String country,
-          String startDate,
-          String endDate,
-          List<String> hashtags,
-          List<String> imagesDate
-  ) {
-    return new TripInfoResponseDTO(
-            tripId,
-            tripTitle,
-            country,
-            startDate,
-            endDate,
-            hashtags,
-            imagesDate,
-            null,
-            null
-    );
-  }
-
   public static TripInfoResponseDTO withoutImagesDate(
           Long tripId,
           String tripTitle,

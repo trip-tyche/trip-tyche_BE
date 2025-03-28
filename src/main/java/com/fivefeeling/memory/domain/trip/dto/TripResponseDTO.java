@@ -2,7 +2,7 @@ package com.fivefeeling.memory.domain.trip.dto;
 
 import java.util.List;
 
-public record TripInfoResponseDTO(
+public record TripResponseDTO(
         Long tripId,
         String tripTitle,
         String country,

@@ -9,11 +9,12 @@ import com.fivefeeling.memory.domain.media.repository.MediaFileRepository;
 import com.fivefeeling.memory.domain.pinpoint.model.PinPoint;
 import com.fivefeeling.memory.domain.pinpoint.model.PinPointResponseDTO;
 import com.fivefeeling.memory.domain.pinpoint.repository.PinPointRepository;
+import com.fivefeeling.memory.domain.trip.dto.MapViewResponseDTO;
+import com.fivefeeling.memory.domain.trip.dto.PinPointImageGalleryResponseDTO;
+import com.fivefeeling.memory.domain.trip.dto.TripResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.TripsResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.UpdateTripInfoResponseDTO;
-import com.fivefeeling.memory.domain.trip.model.PointImageDTO;
 import com.fivefeeling.memory.domain.trip.model.Trip;
-import com.fivefeeling.memory.domain.trip.model.TripResponseDTO;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.user.model.User;
 import com.fivefeeling.memory.domain.user.repository.UserRepository;
@@ -44,7 +45,7 @@ public class TripQueryService {
     User user = userRepository.findByUserEmail(userEmail)
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
-    List<com.fivefeeling.memory.domain.trip.dto.TripInfoResponseDTO> tripDTOs = tripRepository.findAllAccessibleTrips(
+    List<TripResponseDTO> tripDTOs = tripRepository.findAllAccessibleTrips(
                     user.getUserId())
             .stream()
             .map(trip -> {
@@ -55,7 +56,7 @@ public class TripQueryService {
                       .map(User::getUserNickName)
                       .toList();
 
-              return new com.fivefeeling.memory.domain.trip.dto.TripInfoResponseDTO(
+              return new TripResponseDTO(
                       trip.getTripId(),
                       trip.getTripTitle(),
                       trip.getCountry(),
@@ -132,14 +133,14 @@ public class TripQueryService {
     );
   }
 
-  public TripResponseDTO getTripInfoById(Long tripId) {
+  public MapViewResponseDTO getTripInfoById(Long tripId) {
     Trip trip = tripRepository.findById(tripId)
             .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
 
     List<PinPointResponseDTO> pinPoints = pinPointRepository.findEarliestSingleMediaFileForEachPinPointByTripId(tripId);
     List<MediaFileResponseDTO> mediaFiles = pinPointRepository.findMediaFilesByTripId(tripId);
 
-    return new TripResponseDTO(
+    return new MapViewResponseDTO(
             trip.getTripTitle(),
             formatLocalDateToString(trip.getStartDate()),
             formatLocalDateToString(trip.getEndDate()),
@@ -156,25 +157,8 @@ public class TripQueryService {
     );
   }
 
-//  private Function<PinPoint, PinPointResponseDTO> pinPointFirstImage() {
-//    return pinPoint -> {
-//      MediaFile mediaFile = pinPoint.getMediaFiles().stream()
-//          .findFirst()
-//          .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
-//
-//      return new PinPointResponseDTO(
-//          pinPoint.getPinPointId(),
-//          mediaFile.getLatitude(),
-//          mediaFile.getLongitude(),
-//          formatLocalDateTimeToString(mediaFile.getRecordDate()),
-//          mediaFile.getMediaLink()
-//      );
-//    };
-//  }
-
-
   @Transactional(readOnly = true)
-  public PointImageDTO getPointImages(Long tripId, Long pinPointId) {
+  public PinPointImageGalleryResponseDTO getPointImages(Long tripId, Long pinPointId) {
     PinPoint pinPoint = pinPointRepository.findById(pinPointId)
             .orElseThrow(() -> new CustomException(ResultCode.PINPOINT_NOT_FOUND));
 
@@ -210,7 +194,7 @@ public class TripQueryService {
             firstMediaLink,
             imagesLink
     );
-    return new PointImageDTO(
+    return new PinPointImageGalleryResponseDTO(
             pinPoint.getPinPointId(),
             pinPoint.getLatitude(),
             pinPoint.getLongitude(),

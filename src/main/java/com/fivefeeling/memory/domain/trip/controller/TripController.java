@@ -3,12 +3,12 @@ package com.fivefeeling.memory.domain.trip.controller;
 import com.fivefeeling.memory.domain.media.model.MediaFileResponseDTO;
 import com.fivefeeling.memory.domain.media.repository.MediaFileRepository;
 import com.fivefeeling.memory.domain.pinpoint.service.PinPointService;
+import com.fivefeeling.memory.domain.trip.dto.MapViewResponseDTO;
+import com.fivefeeling.memory.domain.trip.dto.PinPointImageGalleryResponseDTO;
+import com.fivefeeling.memory.domain.trip.dto.TripInfoRequestDTO;
 import com.fivefeeling.memory.domain.trip.dto.TripsResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.UpdateTripInfoResponseDTO;
-import com.fivefeeling.memory.domain.trip.model.PointImageDTO;
-import com.fivefeeling.memory.domain.trip.model.TripInfoRequestDTO;
 import com.fivefeeling.memory.domain.trip.model.TripInfoResponseDTO;
-import com.fivefeeling.memory.domain.trip.model.TripResponseDTO;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.trip.service.TripManagementService;
 import com.fivefeeling.memory.domain.trip.service.TripQueryService;
@@ -141,8 +141,8 @@ public class TripController {
   @Operation(summary = "지도위 페이지 여행 정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/fc14909a1ec5481ca37b58924637be20?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}/info")
-  public RestResponse<TripResponseDTO> getTripInfo(@PathVariable Long tripId) {
-    TripResponseDTO tripInfo = tripQueryService.getTripInfoById(tripId);
+  public RestResponse<MapViewResponseDTO> getTripInfo(@PathVariable Long tripId) {
+    MapViewResponseDTO tripInfo = tripQueryService.getTripInfoById(tripId);
     return RestResponse.success(tripInfo);
   }
 
@@ -150,13 +150,13 @@ public class TripController {
   @Operation(summary = "핀포인트별 슬라이드 쇼를 위한 이미지 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/d172149814414943866df2f04f409970?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/api/trips/{tripId}/pinpoints/{pinPointId}/images")
-  public RestResponse<PointImageDTO> getPointImages(
+  public RestResponse<PinPointImageGalleryResponseDTO> getPointImages(
           @PathVariable Long tripId,
           @PathVariable Long pinPointId) {
 
-    PointImageDTO pointImageDTO = tripQueryService.getPointImages(tripId, pinPointId);
+    PinPointImageGalleryResponseDTO pinPointImageGalleryResponse = tripQueryService.getPointImages(tripId, pinPointId);
 
-    return RestResponse.success(pointImageDTO);
+    return RestResponse.success(pinPointImageGalleryResponse);
   }
 
   @Tag(name = "6. 날짜별 페이지 API")
