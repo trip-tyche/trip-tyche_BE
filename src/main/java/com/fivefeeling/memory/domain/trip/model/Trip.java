@@ -15,7 +15,9 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -53,6 +55,12 @@ public class Trip {
   @Column(name = "hashtags", length = 255)
   private String hashtags;
 
+  @Column(name = "status")
+  private String status;
+
+  @Column(name = "created_at", updatable = false)
+  private LocalDateTime createdAt;
+
   @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<PinPoint> pinPoints;
 
@@ -72,6 +80,11 @@ public class Trip {
           inverseJoinColumns = @JoinColumn(name = "user_id")
   )
   private List<User> sharedUsers = new ArrayList<>();
+
+  @PrePersist
+  public void prePersist() {
+    createdAt = LocalDateTime.now();
+  }
 
   public void addSharedUser(User user) {
     if (!this.sharedUsers.contains(user)) {

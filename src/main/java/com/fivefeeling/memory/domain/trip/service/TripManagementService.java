@@ -1,6 +1,7 @@
 package com.fivefeeling.memory.domain.trip.service;
 
 import com.fivefeeling.memory.domain.media.service.MediaProcessingService;
+import com.fivefeeling.memory.domain.trip.dto.TripCreationResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.TripInfoRequestDTO;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
@@ -22,20 +23,40 @@ public class TripManagementService {
   private final MediaProcessingService mediaProcessingService;
 
 
-  public Long createTripId(String userEmail) {
+  public TripCreationResponseDTO createTripId(String userEmail) {
     User user = userRepository.findByUserEmail(userEmail)
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
     Trip trip = Trip.builder()
             .user(user)
-            .tripTitle("N/A")
-            .country("N/A")
+            .tripTitle(null)
+            .country(null)
             .startDate(LocalDate.now())
             .endDate(LocalDate.now())
-            .hashtags("")
+            .hashtags(null)
+            .status("DRAFT")
             .build();
+
     tripRepository.save(trip);
-    return trip.getTripId();
+    return new TripCreationResponseDTO(trip.getTripId());
+  }
+
+  @Transactional
+  public void finalizeTrip(Long tripId) {
+//    // 사용자 검증
+//    userRepository.findByUserEmail(userEmail)
+//            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+
+    Trip trip = tripRepository.findById(tripId)
+            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+
+    // 이미 확정된 경우 예외 처리
+    if (!"DRAFT".equals(trip.getStatus())) {
+      throw new CustomException(ResultCode.INVALID_TRIP_STATE);
+    }
+
+    trip.setStatus("CONFIRMED");
+    tripRepository.save(trip);
   }
 
   // 사용자 여행 정보 저장 및 수정
