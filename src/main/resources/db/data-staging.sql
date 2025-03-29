@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS trip
     start_date DATE,
     end_date   DATE,
     hashtags   VARCHAR(255),
+    status     VARCHAR(20),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_trip_user FOREIGN KEY (user_id) REFERENCES user (user_id) ON DELETE CASCADE
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
@@ -44,9 +46,10 @@ CREATE TABLE IF NOT EXISTS trip_shared_users
 );
 
 -- trip 테이블 초기 데이터 삽입
-INSERT INTO trip (trip_id, country, hashtags, end_date, user_id, start_date, trip_title)
-VALUES (2, '🇳🇱/네덜란드/NETHERLANDS', '우리끼리,버킷리스트,취향저격', '2023-07-25', 4, '2023-07-19', '왜애'),
-       (3, '🇬🇷/그리스/GREECE', '우리끼리', '2023-07-25', 5, '2023-07-19', '왜애2');
+INSERT INTO trip (trip_id, country, hashtags, end_date, user_id, start_date, trip_title, status)
+VALUES (2, '🇳🇱/네덜란드/NETHERLANDS', '우리끼리,버킷리스트,취향저격', '2023-07-25', 4, '2023-07-19', '왜애',
+        'CONFIRMED'),
+       (3, '🇬🇷/그리스/GREECE', '우리끼리', '2023-07-25', 5, '2023-07-19', '왜애2', 'CONFIRMED');
 
 -- PinPoint 테이블 생성
 CREATE TABLE IF NOT EXISTS pin_point
