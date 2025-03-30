@@ -29,11 +29,11 @@ public class TripManagementService {
 
     Trip trip = Trip.builder()
             .user(user)
-            .tripTitle(null)
-            .country(null)
+            .tripTitle("임시 제목")
+            .country("미정")
             .startDate(LocalDate.now())
             .endDate(LocalDate.now())
-            .hashtags(null)
+            .hashtags("")
             .status("DRAFT")
             .build();
 
