@@ -28,11 +28,13 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TripQueryService {
 
   private final TripRepository tripRepository;
@@ -42,9 +44,12 @@ public class TripQueryService {
 
   // ✅
   public TripsResponseDTO getTripsByUserEmail(String userEmail) {
+    log.info("userEmail: {}", userEmail);
     User user = userRepository.findByUserEmail(userEmail)
-            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-
+            .orElseThrow(() -> {
+              log.error("해당 유저를 찾을 수 없습니다: {}", userEmail);
+              return new CustomException(ResultCode.USER_NOT_FOUND);
+            });
     List<TripResponseDTO> tripDTOs = tripRepository.findAllAccessibleTrips(
                     user.getUserId())
             .stream()
