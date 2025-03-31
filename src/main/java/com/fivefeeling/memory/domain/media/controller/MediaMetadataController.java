@@ -1,9 +1,9 @@
 package com.fivefeeling.memory.domain.media.controller;
 
+import com.fivefeeling.memory.domain.media.dto.EditableMediaFilesResponseDTO;
 import com.fivefeeling.memory.domain.media.dto.MediaFileBatchDeleteRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.MediaFileBatchUpdateRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.MediaFileUpdateRequestDTO;
-import com.fivefeeling.memory.domain.media.dto.TripImagesResponseDTO;
 import com.fivefeeling.memory.domain.media.dto.UnlocatedImageResponseDTO;
 import com.fivefeeling.memory.domain.media.dto.UpdateMediaFileInfoRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.UpdateMediaFileLocationRequestDTO;
@@ -31,6 +31,7 @@ public class MediaMetadataController {
   private final MediaMetadataService mediaMetadataService;
   private final TripImagesService tripImagesService;
 
+  //✅
   @Tag(name = "3. 여행등록 페이지 API")
   @Operation(summary = "미디어 메타데이터 등록", description = "<a href='https://www.notion"
           + ".so/maristadev/15066958e5b3806ab0d7d567c80c975b?pvs=4' target='_blank'>API 명세서</a>")
@@ -45,16 +46,17 @@ public class MediaMetadataController {
     return RestResponse.success("등록에 성공했습니다.");
   }
 
+  //✅
   @Tag(name = "4. 이미지 수정 페이지 API")
   @Operation(summary = "해당 여행 이미지 목록 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/389c7561d6514feba1b5b008909ed9d3?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping
-  public RestResponse<TripImagesResponseDTO> getTripImages(@PathVariable Long tripId) {
-    TripImagesResponseDTO responseDTO = tripImagesService.getTripImagesByTripId(tripId);
+  public RestResponse<EditableMediaFilesResponseDTO> getTripImages(@PathVariable Long tripId) {
+    EditableMediaFilesResponseDTO responseDTO = tripImagesService.getTripImagesByTripId(tripId);
     return RestResponse.success(responseDTO);
   }
 
-
+  //✅
   @Tag(name = "4. 이미지 수정 페이지 API")
   @Operation(summary = "단일 이미지 수정", description = "<a href='https://www.notion"
           + ".so/maristadev/aad7b34cc1404a19a3a6870d99f431c9?pvs=4' target='_blank'>API 명세서</a>")
@@ -68,6 +70,7 @@ public class MediaMetadataController {
     return RestResponse.success("이미지 정보가 성공적으로 수정되었습니다.");
   }
 
+  //✅
   @Tag(name = "4. 이미지 수정 페이지 API")
   @Operation(summary = "여러 개 이미지 수정", description = "<a href='https://www.notion"
           + ".so/maristadev/19366958e5b380809038c6c23bd83689?pvs=4' target='_blank'>API 명세서</a>")

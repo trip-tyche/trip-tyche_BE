@@ -2,7 +2,7 @@
 package com.fivefeeling.memory.domain.media.controller;
 
 import com.fivefeeling.memory.domain.media.model.MediaFile;
-import com.fivefeeling.memory.domain.media.model.MediaFileResponseDTO;
+import com.fivefeeling.memory.domain.media.dto.MediaFileResponseDTO;
 import com.fivefeeling.memory.domain.media.service.MediaProcessingService;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;

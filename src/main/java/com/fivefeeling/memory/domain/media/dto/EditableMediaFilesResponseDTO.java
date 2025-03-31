@@ -2,11 +2,10 @@ package com.fivefeeling.memory.domain.media.dto;
 
 import java.util.List;
 
-public record TripImagesResponseDTO(
-        String tripTitle,
+public record EditableMediaFilesResponseDTO(
         String startDate,
         String endDate,
-        List<ImageFileResponseDTO> mediaFiles
+        List<EditableMediaFileResponseDTO> mediaFiles
 ) {
 
 }
