@@ -1,10 +1,8 @@
 package com.fivefeeling.memory.domain.media.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.LocalDateTime;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public record ImageFileResponseDTO(
+public record PinPointMediaFilesResponseDTO(
         Long mediaFileId,
         String mediaLink,
         LocalDateTime recordDate,

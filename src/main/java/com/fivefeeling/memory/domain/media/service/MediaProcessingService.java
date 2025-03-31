@@ -1,40 +1,30 @@
 package com.fivefeeling.memory.domain.media.service;
 
-import com.fivefeeling.memory.domain.media.model.ImageMetadataDTO;
 import com.fivefeeling.memory.domain.media.model.MediaFile;
-import com.fivefeeling.memory.domain.media.model.MediaProcessResult;
 import com.fivefeeling.memory.domain.media.repository.MediaFileRepository;
-import com.fivefeeling.memory.domain.pinpoint.model.PinPoint;
-import com.fivefeeling.memory.domain.pinpoint.service.PinPointService;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.global.s3.S3UploadService;
-import com.fivefeeling.memory.global.s3.UploadResult;
-import com.fivefeeling.memory.global.util.DateUtil;
 import jakarta.transaction.Transactional;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class MediaProcessingService {
 
-  private final Executor cpuBoundTaskExecutor;
-  private final Executor ioBoundTaskExecutor;
+  //
+//  private final Executor cpuBoundTaskExecutor;
+//  private final Executor ioBoundTaskExecutor;
   private final S3UploadService s3UploadService;
-  private final MetadataExtractorService metadataExtractorService;
-  private final PinPointService pinPointService;
+  //  private final MetadataExtractorService metadataExtractorService;
+//  private final PinPointService pinPointService;
   private final MediaFileRepository mediaFileRepository;
 
-  @Transactional
+  /*@Transactional
   public CompletableFuture<List<MediaFile>> processFileUpload(Trip trip, List<MultipartFile> files) {
     // 각 파일별로 비동기 작업 수행
     List<CompletableFuture<MediaProcessResult>> futures = files.stream()
@@ -81,9 +71,9 @@ public class MediaProcessingService {
 //      log.info("MediaFile 배치 저장 완료 스레드 {}", Thread.currentThread().getName());
       return mediaFiles;
     }, ioBoundTaskExecutor);
-  }
+  }*/
 
-  // 단일 파일 처리 메서드
+/*  // 단일 파일 처리 메서드
   private CompletableFuture<MediaProcessResult> processSingleFileUpload(Trip trip, MultipartFile file) {
 //    log.info("파일 '{}' 스레드 {}", file.getOriginalFilename(), Thread.currentThread().getName());
 
@@ -106,7 +96,7 @@ public class MediaProcessingService {
               log.error("파일 처리 중 오류 발생: {}", ex.getMessage());
               return null;
             });
-  }
+  }*/
 
   @Transactional
   public void deleteMediaFilesByTrip(Trip trip) {

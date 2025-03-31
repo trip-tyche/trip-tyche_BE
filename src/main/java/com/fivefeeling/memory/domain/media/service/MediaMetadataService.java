@@ -44,6 +44,7 @@ public class MediaMetadataService {
   @Value("${spring.cloud.aws.s3.bucketName}")
   private String bucketName;
 
+  // ✅
   public void processAndSaveMetadataBatch(Long tripId, List<UpdateMediaFileInfoRequestDTO> files) {
     Trip trip = tripRepository.findById(tripId)
             .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));

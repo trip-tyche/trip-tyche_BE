@@ -1,5 +1,7 @@
 package com.fivefeeling.memory.domain.media.repository;
 
+import com.fivefeeling.memory.domain.media.dto.MediaFilesByDate;
+import com.fivefeeling.memory.domain.media.dto.PinPointMediaFilesResponseDTO;
 import com.fivefeeling.memory.domain.media.model.MediaFile;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import java.time.LocalDateTime;
@@ -13,12 +15,15 @@ import org.springframework.stereotype.Repository;
 public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
 
   // tripId와 pinPointId에 해당하는 MediaFile 조회
-  List<MediaFile> findByTripTripIdAndPinPointPinPointId(Long tripId, Long pinPointId);
+  List<PinPointMediaFilesResponseDTO> findByTripTripIdAndPinPointPinPointId(Long tripId, Long pinPointId);
 
-  // String 형식의 날짜를 Date로 변환하여 조회
-  @Query("SELECT m FROM MediaFile m WHERE m.trip.tripId = :tripId AND m.recordDate BETWEEN :startOfDay AND :endOfDay "
-          + "ORDER BY m.recordDate ASC")
-  List<MediaFile> findByTripTripIdAndRecordDate(
+  @Query("SELECT new com.fivefeeling.memory.domain.media.dto.MediaFilesByDate(" +
+          "m.mediaFileId, m.mediaLink, m.recordDate, m.latitude, m.longitude) " +
+          "FROM MediaFile m " +
+          "WHERE m.trip.tripId = :tripId " +
+          "AND m.recordDate BETWEEN :startOfDay AND :endOfDay " +
+          "ORDER BY m.recordDate ASC")
+  List<MediaFilesByDate> findByTripTripIdAndRecordDate(
           @Param("tripId") Long tripId,
           @Param("startOfDay") LocalDateTime startOfDay,
           @Param("endOfDay") LocalDateTime endOfDay

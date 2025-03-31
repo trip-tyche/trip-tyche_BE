@@ -1,10 +1,12 @@
 package com.fivefeeling.memory.domain.trip.service;
 
-import static com.fivefeeling.memory.global.util.DateFormatter.formatLocalDateTimeToString;
 import static com.fivefeeling.memory.global.util.DateFormatter.formatLocalDateToString;
 
+import com.fivefeeling.memory.domain.media.dto.MediaFileResponseDTO;
+import com.fivefeeling.memory.domain.media.dto.MediaFilesByDate;
+import com.fivefeeling.memory.domain.media.dto.MediaFilesByDateResponseDTO;
+import com.fivefeeling.memory.domain.media.dto.PinPointMediaFilesResponseDTO;
 import com.fivefeeling.memory.domain.media.model.MediaFile;
-import com.fivefeeling.memory.domain.media.model.MediaFileResponseDTO;
 import com.fivefeeling.memory.domain.media.repository.MediaFileRepository;
 import com.fivefeeling.memory.domain.pinpoint.model.PinPoint;
 import com.fivefeeling.memory.domain.pinpoint.model.PinPointResponseDTO;
@@ -41,6 +43,8 @@ public class TripQueryService {
   private final PinPointRepository pinPointRepository;
   private final UserRepository userRepository;
   private final MediaFileRepository mediaFileRepository;
+  private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
 
   // ✅
   public TripsResponseDTO getTripsByUserEmail(String userEmail) {
@@ -167,75 +171,35 @@ public class TripQueryService {
     PinPoint pinPoint = pinPointRepository.findById(pinPointId)
             .orElseThrow(() -> new CustomException(ResultCode.PINPOINT_NOT_FOUND));
 
-    List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripIdAndPinPointPinPointId(tripId, pinPointId);
+    List<PinPointMediaFilesResponseDTO> mediaFiles = mediaFileRepository.findByTripTripIdAndPinPointPinPointId(tripId,
+            pinPointId);
     if (mediaFiles.isEmpty()) {
       throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
     }
 
-    String startDate = formatLocalDateTimeToString(
-            mediaFiles.stream()
-                    .map(MediaFile::getRecordDate)
-                    .min(LocalDateTime::compareTo)
-                    .orElse(null)
-    );
-
-    String endDate = formatLocalDateTimeToString(
-            mediaFiles.stream()
-                    .map(MediaFile::getRecordDate)
-                    .max(LocalDateTime::compareTo)
-                    .orElse(null)
-    );
-
-    String firstMediaLink = mediaFiles.get(0).getMediaLink();
-
-    List<MediaFileResponseDTO> imagesLink = mediaFiles.stream()
-            .map(file -> MediaFileResponseDTO.mediaFileSummary(
-                    file.getMediaLink(),
-                    file.getRecordDate()
-            ))
-            .collect(Collectors.toList());
-
-    MediaFileResponseDTO images = MediaFileResponseDTO.imagesAndFirstImage(
-            firstMediaLink,
-            imagesLink
-    );
     return new PinPointImageGalleryResponseDTO(
             pinPoint.getPinPointId(),
-            pinPoint.getLatitude(),
-            pinPoint.getLongitude(),
-            startDate,
-            endDate,
-            images
+            mediaFiles
     );
   }
 
   @Transactional(readOnly = true)
-  public MediaFileResponseDTO getImagesByDate(Long tripId, String date) {
+  public MediaFilesByDateResponseDTO getImagesByDate(Long tripId, String date) {
+    LocalDate parsedDate;
     try {
-      LocalDate parsedDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-      LocalDateTime startOfDay = parsedDate.atStartOfDay();
-      LocalDateTime endOfDay = parsedDate.atTime(23, 59, 59);
-
-      List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripIdAndRecordDate(tripId, startOfDay, endOfDay);
-      if (mediaFiles.isEmpty()) {
-        throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
-      }
-
-      List<MediaFileResponseDTO> images = mediaFiles.stream()
-              .map(file -> MediaFileResponseDTO.detailed(
-                      file.getMediaFileId(),
-                      file.getMediaLink(),
-                      file.getMediaType(),
-                      file.getRecordDate(),
-                      file.getLatitude(),
-                      file.getLongitude()
-              ))
-              .collect(Collectors.toList());
-
-      return MediaFileResponseDTO.withImages(startOfDay, images);
-
+      parsedDate = LocalDate.parse(date, DATE_FORMATTER);
     } catch (DateTimeParseException e) {
       throw new CustomException(ResultCode.INVALID_DATE_FORMAT);
     }
+
+    LocalDateTime startOfDay = parsedDate.atStartOfDay();
+    LocalDateTime endOfDay = parsedDate.atTime(23, 59, 59);
+
+    List<MediaFilesByDate> mediaFiles = mediaFileRepository.findByTripTripIdAndRecordDate(tripId, startOfDay, endOfDay);
+    if (mediaFiles.isEmpty()) {
+      throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
+    }
+
+    return new MediaFilesByDateResponseDTO(startOfDay, mediaFiles);
   }
 }

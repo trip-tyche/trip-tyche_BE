@@ -1,3 +1,4 @@
+/*
 package com.fivefeeling.memory.domain.media.service;
 
 import com.drew.imaging.ImageMetadataReader;
@@ -58,3 +59,4 @@ public class MetadataExtractorService {
     }
   }
 }
+*/

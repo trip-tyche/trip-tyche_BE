@@ -1,6 +1,6 @@
 package com.fivefeeling.memory.domain.trip.dto;
 
-import com.fivefeeling.memory.domain.media.model.MediaFileResponseDTO;
+import com.fivefeeling.memory.domain.media.dto.MediaFileResponseDTO;
 import com.fivefeeling.memory.domain.pinpoint.model.PinPointResponseDTO;
 import java.util.List;
 

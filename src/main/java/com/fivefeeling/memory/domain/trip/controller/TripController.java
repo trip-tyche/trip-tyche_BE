@@ -1,6 +1,6 @@
 package com.fivefeeling.memory.domain.trip.controller;
 
-import com.fivefeeling.memory.domain.media.model.MediaFileResponseDTO;
+import com.fivefeeling.memory.domain.media.dto.MediaFilesByDateResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.MapViewResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.PinPointImageGalleryResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.TripCreationResponseDTO;
@@ -164,11 +164,11 @@ public class TripController {
   @Operation(summary = "날짜별 이미지 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/de630f9fd0424f1ca1d521037730d296?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/{tripId}/map")
-  public RestResponse<MediaFileResponseDTO> getImagesByDate(
+  public RestResponse<MediaFilesByDateResponseDTO> getImagesByDate(
           @PathVariable Long tripId,
           @RequestParam String date) {
 
-    MediaFileResponseDTO dateImageDTO = tripQueryService.getImagesByDate(tripId, date);
+    MediaFilesByDateResponseDTO dateImageDTO = tripQueryService.getImagesByDate(tripId, date);
 
     return RestResponse.success(dateImageDTO);
   }
