@@ -59,7 +59,7 @@ public class MediaMetadataService {
               return MediaFile.builder()
                       .trip(trip)
                       .pinPoint(pinPoint)
-                      .mediaType(file.mediaType())
+                      .mediaType("image/webp")
                       .mediaLink(file.mediaLink())
                       .mediaKey(mediaKey)
                       .recordDate(recordDateTime)

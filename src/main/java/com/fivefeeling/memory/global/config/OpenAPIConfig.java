@@ -36,6 +36,7 @@ public class OpenAPIConfig {
                     new Tag().name("6. 날짜별 페이지 API"),
                     new Tag().name("7. 위치정보 없는 수정 페이지 API"),
                     new Tag().name("8. 공유 관련 API"),
+                    new Tag().name("9. 알림 관련 API"),
                     new Tag().name("사용하지 않는 API")));
   }
 }
