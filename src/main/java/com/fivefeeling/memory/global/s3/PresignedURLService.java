@@ -16,31 +16,30 @@ public class PresignedURLService {
   private final S3Presigner s3Presigner;
   private final String bucketName;
 
-  public String generatePresignedPutUrl(String key, String mimeType, Duration duration) {
+  public String generatePresignedPutUrl(String key, Duration duration) {
     PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-        .bucket(bucketName)
-        .key(key)
-        .contentType(mimeType)
-        .build();
+            .bucket(bucketName)
+            .key(key)
+            .build();
 
     PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
-        .signatureDuration(duration)
-        .putObjectRequest(putObjectRequest)
-        .build();
+            .signatureDuration(duration)
+            .putObjectRequest(putObjectRequest)
+            .build();
 
     return s3Presigner.presignPutObject(presignRequest).url().toString();
   }
 
   public String generatePresignedGetUrl(String key, Duration duration) {
     GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-        .bucket(bucketName)
-        .key(key)
-        .build();
+            .bucket(bucketName)
+            .key(key)
+            .build();
 
     GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-        .signatureDuration(duration)
-        .getObjectRequest(getObjectRequest)
-        .build();
+            .signatureDuration(duration)
+            .getObjectRequest(getObjectRequest)
+            .build();
 
     return s3Presigner.presignGetObject(presignRequest).url().toString();
   }

@@ -39,7 +39,7 @@ public class TripController {
   private final TripManagementService tripManagementService;
   private final JwtTokenProvider jwtTokenProvider;
 
-  @Tag(name = "2. 여행관리 페이지 API")
+  @Tag(name = "3. 여행등록 페이지 API")
   @Operation(summary = "tripId 임시생성", description = "<a href='https://www.notion"
           + ".so/maristadev/12d66958e5b380c8b6c2ca99cbc2f752?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping
@@ -57,7 +57,7 @@ public class TripController {
     return RestResponse.success(tripIdResponse);
   }
 
-  @Tag(name = "2. 여행관리 페이지 API")
+  @Tag(name = "3. 여행등록 페이지 API")
   @Operation(summary = "Trip 최종 확정", description = "<a href='https://www.notion"
           + ".so/maristadev/Trip-1c566958e5b38062b7afd6ed16c69ea1?pvs=4' target='_blank'>API 명세서</a>")
   @PatchMapping("/{tripId}/finalize")
@@ -95,7 +95,7 @@ public class TripController {
     return RestResponse.success(tripInfo);
   }
 
-  @Tag(name = "2. 여행관리 페이지 API")
+  @Tag(name = "3. 여행등록 페이지 API")
   @Operation(summary = "여행 정보 최초 등록", description = "<a href='https://www.notion"
           + ".so/maristadev/f928c3dc6c2444c9883b8777eadcefc9?pvs=4' target='_blank'>API 명세서</a>")
   @PutMapping("/{tripId}")

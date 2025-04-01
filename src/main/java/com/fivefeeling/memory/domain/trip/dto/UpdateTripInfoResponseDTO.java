@@ -9,7 +9,7 @@ public record UpdateTripInfoResponseDTO(
         String startDate,
         String endDate,
         List<String> hashtags,
-        List<String> imagesDate
+        List<String> meidaFilesDates
 ) {
 
 }

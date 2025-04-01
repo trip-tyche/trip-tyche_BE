@@ -123,7 +123,7 @@ public class TripQueryService {
 
     List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripId(tripId);
 
-    List<String> imagesDate = mediaFiles.stream()
+    List<String> mediaFilesDates = mediaFiles.stream()
             .map(MediaFile::getRecordDate)
             .map(LocalDateTime::toLocalDate)
             .distinct()
@@ -138,7 +138,7 @@ public class TripQueryService {
             formatLocalDateToString(trip.getStartDate()),
             formatLocalDateToString(trip.getEndDate()),
             trip.getHashtagsAsList(),
-            imagesDate
+            mediaFilesDates
     );
   }
 
