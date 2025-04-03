@@ -135,7 +135,7 @@ public class TripController {
 
     tripManagementService.deleteTrip(tripId);
 
-    return RestResponse.success("성공적으로 삭제되었습니다.");
+    return RestResponse.success("성공적으로 여행 정보가 삭제되었습니다.");
   }
 
   @Tag(name = "5. Map 페이지 API")
@@ -172,6 +172,4 @@ public class TripController {
 
     return RestResponse.success(dateImageDTO);
   }
-
-
 }

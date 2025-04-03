@@ -34,20 +34,22 @@ public class NotificationController {
   @Operation(summary = "알림 상태 변경(UNREAD -> READ)", description = "<a href='https://www.notion"
           + ".so/maristadev/18566958e5b3801ea257fcfbe2d9e2e0?pvs=4' target='_blank'>API 명세서</a>")
   @PatchMapping("/{notificationId}")
-  public RestResponse<NotificationResponseDTO> markAsRead(
+  public RestResponse<String> markAsRead(
           @PathVariable Long notificationId
   ) {
-    return RestResponse.success(notificationService.markAsRead(notificationId));
+    notificationService.markAsRead(notificationId);
 
+    return RestResponse.success("알림 상태 변경(UNREAD -> READ) 완료");
   }
 
   @Operation(summary = "알림 상태 변경 (READ -> DELETE)", description = "<a href='https://www.notion"
           + ".so/maristadev/READ-DELETE-19f66958e5b380b4ab36dd53d3b4f26e?pvs=4' target='_blank'>API 명세서</a>")
   @PatchMapping("/delete")
-  public RestResponse<List<NotificationResponseDTO>> markAsDeleted(
+  public RestResponse<String> markAsDeleted(
           @RequestBody List<Long> notificationIds
   ) {
-    return RestResponse.success(notificationService.markAsDeleted(notificationIds));
+    notificationService.markAsDeleted(notificationIds);
+    return RestResponse.success("알림 상태 변경(READ -> DELETE) 완료");
   }
 
 

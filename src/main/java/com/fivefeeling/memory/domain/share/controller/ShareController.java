@@ -41,11 +41,11 @@ public class ShareController {
   @Operation(summary = "공유요청 상태변경[`APPROVED` `REJECTED`]", description = "<a href='https://www.notion"
           + ".so/maristadev/17766958e5b3800fa0ecf89667bdaf03?pvs=4' target='_blank'>API 명세서</a>")
   @PatchMapping("/v1/shares/{shareId}")
-  public RestResponse<ShareResponseDTO> updateShareStatus(
+  public RestResponse<String> updateShareStatus(
           @PathVariable Long shareId,
           @RequestParam ShareStatus status
   ) {
-    ShareResponseDTO response = shareService.updateShareStatus(shareId, status);
-    return RestResponse.success(response);
+    shareService.updateShareStatus(shareId, status);
+    return RestResponse.success("공유 요청 상태 변경 완료");
   }
 }
