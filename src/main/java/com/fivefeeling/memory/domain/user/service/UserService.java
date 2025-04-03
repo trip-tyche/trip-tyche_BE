@@ -69,7 +69,7 @@ public class UserService {
     long tripsCount = tripRepository.countByUser(user);
 
     TripSummaryResponseDTO tripSummary = null;
-    Optional<Trip> recentTripOpt = tripRepository.findTopByUserOrderByTripIdDesc(user);
+    Optional<Trip> recentTripOpt = tripRepository.findFirstByUserOrderByCreatedAtDesc(user);
     if (recentTripOpt.isPresent()) {
       Trip recentTrip = recentTripOpt.get();
       tripSummary = new TripSummaryResponseDTO(
