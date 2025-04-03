@@ -1,7 +1,6 @@
 package com.fivefeeling.memory.domain.user.service;
 
 import com.fivefeeling.memory.domain.trip.dto.TripSummaryResponseDTO;
-import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.user.dto.UserSearchResponseDTO;
 import com.fivefeeling.memory.domain.user.dto.UserSummaryResponseDTO;
@@ -9,7 +8,6 @@ import com.fivefeeling.memory.domain.user.model.User;
 import com.fivefeeling.memory.domain.user.repository.UserRepository;
 import com.fivefeeling.memory.global.common.ResultCode;
 import com.fivefeeling.memory.global.exception.CustomException;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -68,19 +66,15 @@ public class UserService {
 
     long tripsCount = tripRepository.countByUser(user);
 
-    TripSummaryResponseDTO tripSummary = null;
-    Optional<Trip> recentTripOpt = tripRepository.findFirstByUserOrderByCreatedAtDesc(user);
-    if (recentTripOpt.isPresent()) {
-      Trip recentTrip = recentTripOpt.get();
-      tripSummary = new TripSummaryResponseDTO(
-              recentTrip.getTripId(),
-              recentTrip.getTripTitle(),
-              recentTrip.getCountry(),
-              recentTrip.getStartDate(),
-              recentTrip.getEndDate(),
-              recentTrip.getHashtagsAsList()
-      );
-    }
+    TripSummaryResponseDTO tripSummary = tripRepository.findFirstByUserOrderByCreatedAtDesc(user)
+            .map(recentTrip -> new TripSummaryResponseDTO(
+                    recentTrip.getTripId(),
+                    recentTrip.getTripTitle(),
+                    recentTrip.getCountry(),
+                    recentTrip.getStartDate(),
+                    recentTrip.getEndDate(),
+                    recentTrip.getHashtagsAsList()))
+            .orElse(null);
 
     return new UserSummaryResponseDTO(
             user.getUserNickName(),
