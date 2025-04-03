@@ -1,6 +1,9 @@
 package com.fivefeeling.memory.domain.user.service;
 
+import com.fivefeeling.memory.domain.trip.dto.TripSummaryResponseDTO;
+import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.user.dto.UserSearchResponseDTO;
+import com.fivefeeling.memory.domain.user.dto.UserSummaryResponseDTO;
 import com.fivefeeling.memory.domain.user.model.User;
 import com.fivefeeling.memory.domain.user.repository.UserRepository;
 import com.fivefeeling.memory.global.common.ResultCode;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
   private final UserRepository userRepository;
+  private final TripRepository tripRepository;
 
   public void updateUserNickNameByEmail(String userEmail, String userNickName) {
     User user = userRepository.findByUserEmail(userEmail.trim().toLowerCase())
@@ -53,5 +57,29 @@ public class UserService {
     User user = userRepository.findByUserNickName(userNickName.trim())
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
     return UserSearchResponseDTO.fromEntity(user);
+  }
+
+
+  public UserSummaryResponseDTO getUserSummary(String userEmail) {
+    User user = userRepository.findByUserEmail(userEmail.trim().toLowerCase())
+            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+
+    long tripsCount = tripRepository.countByUser(user);
+
+    TripSummaryResponseDTO tripSummary = tripRepository.findFirstByUserOrderByCreatedAtDesc(user)
+            .map(recentTrip -> new TripSummaryResponseDTO(
+                    recentTrip.getTripId(),
+                    recentTrip.getTripTitle(),
+                    recentTrip.getCountry(),
+                    recentTrip.getStartDate(),
+                    recentTrip.getEndDate(),
+                    recentTrip.getHashtagsAsList()))
+            .orElse(null);
+
+    return new UserSummaryResponseDTO(
+            user.getUserNickName(),
+            tripsCount,
+            tripSummary
+    );
   }
 }
