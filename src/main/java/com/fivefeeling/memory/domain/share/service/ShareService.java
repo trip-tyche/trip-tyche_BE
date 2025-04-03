@@ -87,7 +87,7 @@ public class ShareService {
   }
 
   @Transactional
-  public ShareResponseDTO updateShareStatus(Long shareId, ShareStatus status) {
+  public void updateShareStatus(Long shareId, ShareStatus status) {
     Share share = shareRepository.findById(shareId)
             .orElseThrow(() -> new CustomException(ResultCode.SHARE_NOT_FOUND));
 
@@ -122,17 +122,5 @@ public class ShareService {
               senderNickname
       ));
     }
-    
-    return ShareResponseDTO.builder()
-            .shareId(share.getShareId())
-            .tripTitle(share.getTrip().getTripTitle())
-            .ownerNickname(share.getTrip().getUser().getUserNickName())
-            .recipientNickname(recipient.getUserNickName())
-            .status(share.getShareStatus())
-            .country(share.getTrip().getCountry())
-            .startDate(share.getTrip().getStartDate().toString())
-            .endDate(share.getTrip().getEndDate().toString())
-            .hashtags(share.getTrip().getHashtags())
-            .build();
   }
 }

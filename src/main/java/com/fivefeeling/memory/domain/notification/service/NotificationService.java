@@ -37,7 +37,7 @@ public class NotificationService {
             .collect(Collectors.toList());
   }
 
-  public NotificationResponseDTO markAsRead(Long notificationId) {
+  public void markAsRead(Long notificationId) {
     Optional<Notification> notificationOpt = notificationRepository.findById(notificationId);
     if (notificationOpt.isEmpty()) {
       throw new CustomException(ResultCode.NOTIFICATION_NOT_FOUND);
@@ -46,7 +46,8 @@ public class NotificationService {
     Notification notification = notificationOpt.get();
 
     if (notification.getStatus() == NotificationStatus.READ) {
-      return toDTO(notification);
+      toDTO(notification);
+      return;
     }
 
     if (notification.getStreamMessageId() != null) {
@@ -63,12 +64,11 @@ public class NotificationService {
     notification.markAsRead();
 
     Notification saved = notificationRepository.save(notification);
-    return toDTO(saved);
   }
 
 
-  public List<NotificationResponseDTO> markAsDeleted(List<Long> notificationIds) {
-    return notificationIds.stream().map(id -> {
+  public void markAsDeleted(List<Long> notificationIds) {
+    notificationIds.forEach(id -> {
       Notification notification = notificationRepository.findById(id)
               .orElseThrow(() -> new CustomException(ResultCode.NOTIFICATION_NOT_FOUND));
 
@@ -76,8 +76,7 @@ public class NotificationService {
         notification.markAsDeleted();
         notification = notificationRepository.save(notification);
       }
-      return toDTO(notification);
-    }).toList();
+    });
   }
 
   private NotificationResponseDTO toDTO(Notification notification) {
