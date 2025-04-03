@@ -1,6 +1,7 @@
 package com.fivefeeling.memory.domain.trip.repository;
 
 import com.fivefeeling.memory.domain.trip.model.Trip;
+import com.fivefeeling.memory.domain.user.model.User;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -25,4 +26,10 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
 
   // DRAFT 상태이며, 생성일이 임계치 이전인 Trip 조회 (임시 데이터 정리용)
   List<Trip> findByStatusAndCreatedAtBefore(String status, LocalDateTime threshold);
+
+  // 여행갯수
+  long countByUser(User user);
+
+  // 최근여행 조회
+  Optional<Trip> findTopByUserOrderByTripIdDesc(User user);
 }

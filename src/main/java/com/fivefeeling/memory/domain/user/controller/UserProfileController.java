@@ -1,7 +1,7 @@
 package com.fivefeeling.memory.domain.user.controller;
 
 import com.fivefeeling.memory.domain.user.dto.UpdateNickNameRequest;
-import com.fivefeeling.memory.domain.user.repository.UserRepository;
+import com.fivefeeling.memory.domain.user.dto.UserSummaryResponseDTO;
 import com.fivefeeling.memory.domain.user.service.UserService;
 import com.fivefeeling.memory.global.common.RestResponse;
 import com.fivefeeling.memory.global.util.JwtTokenProvider;
@@ -25,7 +25,21 @@ public class UserProfileController {
 
   private final UserService userService;
   private final JwtTokenProvider jwtTokenProvider;
-  private final UserRepository userRepository;
+
+  @Operation(summary = "사용자 요약 정보 조회", description = "<a href='https://www.notion"
+          + ".so/maristadev/1ca66958e5b380478db5da52e40aa8d8?pvs=4' target='_blank'>API 명세서</a>")
+  @GetMapping("/users/me/summary")
+  public RestResponse<UserSummaryResponseDTO> getUserSummary(
+          @RequestHeader("Authorization") String authorizationHeader) {
+
+    // JWT 토큰에서 이메일을 추출
+    String token = authorizationHeader.substring(7);
+    String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
+
+    UserSummaryResponseDTO summary = userService.getUserSummary(userEmail);
+    return RestResponse.success(summary);
+  }
+
 
   @Operation(summary = "사용자 닉네임 업데이트", description = "<a href='https://www.notion"
           + ".so/maristadev/865a54c429e649fe8646be7da6954a4a?pvs=4' target='_blank'>API 명세서</a>")
