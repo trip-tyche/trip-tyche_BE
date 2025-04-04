@@ -2,7 +2,6 @@ package com.fivefeeling.memory.domain.trip.scheduler;
 
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
-import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,14 +20,12 @@ public class TripCleanupScheduler {
   @Transactional
   public void cleanupDraftTrips() {
     log.info("🧹 TripCleanupScheduler: 예약된 임시 여행 삭제 작업 시작");
-    LocalDateTime threshold = LocalDateTime.now().minusHours(1);
-    log.info("삭제 기준 시간: {}", threshold);
-    List<Trip> stableDraftTrips = tripRepository.findByStatusAndCreatedAtBefore("DRAFT", threshold);
-    log.info("삭제 대상 DRAFT 여행 개수: {}", stableDraftTrips.size());
+    List<Trip> draftTrips = tripRepository.findByStatus("DRAFT");
+    log.info("삭제 대상 DRAFT 여행 개수: {}", draftTrips.size());
 
-    if (!stableDraftTrips.isEmpty()) {
-      tripRepository.deleteAll(stableDraftTrips);
-      log.info("총 {}개의 임시 여행을 삭제했습니다.", stableDraftTrips.size());
+    if (!draftTrips.isEmpty()) {
+      tripRepository.deleteAll(draftTrips);
+      log.info("총 {}개의 임시 여행을 삭제했습니다.", draftTrips.size());
     } else {
       log.info("삭제할 임시 여행이 없습니다.");
     }
