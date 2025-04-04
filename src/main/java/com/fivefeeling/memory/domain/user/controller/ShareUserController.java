@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "8. 공유 관련 API")
 @RestController
-@RequestMapping("/api/share")
+@RequestMapping("/v1/share")
 @RequiredArgsConstructor
 public class ShareUserController {
 
