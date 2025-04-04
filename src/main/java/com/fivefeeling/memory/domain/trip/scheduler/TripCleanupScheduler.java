@@ -22,6 +22,7 @@ public class TripCleanupScheduler {
   public void cleanupDraftTrips() {
     log.info("🧹 TripCleanupScheduler: 예약된 임시 여행 삭제 작업 시작");
     LocalDateTime threshold = LocalDateTime.now().minusHours(1);
+    log.info("삭제 기준 시간: {}", threshold);
     List<Trip> stableDraftTrips = tripRepository.findByStatusAndCreatedAtBefore("DRAFT", threshold);
     log.info("삭제 대상 DRAFT 여행 개수: {}", stableDraftTrips.size());
 
