@@ -19,8 +19,8 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
           SELECT DISTINCT t
           FROM Trip t
               LEFT JOIN t.sharedUsers su
-          WHERE t.user.userId = :userId
-             OR su.userId = :userId
+          WHERE (t.user.userId = :userId OR su.userId = :userId)
+                    AND t.status = 'CONFIRMED'
           """)
   List<Trip> findAllAccessibleTrips(@Param("userId") Long userId);
 
