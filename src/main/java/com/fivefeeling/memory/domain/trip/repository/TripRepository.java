@@ -31,5 +31,5 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
   long countByUser(User user);
 
   // 최근여행 조회
-  Optional<Trip> findFirstByUserOrderByCreatedAtDesc(User user);
+  Optional<Trip> findFirstByUserAndStatusOrderByCreatedAtDesc(User user, String status);
 }
