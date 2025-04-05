@@ -51,12 +51,12 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     }
 
     // 쿠키 생성 (HttpOnly, Secure, SameSite 설정 포함)
-    boolean isSecureRequest = request.isSecure();
+    boolean isSecureRequest = !isLocalOrStagingEnvironment();
     Cookie accessTokenCookie = createCookie("access_token", accessToken, ACCESS_TOKEN_MAX_AGE, isSecureRequest);
     Cookie refreshTokenCookie = createCookie("refresh_token", refreshToken, REFRESH_TOKEN_MAX_AGE, isSecureRequest);
 
     // SameSite 옵션은 환경에 따라 다르게 설정 (local: Lax, 운영: None)
-    String sameSiteValue = isLocalEnvironment() ? "Lax" : "None";
+    String sameSiteValue = isLocalOrStagingEnvironment() ? "Lax" : "None";
 
     // 쿠키를 SameSite 옵션 포함하여 헤더에 추가
     addCookieWithSameSite(response, accessTokenCookie, sameSiteValue);
@@ -99,13 +99,13 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
   /**
    * 현재 환경이 로컬 환경인지 확인
    */
-  private boolean isLocalEnvironment() {
-    // 'local' 프로파일이 활성화되어 있는지 확인
+  private boolean isLocalOrStagingEnvironment() {
     for (String profile : env.getActiveProfiles()) {
-      if ("local".equals(profile)) {
+      if ("local".equals(profile) || "staging".equals(profile)) {
         return true;
       }
     }
     return false;
   }
+
 }
