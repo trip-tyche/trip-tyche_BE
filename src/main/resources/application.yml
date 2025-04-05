@@ -289,7 +289,7 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
   redirect:
-    url: https://ec2-43-200-110-25.ap-northeast-2.compute.amazonaws.com
+    url: https://local.triptyche.world:3000
   management:
     endpoints:
       web:
