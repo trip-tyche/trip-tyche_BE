@@ -289,7 +289,7 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
   redirect:
-    url: https://local.triptyche.world:3000
+    url: http://local.triptyche.world:3000
   management:
     endpoints:
       web:
