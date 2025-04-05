@@ -75,7 +75,7 @@ dependencies {
 
     // Redis 설정
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    implementation 'org.springframework.session:spring-session-data-redis'
+//    implementation 'org.springframework.session:spring-session-data-redis'
 
     // hibernate
     implementation 'org.hibernate.common:hibernate-commons-annotations:6.0.6.Final'
