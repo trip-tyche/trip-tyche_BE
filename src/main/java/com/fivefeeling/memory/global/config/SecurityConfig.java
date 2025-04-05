@@ -2,7 +2,7 @@ package com.fivefeeling.memory.global.config;
 
 import com.fivefeeling.memory.global.oauth.CustomOAuth2AuthenticationFailureHandler;
 import com.fivefeeling.memory.global.oauth.OAuth2LoginSuccessHandler;
-import com.fivefeeling.memory.global.oauth.OAuth2Service;
+import com.fivefeeling.memory.global.oauth.service.OAuth2Service;
 import com.fivefeeling.memory.global.util.JWTAuthenticationFilter;
 import com.fivefeeling.memory.global.util.JwtTokenProvider;
 import io.jsonwebtoken.io.IOException;
@@ -73,7 +73,7 @@ public class SecurityConfig {
             .exceptionHandling(exceptionHandling -> exceptionHandling
                     .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
             .logout(logout -> logout.logoutSuccessUrl("/"))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(new JWTAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(new IPLoggingFilter(), JWTAuthenticationFilter.class);
 

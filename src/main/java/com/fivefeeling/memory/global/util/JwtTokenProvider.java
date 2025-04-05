@@ -36,12 +36,15 @@ public class JwtTokenProvider {
   /**
    * JWT 토큰 생성
    *
-   * @param userEmail 사용자 이메일
-   * @param roles 사용자 권한 목록
-   * @param provider OAuth2 제공자 이름
+   * @param userEmail
+   *         사용자 이메일
+   * @param roles
+   *         사용자 권한 목록
+   * @param provider
+   *         OAuth2 제공자 이름(ex: google, kakao 등)
    * @return 생성된 JWT 토큰
    */
-  public String createToken(String userEmail, List<String> roles, String provider) {
+  public String createAccessToken(String userEmail, List<String> roles, String provider) {
     Claims claims = Jwts.claims().setSubject(userEmail);
     claims.put("roles", roles);
     claims.put("provider", provider);
@@ -49,18 +52,47 @@ public class JwtTokenProvider {
     Date now = new Date();
     Date validity = new Date(now.getTime() + 3600000); // 1시간
 
-    return Jwts.builder().setClaims(claims).setIssuedAt(now).setExpiration(validity)
-        .signWith(jwtSecretKeyManager.getSecretKey(provider), SignatureAlgorithm.HS256).compact();
+    return Jwts.builder()
+            .setClaims(claims)
+            .setIssuedAt(now)
+            .setExpiration(validity)
+            .signWith(jwtSecretKeyManager.getSecretKey(provider), SignatureAlgorithm.HS256)
+            .compact();
+  }
+
+  /**
+   * Refresh Token 생성
+   *
+   * @param userEmail
+   *         사용자 이메일 (Refresh Token 생성 시 사용자 식별 용도로 사용)
+   * @param provider
+   *         OAuth2 제공자 이름
+   * @return 생성된 Refresh Token (만료시간 30일)
+   */
+  public String createRefreshToken(String userEmail, String provider) {
+    Claims claims = Jwts.claims().setSubject(userEmail);
+    claims.put("provider", provider);
+
+    Date now = new Date();
+    Date validity = new Date(now.getTime() + 2592000000L); // 30일
+
+    return Jwts.builder()
+            .setClaims(claims)
+            .setIssuedAt(now)
+            .setExpiration(validity)
+            .signWith(jwtSecretKeyManager.getSecretKey(provider), SignatureAlgorithm.HS256)
+            .compact();
   }
 
   /**
    * JWT 유효성 검증
    *
-   * @param token 클라이언트에서 전달받은 JWT
-   * @return 검증 성공 여부 (true: 성공)
-   * @throws CustomException 검증 실패 시 적절한 예외를 던진다.
+   * @param token
+   *         클라이언트에서 전달받은 JWT
+   * @throws CustomException
+   *         검증 실패 시 적절한 예외를 던진다.
    */
-  public boolean validateToken(String token) {
+  public void validateToken(String token) {
     try {
       // Step 1: 토큰에서 provider 추출
       String provider = extractProviderFromToken(token);
@@ -70,7 +102,6 @@ public class JwtTokenProvider {
       Jwts.parserBuilder().setSigningKey(jwtSecretKeyManager.getSecretKey(provider)).build().parseClaimsJws(token);
 
       log.debug("토큰 검증 성공. provider: {}", provider);
-      return true;
     } catch (SecurityException | MalformedJwtException e) {
       log.error("JWT 서명 오류 또는 변조된 토큰: {}", e.getMessage());
       throw new CustomException(ResultCode.INVALID_JWT);
@@ -92,7 +123,8 @@ public class JwtTokenProvider {
   /**
    * JWT에서 사용자 이메일 추출
    *
-   * @param token 클라이언트에서 전달받은 JWT
+   * @param token
+   *         클라이언트에서 전달받은 JWT
    * @return JWT에 저장된 사용자 이메일
    */
   public String getUserEmailFromToken(String token) {
@@ -100,7 +132,8 @@ public class JwtTokenProvider {
       String provider = extractProviderFromToken(token);
       Key secretKey = jwtSecretKeyManager.getSecretKey(provider);
 
-      String userEmail = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody().getSubject();
+      String userEmail = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody()
+              .getSubject();
 
       log.debug("추출된 사용자 이메일: {}", userEmail);
       return userEmail;
@@ -113,7 +146,8 @@ public class JwtTokenProvider {
   /**
    * JWT에서 사용자 권한 목록 추출
    *
-   * @param token 클라이언트에서 전달받은 JWT
+   * @param token
+   *         클라이언트에서 전달받은 JWT
    * @return JWT에 저장된 사용자 권한 목록
    */
   public List<GrantedAuthority> getAuthorities(String token) {
@@ -133,11 +167,13 @@ public class JwtTokenProvider {
   /**
    * JWT에서 제공자(provider) 정보 추출
    *
-   * @param token 클라이언트에서 전달받은 JWT
+   * @param token
+   *         클라이언트에서 전달받은 JWT
    * @return JWT에 저장된 제공자(provider) 정보
-   * @throws CustomException JWT 형식 오류나 파싱 오류 발생 시
+   * @throws CustomException
+   *         JWT 형식 오류나 파싱 오류 발생 시
    */
-  private String extractProviderFromToken(String token) {
+  public String extractProviderFromToken(String token) {
     try {
       String[] chunks = token.split("\\.");
       if (chunks.length != 3) {

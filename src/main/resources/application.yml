@@ -71,7 +71,7 @@ spring:
       max-request-size: 100MB
   #      enabled: true
   redirect:
-    url: http://localhost:8080/auth/redirect
+    url: http://localhost:8080/swagger-ui/index.html
   management:
     endpoints:
       web:
@@ -186,7 +186,7 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
   redirect:
-    url: https://triptyche.world/login/redirect
+    url: https://triptyche.world
 
   management:
     endpoints:
@@ -289,7 +289,7 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
   redirect:
-    url: http://localhost:3000/login/redirect
+    url: http://localhost:3000
   management:
     endpoints:
       web:

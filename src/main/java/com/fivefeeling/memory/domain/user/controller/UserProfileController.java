@@ -7,11 +7,11 @@ import com.fivefeeling.memory.global.common.RestResponse;
 import com.fivefeeling.memory.global.util.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -29,13 +29,8 @@ public class UserProfileController {
   @Operation(summary = "사용자 요약 정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/1ca66958e5b380478db5da52e40aa8d8?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/users/me/summary")
-  public RestResponse<UserSummaryResponseDTO> getUserSummary(
-          @RequestHeader("Authorization") String authorizationHeader) {
-
-    // JWT 토큰에서 이메일을 추출
-    String token = authorizationHeader.substring(7);
-    String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
-
+  public RestResponse<UserSummaryResponseDTO> getUserSummary(Principal principal) {
+    String userEmail = principal.getName();
     UserSummaryResponseDTO summary = userService.getUserSummary(userEmail);
     return RestResponse.success(summary);
   }
@@ -46,13 +41,10 @@ public class UserProfileController {
   @PatchMapping("/users/me")
   @ResponseBody
   public RestResponse<String> updateNickName(
-          @RequestHeader("Authorization") String authorizationHeader,
+          Principal principal,
           @RequestBody UpdateNickNameRequest updateRequest) {
 
-    // JWT 토큰에서 이메일을 추출
-    String token = authorizationHeader.substring(7);
-    String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
-
+    String userEmail = principal.getName();
     // 닉네임 업데이트 서비스 호출
     userService.updateUserNickNameByEmail(userEmail, updateRequest.nickname());
     return RestResponse.success("닉네임이 성공적으로 등록되었습니다.");
