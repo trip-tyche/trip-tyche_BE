@@ -89,7 +89,8 @@ public class SecurityConfig {
                     "http://trip-tyche-fe.s3-website.ap-northeast-2.amazonaws.com",
                     "https://triptyche.world",
                     "http://ec2-43-200-110-25.ap-northeast-2.compute.amazonaws.com",
-                    "http://ec2-43-200-110-25.ap-northeast-2.compute.amazonaws.com:3000"));
+                    "http://ec2-43-200-110-25.ap-northeast-2.compute.amazonaws.com:3000",
+                    "http://local.triptyche.world:3000"));
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     configuration.setAllowedHeaders(List.of("*"));
     configuration.setAllowCredentials(true);
