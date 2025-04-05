@@ -13,9 +13,9 @@ import com.fivefeeling.memory.global.common.RestResponse;
 import com.fivefeeling.memory.global.util.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -42,8 +42,7 @@ public class TripController {
           + ".so/maristadev/12d66958e5b380c8b6c2ca99cbc2f752?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping
   public RestResponse<TripCreationResponseDTO> createTrip(
-          Principal principal) {
-    String userEmail = principal.getName();
+          @AuthenticationPrincipal String userEmail) {
     TripCreationResponseDTO tripIdResponse = tripManagementService.createTripId(userEmail);
     return RestResponse.success(tripIdResponse);
   }
@@ -62,9 +61,8 @@ public class TripController {
           + ".so/maristadev/680d29996d0941b9aa742a280e2b3b27?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping
   public RestResponse<TripsResponseDTO> getUserTrips(
-          Principal principal) {
+          @AuthenticationPrincipal String userEmail) {
 
-    String userEmail = principal.getName();
     TripsResponseDTO tripsResponse = tripQueryService.getTripsByUserEmail(userEmail);
     return RestResponse.success(tripsResponse);
   }
