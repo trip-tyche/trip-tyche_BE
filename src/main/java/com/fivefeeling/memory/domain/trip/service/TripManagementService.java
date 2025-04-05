@@ -61,10 +61,7 @@ public class TripManagementService {
 
   // 사용자 여행 정보 저장 및 수정
   @Transactional
-  public void updateTrip(String userEmail, Long tripId, TripInfoRequestDTO tripInfoRequestDTO) {
-    userRepository.findByUserEmail(userEmail)
-            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-
+  public void updateTrip(Long tripId, TripInfoRequestDTO tripInfoRequestDTO) {
     Trip trip = tripRepository.findById(tripId)
             .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
 
@@ -74,7 +71,7 @@ public class TripManagementService {
     trip.setEndDate(tripInfoRequestDTO.endDate());
     trip.setHashtagsFromList(tripInfoRequestDTO.hashtags());
 
-    Trip updatedTrip = tripRepository.save(trip);
+    tripRepository.save(trip);
   }
 
   // 사용자 여행 정보 삭제
