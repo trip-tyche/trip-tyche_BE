@@ -1,10 +1,12 @@
-package com.fivefeeling.memory.global.oauth;
+package com.fivefeeling.memory.global.oauth.service;
 
 import com.fivefeeling.memory.domain.user.dto.UserDTO;
 import com.fivefeeling.memory.domain.user.model.User;
 import com.fivefeeling.memory.domain.user.repository.UserRepository;
 import com.fivefeeling.memory.global.common.ResultCode;
 import com.fivefeeling.memory.global.exception.CustomException;
+import com.fivefeeling.memory.global.oauth.OAuthAttributes;
+import com.fivefeeling.memory.global.oauth.repository.RefreshTokenRepository;
 import com.fivefeeling.memory.global.util.JwtTokenProvider;
 import java.util.Collections;
 import java.util.List;
@@ -31,6 +33,7 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
 
   private final UserRepository userRepository;
   private final JwtTokenProvider jwtTokenProvider;
+  private final RefreshTokenRepository refreshTokenRepository;
 
   @Override
   public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -50,13 +53,20 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
       User user = updateOrSaveUser(userProfile);
       Long userId = user.getUserId();
 
-      // JWT 토큰 생성
-      List<String> roles = List.of("ROLE_USER"); // 기본 권한 설정
-      String token = jwtTokenProvider.createToken(userProfile.userEmail(), roles, registrationId);
+      // 기본 권한 설정
+      List<String> roles = List.of("ROLE_USER");
+      // Access Token 생성
+      String accessToken = jwtTokenProvider.createAccessToken(userProfile.userEmail(), roles, registrationId);
+      // Refresh Token 생성
+      String refreshToken = jwtTokenProvider.createRefreshToken(userProfile.userEmail(), registrationId);
+      // Redis에 Refresh Token 저장
+      refreshTokenRepository.save(userProfile.userEmail(), refreshToken, 2592000); // 30일
 
+      // 사용자 정보 및 토큰을 customAttribute에 추가하여 SuccessHandler에서 활용 가능하도록 함
       Map<String, Object> customAttribute = getCustomAttribute(registrationId, userNameAttributeName, attributes,
               userProfile);
-      customAttribute.put("token", token);
+      customAttribute.put("accessToken", accessToken);
+      customAttribute.put("refreshToken", refreshToken);
       customAttribute.put("userId", userId);
 
       return new DefaultOAuth2User(
