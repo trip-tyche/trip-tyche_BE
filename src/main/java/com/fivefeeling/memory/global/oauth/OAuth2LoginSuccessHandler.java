@@ -56,7 +56,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     Cookie refreshTokenCookie = createCookie("refresh_token", refreshToken, REFRESH_TOKEN_MAX_AGE, isSecureRequest);
 
     // SameSite 옵션은 환경에 따라 다르게 설정 (local: Lax, 운영: None)
-    String sameSiteValue = isLocalOrStagingEnvironment() ? "Lax" : "None";
+    String sameSiteValue = isLocalOrStagingEnvironment() ? "None" : "None";
 
     // 쿠키를 SameSite 옵션 포함하여 헤더에 추가
     addCookieWithSameSite(response, accessTokenCookie, sameSiteValue);
