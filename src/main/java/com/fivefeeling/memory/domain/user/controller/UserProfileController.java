@@ -8,6 +8,7 @@ import com.fivefeeling.memory.global.util.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -29,6 +30,7 @@ public class UserProfileController {
   @Operation(summary = "사용자 요약 정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/1ca66958e5b380478db5da52e40aa8d8?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/users/me/summary")
+  @PreAuthorize("isAuthenticated()")
   public RestResponse<UserSummaryResponseDTO> getUserSummary(@AuthenticationPrincipal String userEmail) {
     UserSummaryResponseDTO summary = userService.getUserSummary(userEmail);
     return RestResponse.success(summary);
