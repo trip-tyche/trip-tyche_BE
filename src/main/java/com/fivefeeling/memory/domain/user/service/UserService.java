@@ -77,6 +77,7 @@ public class UserService {
             .orElse(null);
 
     return new UserSummaryResponseDTO(
+            user.getUserId(),
             user.getUserNickName(),
             tripsCount,
             tripSummary
