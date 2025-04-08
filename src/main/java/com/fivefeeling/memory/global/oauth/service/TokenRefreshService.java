@@ -41,7 +41,10 @@ public class TokenRefreshService {
 
     // 3. Redis에 저장된 Refresh Token과 클라이언트가 보낸 토큰을 비교
     String storedRefreshToken = refreshTokenRepository.findByUserEmail(userEmail);
+    log.info("📌 저장된 refreshToken (Redis): {}", storedRefreshToken);
+
     if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
+      log.warn("❌ Refresh token mismatch! 전달: {}, 저장된: {}", refreshToken, storedRefreshToken);
       throw new CustomException(ResultCode.UNAUTHORIZED);
     }
 
