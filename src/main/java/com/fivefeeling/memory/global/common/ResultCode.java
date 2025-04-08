@@ -29,7 +29,7 @@ public enum ResultCode {
   JWT_PARSING_ERROR(HttpStatus.BAD_REQUEST, 2005, "토큰 파싱 중 오류가 발생했습니다."),
   USER_SAVE_FAILURE(HttpStatus.INTERNAL_SERVER_ERROR, 2006, "사용자 정보를 저장하는 데 실패했습니다."),
   INVALID_PROVIDER(HttpStatus.BAD_REQUEST, 2007, "유효하지 않은 OAuth 제공자입니다."),
-  REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, 2008, "Refresh Token이 만료되었거나 유효하지 않습니다."),
+  REFRESH_TOKEN_EXPIRED(HttpStatus.FORBIDDEN, 2008, "Refresh Token이 만료되었거나 유효하지 않습니다."),
 
 
   // 사용자 관련 오류 코드 (3000번대)
