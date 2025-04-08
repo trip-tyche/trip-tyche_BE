@@ -52,8 +52,10 @@ public class TokenRefreshService {
 
     // 5. Redis에 새 Refresh Token 저장 (기존 토큰을 대체)
     refreshTokenRepository.save(userEmail, newRefreshToken, REFRESH_TOKEN_EXPIRATION_SECONDS);
+    log.info("🔐 Redis에 저장된 새로운 refresh_token: {}", newRefreshToken);
 
     // 6. 새 토큰 정보를 반환
+    log.info("📌 저장된 refreshToken (Redis): {}", refreshTokenRepository.findByUserEmail(userEmail));
     return Map.of("accessToken", newAccessToken, "refreshToken", newRefreshToken);
   }
 }
