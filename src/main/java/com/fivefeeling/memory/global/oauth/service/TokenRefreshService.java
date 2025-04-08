@@ -45,7 +45,7 @@ public class TokenRefreshService {
 
     if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
       log.warn("❌ Refresh token mismatch! 전달: {}, 저장된: {}", refreshToken, storedRefreshToken);
-      throw new CustomException(ResultCode.UNAUTHORIZED);
+      throw new CustomException(ResultCode.REFRESH_TOKEN_EXPIRED);
     }
 
     // 4. 새로운 토큰 발급
