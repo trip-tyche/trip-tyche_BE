@@ -31,15 +31,26 @@ public class AuthController {
   @PostMapping("/refresh")
   public RestResponse<String> refreshToken(HttpServletRequest request, HttpServletResponse response) {
     String refreshToken = getCookieValue(request);
-    log.info("refresh_token 🍪쿠키 값: {}", refreshToken);
     if (refreshToken == null) {
-      throw new CustomException(ResultCode.UNAUTHORIZED);
+      log.warn("❌ refresh_token 쿠키가 존재하지 않거나 비어 있음.");
+      throw new CustomException(ResultCode.REFRESH_TOKEN_EXPIRED);
     }
-    var tokenMap = tokenRefreshService.refreshToken(refreshToken);
-    cookieUtil.setCookie(response, "access_token", tokenMap.get("accessToken"), 60 * 60);          // 1시간
-    cookieUtil.setCookie(response, "refresh_token", tokenMap.get("refreshToken"), 30 * 24 * 60 * 60); // 30일
+    log.info("refresh_token 🍪쿠키 값: {}", refreshToken);
 
-    return RestResponse.success("성공적으로 토큰을 갱신했습니다.");
+    try {
+      var tokenMap = tokenRefreshService.refreshToken(refreshToken);
+
+      cookieUtil.setCookie(response, "access_token", tokenMap.get("accessToken"), 60 * 60);             // 1시간
+      cookieUtil.setCookie(response, "refresh_token", tokenMap.get("refreshToken"), 30 * 24 * 60 * 60); // 30일
+
+      return RestResponse.success("성공적으로 토큰을 갱신했습니다.");
+    } catch (CustomException e) {
+      log.warn("❌ 토큰 갱신 실패: {}", e.getResultCode().getMessage());
+      throw e; // RestControllerAdvice 또는 GlobalExceptionHandler에서 일관된 응답 처리
+    } catch (Exception e) {
+      log.error("⚠️ 예기치 않은 오류 발생", e);
+      throw new CustomException(ResultCode.INTERNAL_SERVER_ERROR);
+    }
   }
 
   private String getCookieValue(HttpServletRequest request) {
