@@ -44,7 +44,6 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/v1/**").authenticated()
                     .requestMatchers(
                             "/swagger-ui/**",
                             "/v3/api-docs/**",
@@ -59,9 +58,11 @@ public class SecurityConfig {
                             "/actuator/**",
                             "/ws/**",
                             "/app/**",
-                            "/topic/**"
+                            "/topic/**",
+                            "/v1/auth/refresh"
                     )
                     .permitAll()
+                    .requestMatchers("/v1/**").authenticated()
                     .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
