@@ -1,5 +1,6 @@
 package com.fivefeeling.memory.global.config;
 
+import com.fivefeeling.memory.global.exception.CustomAuthenticationEntryPoint;
 import com.fivefeeling.memory.global.oauth.CustomOAuth2AuthenticationFailureHandler;
 import com.fivefeeling.memory.global.oauth.OAuth2LoginSuccessHandler;
 import com.fivefeeling.memory.global.oauth.service.OAuth2Service;
@@ -16,12 +17,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -36,6 +35,7 @@ public class SecurityConfig {
   private final OAuth2Service oAuth2Service;
   private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
   private final CustomOAuth2AuthenticationFailureHandler customOAuth2AuthenticationFailureHandler;
+  private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtTokenProvider jwtTokenProvider)
@@ -72,8 +72,9 @@ public class SecurityConfig {
                     .successHandler(oAuth2LoginSuccessHandler)
                     .failureHandler(customOAuth2AuthenticationFailureHandler)
             )
-            .exceptionHandling(exceptionHandling -> exceptionHandling
-                    .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+            .exceptionHandling(exceptionHandling ->
+                    exceptionHandling
+                            .authenticationEntryPoint(customAuthenticationEntryPoint))
             .logout(logout -> logout.logoutSuccessUrl("/"))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(new JWTAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
