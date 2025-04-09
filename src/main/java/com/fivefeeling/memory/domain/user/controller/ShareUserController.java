@@ -23,9 +23,9 @@ public class ShareUserController {
           + ".so/maristadev/17766958e5b380e9b22bff0ed697db9d?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/users")
   public RestResponse<UserSearchResponseDTO> findUserByNickName(
-          @RequestParam String userNickName) {
+          @RequestParam String nickname) {
 
-    UserSearchResponseDTO responseDTO = userService.getUserByNickName(userNickName);
+    UserSearchResponseDTO responseDTO = userService.getUserByNickName(nickname);
     return RestResponse.success(responseDTO);
   }
 }

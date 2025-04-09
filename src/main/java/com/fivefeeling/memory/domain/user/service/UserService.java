@@ -48,13 +48,13 @@ public class UserService {
   /**
    * 닉네임으로 사용자 검색
    *
-   * @param userNickName
+   * @param nickname
    *         검색할 사용자 닉네임
    * @return User 사용자 객체
    */
 
-  public UserSearchResponseDTO getUserByNickName(String userNickName) {
-    User user = userRepository.findByUserNickName(userNickName.trim())
+  public UserSearchResponseDTO getUserByNickName(String nickname) {
+    User user = userRepository.findByUserNickName(nickname.trim())
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
     return UserSearchResponseDTO.fromEntity(user);
   }
