@@ -10,7 +10,6 @@ import com.fivefeeling.memory.domain.trip.dto.UpdateTripInfoResponseDTO;
 import com.fivefeeling.memory.domain.trip.service.TripManagementService;
 import com.fivefeeling.memory.domain.trip.service.TripQueryService;
 import com.fivefeeling.memory.global.common.RestResponse;
-import com.fivefeeling.memory.global.util.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +34,6 @@ public class TripController {
 
   private final TripQueryService tripQueryService;
   private final TripManagementService tripManagementService;
-  private final JwtTokenProvider jwtTokenProvider;
 
   @Tag(name = "3. 여행등록 페이지 API")
   @Operation(summary = "tripId 임시생성", description = "<a href='https://www.notion"
@@ -51,8 +49,10 @@ public class TripController {
   @Operation(summary = "Trip 최종 확정", description = "<a href='https://www.notion"
           + ".so/maristadev/Trip-1c566958e5b38062b7afd6ed16c69ea1?pvs=4' target='_blank'>API 명세서</a>")
   @PatchMapping("/{tripId}/finalize")
-  public RestResponse<String> finalizeTrip(@PathVariable("tripId") Long tripId) {
-    tripManagementService.finalizeTrip(tripId);
+  public RestResponse<String> finalizeTrip(
+          @AuthenticationPrincipal String userEmail,
+          @PathVariable("tripId") Long tripId) {
+    tripManagementService.finalizeTrip(userEmail, tripId);
     return RestResponse.success("여행이 성공적으로 등록되었습니다.");
   }
 
@@ -71,8 +71,10 @@ public class TripController {
   @Operation(summary = "여행정보 수정을 위한 {tripId} 여행정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/10d66958e5b3803f8dddf7b02d4e83f5?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/{tripId}")
-  public RestResponse<UpdateTripInfoResponseDTO> getTripById(@PathVariable Long tripId) {
-    UpdateTripInfoResponseDTO tripInfo = tripQueryService.getTripById(tripId);
+  public RestResponse<UpdateTripInfoResponseDTO> getTripById(
+          @AuthenticationPrincipal String userEmail,
+          @PathVariable Long tripId) {
+    UpdateTripInfoResponseDTO tripInfo = tripQueryService.getTripById(userEmail, tripId);
 
     return RestResponse.success(tripInfo);
   }
@@ -82,10 +84,11 @@ public class TripController {
           + ".so/maristadev/f928c3dc6c2444c9883b8777eadcefc9?pvs=4' target='_blank'>API 명세서</a>")
   @PutMapping("/{tripId}")
   public RestResponse<String> updateTrip(
+          @AuthenticationPrincipal String userEmail,
           @PathVariable Long tripId,
           @RequestBody TripInfoRequestDTO tripInfoRequestDTO) {
 
-    tripManagementService.updateTrip(tripId, tripInfoRequestDTO);
+    tripManagementService.updateTrip(userEmail, tripId, tripInfoRequestDTO);
 
     return RestResponse.success("성공적으로 여행 정보가 등록되었습니다.");
   }
@@ -95,9 +98,10 @@ public class TripController {
           + ".so/maristadev/38909993a1654e0c9034287a27a483fe?pvs=4' target='_blank'>API 명세서</a>")
   @DeleteMapping("/{tripId}")
   public RestResponse<String> deleteTrip(
+          @AuthenticationPrincipal String userEmail,
           @PathVariable Long tripId) {
 
-    tripManagementService.deleteTrip(tripId);
+    tripManagementService.deleteTrip(userEmail, tripId);
 
     return RestResponse.success("성공적으로 여행 정보가 삭제되었습니다.");
   }
@@ -106,8 +110,10 @@ public class TripController {
   @Operation(summary = "지도위 페이지 여행 정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/fc14909a1ec5481ca37b58924637be20?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/{tripId}/info")
-  public RestResponse<MapViewResponseDTO> getTripInfo(@PathVariable Long tripId) {
-    MapViewResponseDTO tripInfo = tripQueryService.getTripInfoById(tripId);
+  public RestResponse<MapViewResponseDTO> getTripInfo(
+          @AuthenticationPrincipal String userEmail,
+          @PathVariable Long tripId) {
+    MapViewResponseDTO tripInfo = tripQueryService.getTripInfoById(userEmail, tripId);
     return RestResponse.success(tripInfo);
   }
 
@@ -116,10 +122,12 @@ public class TripController {
           + ".so/maristadev/d172149814414943866df2f04f409970?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/{tripId}/pinpoints/{pinPointId}/images")
   public RestResponse<PinPointImageGalleryResponseDTO> getPointImages(
+          @AuthenticationPrincipal String userEmail,
           @PathVariable Long tripId,
           @PathVariable Long pinPointId) {
 
-    PinPointImageGalleryResponseDTO pinPointImageGalleryResponse = tripQueryService.getPointImages(tripId, pinPointId);
+    PinPointImageGalleryResponseDTO pinPointImageGalleryResponse = tripQueryService.getPointImages(userEmail, tripId,
+            pinPointId);
 
     return RestResponse.success(pinPointImageGalleryResponse);
   }
@@ -129,10 +137,11 @@ public class TripController {
           + ".so/maristadev/de630f9fd0424f1ca1d521037730d296?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/{tripId}/map")
   public RestResponse<MediaFilesByDateResponseDTO> getImagesByDate(
+          @AuthenticationPrincipal String userEmail,
           @PathVariable Long tripId,
           @RequestParam String date) {
 
-    MediaFilesByDateResponseDTO dateImageDTO = tripQueryService.getImagesByDate(tripId, date);
+    MediaFilesByDateResponseDTO dateImageDTO = tripQueryService.getImagesByDate(userEmail, tripId, date);
 
     return RestResponse.success(dateImageDTO);
   }

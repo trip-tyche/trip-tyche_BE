@@ -18,6 +18,7 @@ import com.fivefeeling.memory.domain.trip.dto.TripsResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.UpdateTripInfoResponseDTO;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
+import com.fivefeeling.memory.domain.trip.validator.TripAccessValidator;
 import com.fivefeeling.memory.domain.user.model.User;
 import com.fivefeeling.memory.domain.user.repository.UserRepository;
 import com.fivefeeling.memory.global.common.ResultCode;
@@ -43,6 +44,7 @@ public class TripQueryService {
   private final PinPointRepository pinPointRepository;
   private final UserRepository userRepository;
   private final MediaFileRepository mediaFileRepository;
+  private final TripAccessValidator tripAccessValidator;
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 
@@ -117,9 +119,8 @@ public class TripQueryService {
 */
 
 
-  public UpdateTripInfoResponseDTO getTripById(Long tripId) {
-    Trip trip = tripRepository.findByTripId(tripId)
-            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+  public UpdateTripInfoResponseDTO getTripById(String userEmail, Long tripId) {
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
     List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripId(tripId);
 
@@ -142,9 +143,8 @@ public class TripQueryService {
     );
   }
 
-  public MapViewResponseDTO getTripInfoById(Long tripId) {
-    Trip trip = tripRepository.findById(tripId)
-            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+  public MapViewResponseDTO getTripInfoById(String userEmail, Long tripId) {
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
     List<PinPointResponseDTO> pinPoints = pinPointRepository.findEarliestSingleMediaFileForEachPinPointByTripId(tripId);
     List<MediaFileResponseDTO> mediaFiles = pinPointRepository.findMediaFilesByTripId(tripId);
@@ -167,7 +167,9 @@ public class TripQueryService {
   }
 
   @Transactional(readOnly = true)
-  public PinPointImageGalleryResponseDTO getPointImages(Long tripId, Long pinPointId) {
+  public PinPointImageGalleryResponseDTO getPointImages(String userEmail, Long tripId, Long pinPointId) {
+    tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+
     PinPoint pinPoint = pinPointRepository.findById(pinPointId)
             .orElseThrow(() -> new CustomException(ResultCode.PINPOINT_NOT_FOUND));
 
@@ -184,7 +186,9 @@ public class TripQueryService {
   }
 
   @Transactional(readOnly = true)
-  public MediaFilesByDateResponseDTO getImagesByDate(Long tripId, String date) {
+  public MediaFilesByDateResponseDTO getImagesByDate(String userEmail, Long tripId, String date) {
+    tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+
     LocalDate parsedDate;
     try {
       parsedDate = LocalDate.parse(date, DATE_FORMATTER);

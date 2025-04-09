@@ -7,9 +7,7 @@ import com.fivefeeling.memory.domain.media.dto.EditableMediaFilesResponseDTO;
 import com.fivefeeling.memory.domain.media.model.MediaFile;
 import com.fivefeeling.memory.domain.media.repository.MediaFileRepository;
 import com.fivefeeling.memory.domain.trip.model.Trip;
-import com.fivefeeling.memory.domain.trip.repository.TripRepository;
-import com.fivefeeling.memory.global.common.ResultCode;
-import com.fivefeeling.memory.global.exception.CustomException;
+import com.fivefeeling.memory.domain.trip.validator.TripAccessValidator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,13 +16,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TripImagesService {
 
-  private final TripRepository tripRepository;
   private final MediaFileRepository mediaFileRepository;
+  private final TripAccessValidator tripAccessValidator;
 
-  public EditableMediaFilesResponseDTO getTripImagesByTripId(Long tripId) {
-    Trip trip = tripRepository.findByTripId(tripId)
-            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
-
+  public EditableMediaFilesResponseDTO getTripImagesByTripId(String userEmail, Long tripId) {
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
     List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripId(tripId);
 
     List<EditableMediaFileResponseDTO> mediaFileDTOs = mediaFiles.stream()

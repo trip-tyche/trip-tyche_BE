@@ -13,6 +13,7 @@ import com.fivefeeling.memory.domain.pinpoint.model.PinPoint;
 import com.fivefeeling.memory.domain.pinpoint.service.PinPointService;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
+import com.fivefeeling.memory.domain.trip.validator.TripAccessValidator;
 import com.fivefeeling.memory.global.common.ResultCode;
 import com.fivefeeling.memory.global.exception.CustomException;
 import com.fivefeeling.memory.global.redis.ImageQueueService;
@@ -39,6 +40,7 @@ public class MediaMetadataService {
   private final RedisDataService redisDataService;
   private final S3UploadService s3UploadService;
   private final ImageQueueService imageQueueService;
+  private final TripAccessValidator tripAccessValidator;
 
 
   @Value("${spring.cloud.aws.s3.bucketName}")
@@ -87,10 +89,9 @@ public class MediaMetadataService {
   }
 
   @Transactional
-  public void updateMediaFileMetadata(Long tripId, Long mediaFileId, MediaFileUpdateRequestDTO request) {
-
-    Trip trip = tripRepository.findById(tripId)
-            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+  public void updateMediaFileMetadata(String userEmail, Long tripId, Long mediaFileId,
+                                      MediaFileUpdateRequestDTO request) {
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
     MediaFile mediaFile = mediaFileRepository.findById(mediaFileId)
             .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
@@ -106,9 +107,8 @@ public class MediaMetadataService {
   }
 
   @Transactional
-  public int updateMultipleMediaFiles(Long tripId, MediaFileBatchUpdateRequestDTO requestDTO) {
-    Trip trip = tripRepository.findById(tripId)
-            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+  public int updateMultipleMediaFiles(String userEmail, Long tripId, MediaFileBatchUpdateRequestDTO requestDTO) {
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
     List<MediaFile> updatedMediaFiles = requestDTO.mediaFiles().stream()
             .map(request -> {
@@ -132,9 +132,8 @@ public class MediaMetadataService {
   }
 
   @Transactional
-  public void deleteSingleMediaFile(Long tripId, Long mediaFileId) {
-    tripRepository.findById(tripId)
-            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+  public void deleteSingleMediaFile(String userEmail, Long tripId, Long mediaFileId) {
+    tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
     MediaFile mediaFile = mediaFileRepository.findById(mediaFileId)
             .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
@@ -145,9 +144,8 @@ public class MediaMetadataService {
   }
 
   @Transactional
-  public int deleteMultipleMediaFiles(Long tripId, MediaFileBatchDeleteRequestDTO requestDTO) {
-    tripRepository.findById(tripId)
-            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+  public int deleteMultipleMediaFiles(String userEmail, Long tripId, MediaFileBatchDeleteRequestDTO requestDTO) {
+    tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
     List<Long> mediaFileIds = requestDTO.mediaFileIds();
 
@@ -170,7 +168,8 @@ public class MediaMetadataService {
   }
 
   @Transactional(readOnly = true)
-  public List<UnlocatedImageResponseDTO> getUnlocatedImages(Long tripId) {
+  public List<UnlocatedImageResponseDTO> getUnlocatedImages(String userEmail, Long tripId) {
+    tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
     String redisKey = "trip:" + tripId;
     Map<Object, Object> redisData = imageQueueService.getImageQueue(redisKey);
 
@@ -187,7 +186,6 @@ public class MediaMetadataService {
                 Map<String, Object> imageData = objectMapper.readValue(entry.getValue().toString(), Map.class);
                 String mediaLink = (String) imageData.get("mediaLink");
                 String recordDateString = (String) imageData.get("recordDate");
-
                 LocalDateTime recordDateTime = LocalDateTime.parse(recordDateString);
                 String formattedDate = DateFormatter.formatLocalDateToString(recordDateTime.toLocalDate());
 
@@ -209,7 +207,9 @@ public class MediaMetadataService {
 
 
   @Transactional
-  public void updateImageLocation(Long tripId, Long mediaFileId, UpdateMediaFileLocationRequestDTO requestDTO) {
+  public void updateImageLocation(String userEmail, Long tripId, Long mediaFileId,
+                                  UpdateMediaFileLocationRequestDTO requestDTO) {
+
     // 직접 요청 DTO에서 위도와 경도 값을 추출
     Double newLatitude = requestDTO.latitude();
     Double newLongitude = requestDTO.longitude();
@@ -218,9 +218,7 @@ public class MediaMetadataService {
       throw new CustomException(ResultCode.INVALID_COORDINATE);
     }
 
-    // Trip 조회
-    Trip trip = tripRepository.findById(tripId)
-            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
     // MediaFile 조회
     MediaFile mediaFile = mediaFileRepository.findById(mediaFileId)

@@ -5,6 +5,7 @@ import com.fivefeeling.memory.domain.trip.dto.TripCreationResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.TripInfoRequestDTO;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
+import com.fivefeeling.memory.domain.trip.validator.TripAccessValidator;
 import com.fivefeeling.memory.domain.user.model.User;
 import com.fivefeeling.memory.domain.user.repository.UserRepository;
 import com.fivefeeling.memory.global.common.ResultCode;
@@ -21,6 +22,7 @@ public class TripManagementService {
   private final TripRepository tripRepository;
   private final UserRepository userRepository;
   private final MediaProcessingService mediaProcessingService;
+  private final TripAccessValidator tripAccessValidator;
 
 
   public TripCreationResponseDTO createTripId(String userEmail) {
@@ -42,13 +44,8 @@ public class TripManagementService {
   }
 
   @Transactional
-  public void finalizeTrip(Long tripId) {
-//    // 사용자 검증
-//    userRepository.findByUserEmail(userEmail)
-//            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-
-    Trip trip = tripRepository.findById(tripId)
-            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+  public void finalizeTrip(String userEmail, Long tripId) {
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
     // 이미 확정된 경우 예외 처리
     if (!"DRAFT".equals(trip.getStatus())) {
@@ -61,9 +58,8 @@ public class TripManagementService {
 
   // 사용자 여행 정보 저장 및 수정
   @Transactional
-  public void updateTrip(Long tripId, TripInfoRequestDTO tripInfoRequestDTO) {
-    Trip trip = tripRepository.findById(tripId)
-            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+  public void updateTrip(String userEmail, Long tripId, TripInfoRequestDTO tripInfoRequestDTO) {
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
     trip.setTripTitle(tripInfoRequestDTO.tripTitle());
     trip.setCountry(tripInfoRequestDTO.country());
@@ -76,9 +72,8 @@ public class TripManagementService {
 
   // 사용자 여행 정보 삭제
   @Transactional
-  public void deleteTrip(Long tripId) {
-    Trip trip = tripRepository.findById(tripId)
-            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+  public void deleteTrip(String userEmail, Long tripId) {
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
     // 미디어 파일 삭제
     mediaProcessingService.deleteMediaFilesByTrip(trip);
