@@ -9,7 +9,6 @@ import com.fivefeeling.memory.global.oauth.service.TokenRefreshService;
 import com.fivefeeling.memory.global.util.CookieUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,11 +27,12 @@ public class AuthController {
   private final CookieUtil cookieUtil;
   private final LogoutService logoutService;
 
-  @Tag(name = "0. OAuth 관련 API")
-  @Operation(summary = "토큰 갱신 API", description = "<a href='' target='_blank'>API 명세서</a>")
+  @Tag(name = "0. 로그인&인증관련 API")
+  @Operation(summary = "토큰 갱신 API", description = "<a href='https://www.notion"
+          + ".so/maristadev/Access-Refresh-1cd66958e5b380ceb12dd3aa5442af4d?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping("/refresh")
   public RestResponse<String> refreshToken(HttpServletRequest request, HttpServletResponse response) {
-    String refreshToken = getCookieValue(request);
+    String refreshToken = cookieUtil.getCookieValue(request, "refresh_token");
     if (refreshToken == null) {
       log.warn("❌ refresh_token 쿠키가 존재하지 않거나 비어 있음.");
       throw new CustomException(ResultCode.REFRESH_TOKEN_EXPIRED);
@@ -55,9 +55,12 @@ public class AuthController {
     }
   }
 
+  @Tag(name = "0. 로그인&인증관련 API")
+  @Operation(summary = "토큰 갱신 API", description = "<a href='https://www.notion"
+          + ".so/maristadev/1d066958e5b380df964ed370a7d39636?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping("/logout")
   public RestResponse<String> logout(HttpServletRequest request, HttpServletResponse response) {
-    String refreshToken = getCookieValue(request);
+    String refreshToken = cookieUtil.getCookieValue(request, "refresh_token");
     if (refreshToken != null) {
       logoutService.logout(refreshToken);
     } else {
@@ -68,16 +71,5 @@ public class AuthController {
     cookieUtil.deleteCookie(response, "refresh_token");
 
     return RestResponse.success("성공적으로 로그아웃되었습니다.");
-  }
-
-  private String getCookieValue(HttpServletRequest request) {
-    if (request.getCookies() != null) {
-      for (Cookie cookie : request.getCookies()) {
-        if (cookie.getName().equals("refresh_token")) {
-          return cookie.getValue();
-        }
-      }
-    }
-    return null;
   }
 }
