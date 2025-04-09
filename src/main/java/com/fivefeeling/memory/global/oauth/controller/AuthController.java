@@ -4,6 +4,7 @@ package com.fivefeeling.memory.global.oauth.controller;
 import com.fivefeeling.memory.global.common.RestResponse;
 import com.fivefeeling.memory.global.common.ResultCode;
 import com.fivefeeling.memory.global.exception.CustomException;
+import com.fivefeeling.memory.global.oauth.service.LogoutService;
 import com.fivefeeling.memory.global.oauth.service.TokenRefreshService;
 import com.fivefeeling.memory.global.util.CookieUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +26,7 @@ public class AuthController {
 
   private final TokenRefreshService tokenRefreshService;
   private final CookieUtil cookieUtil;
+  private final LogoutService logoutService;
 
   @Tag(name = "0. OAuth 관련 API")
   @Operation(summary = "토큰 갱신 API", description = "<a href='' target='_blank'>API 명세서</a>")
@@ -51,6 +53,21 @@ public class AuthController {
       log.error("⚠️ 예기치 않은 오류 발생", e);
       throw new CustomException(ResultCode.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  @PostMapping("/logout")
+  public RestResponse<String> logout(HttpServletRequest request, HttpServletResponse response) {
+    String refreshToken = getCookieValue(request);
+    if (refreshToken != null) {
+      logoutService.logout(refreshToken);
+    } else {
+      log.warn("로그아웃 시, refresh_token 쿠키가 존재하지 않음");
+    }
+
+    cookieUtil.deleteCookie(response, "access_token");
+    cookieUtil.deleteCookie(response, "refresh_token");
+
+    return RestResponse.success("성공적으로 로그아웃되었습니다.");
   }
 
   private String getCookieValue(HttpServletRequest request) {

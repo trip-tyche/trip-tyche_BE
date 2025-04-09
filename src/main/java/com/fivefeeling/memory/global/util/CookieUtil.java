@@ -33,4 +33,22 @@ public class CookieUtil {
 
     response.addHeader("Set-Cookie", cookieHeader.toString());
   }
+
+  public void deleteCookie(HttpServletResponse response, String name) {
+    String profile = env.getActiveProfiles().length > 0 ? env.getActiveProfiles()[0] : "default";
+    boolean isSecure = profile.equals("local") || profile.equals("staging");
+    String sameSite = profile.equals("prod") ? "Lax" : "None";
+
+    StringBuilder cookieHeader = new StringBuilder();
+    cookieHeader.append(name).append("=")
+            .append("; Max-Age=0")
+            .append("; Path=/")
+            .append("; HttpOnly")
+            .append("; SameSite=").append(sameSite);
+
+    if (isSecure) {
+      cookieHeader.append("; Secure");
+    }
+    response.addHeader("Set-Cookie", cookieHeader.toString());
+  }
 }
