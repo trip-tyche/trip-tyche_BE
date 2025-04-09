@@ -50,7 +50,6 @@ public class SecurityConfig {
                             "/swagger-resources/**",
                             "/webjars/**",
                             "/oauth2/**",
-                            "/api/**",
                             "/login/oauth2/code/**",
                             "/upload/**",
                             "/oauth2/success",
@@ -75,7 +74,6 @@ public class SecurityConfig {
             .exceptionHandling(exceptionHandling ->
                     exceptionHandling
                             .authenticationEntryPoint(customAuthenticationEntryPoint))
-            .logout(logout -> logout.logoutSuccessUrl("/"))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(new JWTAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(new IPLoggingFilter(), JWTAuthenticationFilter.class);
@@ -87,13 +85,11 @@ public class SecurityConfig {
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
     configuration.setAllowedOrigins(
-            List.of("http://localhost:3000",
-                    "http://127.0.0.1:5500",
+            List.of(
                     "http://trip-tyche-fe.s3-website.ap-northeast-2.amazonaws.com",
                     "https://triptyche.world",
                     "http://ec2-43-200-110-25.ap-northeast-2.compute.amazonaws.com",
                     "http://ec2-43-200-110-25.ap-northeast-2.compute.amazonaws.com:3000",
-                    "http://local.triptyche.world:3000",
                     "https://local.triptyche.world:3000",
                     "https://triptychetest.shop:3000",
                     "https://local.triptychetest.shop:3000"));
@@ -109,7 +105,7 @@ public class SecurityConfig {
   }
 
   // IPLoggingFilter 클래스 추가
-  public class IPLoggingFilter extends OncePerRequestFilter {
+  public static class IPLoggingFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(IPLoggingFilter.class);
 
