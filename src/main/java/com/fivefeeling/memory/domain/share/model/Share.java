@@ -36,18 +36,18 @@ public class Share {
   @JoinColumn(name = "trip_id", nullable = false)
   private Trip trip;
 
-  @Column(name = "recipientId", nullable = false)
+  @Column(name = "recipient_id", nullable = false)
   private Long recipientId;
 
   @Setter
-  @Column(name = "shareStatus", nullable = false)
+  @Column(name = "share_status", nullable = false)
   @Enumerated(EnumType.STRING)
   private ShareStatus shareStatus;
 
-  @Column(name = "createdAt", updatable = false)
+  @Column(name = "created_at", updatable = false)
   private LocalDateTime createdAt;
 
-  @Column(name = "updatedAt")
+  @Column(name = "updated_at")
   private LocalDateTime updatedAt;
 
   @PrePersist
