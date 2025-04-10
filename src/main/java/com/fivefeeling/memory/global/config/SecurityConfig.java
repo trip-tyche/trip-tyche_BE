@@ -84,17 +84,16 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOriginPatterns(List.of("*")); // ⭐ 여기 변경
-//    configuration.setAllowedOrigins(
-//            List.of("*"
-////                    "http://trip-tyche-fe.s3-website.ap-northeast-2.amazonaws.com",
-////                    "https://triptyche.world",
-////                    "http://ec2-43-200-110-25.ap-northeast-2.compute.amazonaws.com",
-////                    "http://ec2-43-200-110-25.ap-northeast-2.compute.amazonaws.com:3000",
-////                    "https://local.triptyche.world:3000",
-////                    "https://triptychetest.shop:3000",
-////                    "https://local.triptychetest.shop:3000"
-//            ));
+//    configuration.setAllowedOriginPatterns(List.of("*")); // ⭐ 여기 변경
+    configuration.setAllowedOrigins(List.of(
+            "http://trip-tyche-fe.s3-website.ap-northeast-2.amazonaws.com",
+            "https://triptyche.world",
+            "http://ec2-43-200-110-25.ap-northeast-2.compute.amazonaws.com",
+            "http://ec2-43-200-110-25.ap-northeast-2.compute.amazonaws.com:3000",
+            "https://local.triptyche.world:3000",
+            "https://triptychetest.shop:3000",
+            "https://local.triptychetest.shop:3000"
+    ));
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     configuration.setAllowedHeaders(List.of("*"));
     configuration.setAllowCredentials(true);
