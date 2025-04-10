@@ -1,6 +1,7 @@
 package com.fivefeeling.memory.domain.trip.service;
 
 import com.fivefeeling.memory.domain.media.service.MediaProcessingService;
+import com.fivefeeling.memory.domain.share.repository.ShareRepository;
 import com.fivefeeling.memory.domain.trip.dto.TripCreationResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.TripInfoRequestDTO;
 import com.fivefeeling.memory.domain.trip.model.Trip;
@@ -21,6 +22,7 @@ public class TripManagementService {
 
   private final TripRepository tripRepository;
   private final UserRepository userRepository;
+  private final ShareRepository shareRepository;
   private final MediaProcessingService mediaProcessingService;
   private final TripAccessValidator tripAccessValidator;
 
@@ -74,6 +76,8 @@ public class TripManagementService {
   @Transactional
   public void deleteTrip(String userEmail, Long tripId) {
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+
+    shareRepository.deleteAllByTrip(trip);
 
     // 미디어 파일 삭제
     mediaProcessingService.deleteMediaFilesByTrip(trip);
