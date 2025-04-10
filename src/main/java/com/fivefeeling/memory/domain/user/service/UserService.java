@@ -64,7 +64,7 @@ public class UserService {
     User user = userRepository.findByUserEmail(userEmail.trim().toLowerCase())
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
-    long tripsCount = tripRepository.countByUser(user);
+    long tripsCount = tripRepository.countByUserAndStatus(user, "CONFIRMED");
 
     TripSummaryResponseDTO tripSummary = tripRepository.findFirstByUserAndStatusOrderByCreatedAtDesc(user, "CONFIRMED")
             .map(recentTrip -> new TripSummaryResponseDTO(

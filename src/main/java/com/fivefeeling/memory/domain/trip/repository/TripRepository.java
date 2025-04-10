@@ -35,8 +35,7 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
   List<Trip> findAllAccessibleTrips(@Param("userId") Long userId);
 
 
-  // 여행갯수
-  long countByUser(User user);
+  long countByUserAndStatus(User user, String status);
 
   // 최근여행 조회
   Optional<Trip> findFirstByUserAndStatusOrderByCreatedAtDesc(User user, String status);
