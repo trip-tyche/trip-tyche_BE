@@ -26,7 +26,16 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
           throws ServletException, IOException {
+    String uri = request.getRequestURI();
     log.info("✅JWTAuthenticationFilter 실행: URI = {}", request.getRequestURI());
+
+    // ✅ WebSocket 관련 경로는 인증 필터를 건너뜀
+    if (uri.startsWith("/ws") || uri.startsWith("/app") || uri.startsWith("/topic")) {
+      log.info("🧵 WebSocket 관련 요청이므로 필터 스킵: {}", uri);
+      filterChain.doFilter(request, response);
+      return;
+    }
+
     try {
       // 오직 쿠키에서 "access_token"을 추출합니다.
       String token = getTokenFromCookies(request);
