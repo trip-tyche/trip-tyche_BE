@@ -5,7 +5,7 @@ import java.security.SecureRandom;
 public final class TripKeyGenerator {
 
   private static final SecureRandom RANDOM = new SecureRandom();
-  private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
   private static final int KEY_LENGTH = 6;
 
   private TripKeyGenerator() {
