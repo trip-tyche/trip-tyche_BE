@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public record TripSummaryResponseDTO(
-        Long tripId,
+        String tripKey,
         String tripTitle,
         String country,
         LocalDate startDate,

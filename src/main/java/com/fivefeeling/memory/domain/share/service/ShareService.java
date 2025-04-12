@@ -9,8 +9,10 @@ import com.fivefeeling.memory.domain.share.event.ShareRejectedEvent;
 import com.fivefeeling.memory.domain.share.model.Share;
 import com.fivefeeling.memory.domain.share.model.ShareStatus;
 import com.fivefeeling.memory.domain.share.repository.ShareRepository;
+import com.fivefeeling.memory.domain.trip.converter.TripKeyConverter;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
+import com.fivefeeling.memory.domain.trip.validator.TripAccessValidator;
 import com.fivefeeling.memory.domain.user.model.User;
 import com.fivefeeling.memory.domain.user.repository.UserRepository;
 import com.fivefeeling.memory.global.common.ResultCode;
@@ -28,11 +30,14 @@ public class ShareService {
   private final TripRepository tripRepository;
   private final UserRepository userRepository;
   private final ApplicationEventPublisher eventPublisher;
+  private final TripKeyConverter tripKeyConverter;
+  private final TripAccessValidator tripAccessValidator;
 
-  public ShareCreateResponseDTO createShare(ShareCreateRequestDTO requestDTO) {
+  public ShareCreateResponseDTO createShare(ShareCreateRequestDTO requestDTO, String userEmail) {
 
-    Trip trip = tripRepository.findById(requestDTO.tripId())
-            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+    Long tripId = tripKeyConverter.convertToTripId(requestDTO.tripKey());
+
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
     if (trip.getUser().getUserId().equals(requestDTO.recipientId())) {
       throw new CustomException(ResultCode.CANNOT_SHARE_TO_SELF);

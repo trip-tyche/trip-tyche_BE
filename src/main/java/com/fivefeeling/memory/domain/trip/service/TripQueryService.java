@@ -68,7 +68,7 @@ public class TripQueryService {
                       .toList();
 
               return new TripResponseDTO(
-                      trip.getTripId(),
+                      trip.getTripKey(),
                       trip.getTripTitle(),
                       trip.getCountry(),
                       formatLocalDateToString(trip.getStartDate()),
@@ -81,43 +81,6 @@ public class TripQueryService {
             .collect(Collectors.toList());
     return new TripsResponseDTO(tripDTOs);
   }
-
-
-/*
-  public UserTripInfoResponseDTO getUserTripInfo(String userEmail) {
-    User user = userRepository.findByUserEmail(userEmail)
-            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-
-    List<TripInfoResponseDTO> tripDTOs = tripRepository.findAllAccessibleTrips(user.getUserId())
-            .stream()
-            .map(trip -> {
-              String ownerNickname = trip.getUser().getUserNickName();
-
-              List<String> sharedUserNicknames = trip.getSharedUsers()
-                      .stream()
-                      .map(User::getUserNickName)
-                      .toList();
-
-              return TripInfoResponseDTO.withOwnerAndSharedUsers(
-                      trip.getTripId(),
-                      trip.getTripTitle(),
-                      trip.getCountry(),
-                      formatLocalDateToString(trip.getStartDate()),
-                      formatLocalDateToString(trip.getEndDate()),
-                      trip.getHashtagsAsList(),
-                      List.of(),
-                      ownerNickname,
-                      sharedUserNicknames
-              );
-            })
-            .collect(Collectors.toList());
-    return UserTripInfoResponseDTO.withoutPinPoints(
-            user.getUserId(),
-            user.getUserNickName(),
-            tripDTOs);
-  }
-*/
-
 
   public UpdateTripInfoResponseDTO getTripById(String userEmail, Long tripId) {
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
@@ -133,7 +96,7 @@ public class TripQueryService {
             .toList();
 
     return new UpdateTripInfoResponseDTO(
-            trip.getTripId(),
+            trip.getTripKey(),
             trip.getTripTitle(),
             trip.getCountry(),
             formatLocalDateToString(trip.getStartDate()),

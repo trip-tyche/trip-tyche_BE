@@ -42,7 +42,7 @@ public class TripManagementService {
             .build();
 
     tripRepository.save(trip);
-    return new TripCreationResponseDTO(trip.getTripId());
+    return new TripCreationResponseDTO(trip.getTripKey());
   }
 
   @Transactional

@@ -3,6 +3,7 @@ package com.fivefeeling.memory.domain.trip.model;
 
 import com.fivefeeling.memory.domain.pinpoint.model.PinPoint;
 import com.fivefeeling.memory.domain.user.model.User;
+import com.fivefeeling.memory.global.util.TripKeyGenerator;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -36,6 +37,9 @@ public class Trip {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long tripId;
 
+  @Column(name = "trip_key", unique = true, nullable = false)
+  private String tripKey;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
@@ -64,6 +68,14 @@ public class Trip {
   @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<PinPoint> pinPoints;
 
+  @ManyToMany
+  @JoinTable(
+          name = "trip_shared_users",
+          joinColumns = @JoinColumn(name = "trip_id"),
+          inverseJoinColumns = @JoinColumn(name = "user_id")
+  )
+  private List<User> sharedUsers = new ArrayList<>();
+
   // 해시태그 리스트로 처리
   public void setHashtagsFromList(List<String> hashtags) {
     this.hashtags = String.join(",", hashtags);
@@ -73,22 +85,17 @@ public class Trip {
     return List.of(this.hashtags.split(","));
   }
 
-  @ManyToMany
-  @JoinTable(
-          name = "trip_shared_users",
-          joinColumns = @JoinColumn(name = "trip_id"),
-          inverseJoinColumns = @JoinColumn(name = "user_id")
-  )
-  private List<User> sharedUsers = new ArrayList<>();
-
-  @PrePersist
-  public void prePersist() {
-    createdAt = LocalDateTime.now();
-  }
-
   public void addSharedUser(User user) {
     if (!this.sharedUsers.contains(user)) {
       this.sharedUsers.add(user);
     }
+  }
+
+  @PrePersist
+  public void prePersist() {
+    if (this.tripKey == null || this.tripKey.isEmpty()) {
+      this.tripKey = TripKeyGenerator.generateKey();
+    }
+    this.createdAt = LocalDateTime.now();
   }
 }

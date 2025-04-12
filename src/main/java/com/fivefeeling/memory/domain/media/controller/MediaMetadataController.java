@@ -3,12 +3,12 @@ package com.fivefeeling.memory.domain.media.controller;
 import com.fivefeeling.memory.domain.media.dto.EditableMediaFilesResponseDTO;
 import com.fivefeeling.memory.domain.media.dto.MediaFileBatchDeleteRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.MediaFileBatchUpdateRequestDTO;
-import com.fivefeeling.memory.domain.media.dto.MediaFileUpdateRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.UnlocatedImageResponseDTO;
 import com.fivefeeling.memory.domain.media.dto.UpdateMediaFileInfoRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.UpdateMediaFileLocationRequestDTO;
 import com.fivefeeling.memory.domain.media.service.MediaMetadataService;
 import com.fivefeeling.memory.domain.media.service.TripImagesService;
+import com.fivefeeling.memory.domain.trip.converter.TripKeyConverter;
 import com.fivefeeling.memory.global.common.RestResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,11 +26,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/v1/trips/{tripId}/media-files")
+@RequestMapping("/v1/trips/{tripKey}/media-files")
 public class MediaMetadataController {
 
   private final MediaMetadataService mediaMetadataService;
   private final TripImagesService tripImagesService;
+  private final TripKeyConverter tripKeyConverter;
 
   //✅
   @Tag(name = "3. 여행등록 페이지 API")
@@ -38,9 +39,10 @@ public class MediaMetadataController {
           + ".so/maristadev/15066958e5b3806ab0d7d567c80c975b?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping
   public RestResponse<String> processMetadata(
-          @PathVariable("tripId") Long tripId,
+          @PathVariable("tripKey") String tripKey,
           @RequestBody List<UpdateMediaFileInfoRequestDTO> files
   ) {
+    Long tripId = tripKeyConverter.convertToTripId(tripKey);
     // 한 번의 호출로 배치 처리
     mediaMetadataService.processAndSaveMetadataBatch(tripId, files);
 
@@ -54,24 +56,10 @@ public class MediaMetadataController {
   @GetMapping
   public RestResponse<EditableMediaFilesResponseDTO> getTripImages(
           @AuthenticationPrincipal String userEmail,
-          @PathVariable Long tripId) {
+          @PathVariable String tripKey) {
+    Long tripId = tripKeyConverter.convertToTripId(tripKey);
     EditableMediaFilesResponseDTO responseDTO = tripImagesService.getTripImagesByTripId(userEmail, tripId);
     return RestResponse.success(responseDTO);
-  }
-
-  //✅
-  @Tag(name = "4. 이미지 수정 페이지 API")
-  @Operation(summary = "단일 이미지 수정", description = "<a href='https://www.notion"
-          + ".so/maristadev/aad7b34cc1404a19a3a6870d99f431c9?pvs=4' target='_blank'>API 명세서</a>")
-  @PatchMapping("/{mediaFileId}")
-  public RestResponse<String> updateMediaFile(
-          @AuthenticationPrincipal String userEmail,
-          @PathVariable Long tripId,
-          @PathVariable Long mediaFileId,
-          @RequestBody MediaFileUpdateRequestDTO requestDTO
-  ) {
-    mediaMetadataService.updateMediaFileMetadata(userEmail, tripId, mediaFileId, requestDTO);
-    return RestResponse.success("이미지 정보가 성공적으로 수정되었습니다.");
   }
 
   //✅
@@ -81,25 +69,12 @@ public class MediaMetadataController {
   @PatchMapping
   public RestResponse<String> updateMultipleMediaFiles(
           @AuthenticationPrincipal String userEmail,
-          @PathVariable Long tripId,
+          @PathVariable String tripKey,
           @RequestBody MediaFileBatchUpdateRequestDTO requestDTO
   ) {
+    Long tripId = tripKeyConverter.convertToTripId(tripKey);
     int updatedCount = mediaMetadataService.updateMultipleMediaFiles(userEmail, tripId, requestDTO);
     return RestResponse.success(updatedCount + "개의 이미지 정보가 성공적으로 수정되었습니다.");
-  }
-
-
-  @Tag(name = "4. 이미지 수정 페이지 API")
-  @Operation(summary = "단일 이미지 삭제", description = "<a href='https://www.notion"
-          + ".so/maristadev/e5c93ad0f80c4be5ad1a211f14116e85?pvs=4' target='_blank'>API 명세서</a>")
-  @DeleteMapping("/{mediaFileId}")
-  public RestResponse<String> deleteSingleMediaFile(
-          @AuthenticationPrincipal String userEmail,
-          @PathVariable Long tripId,
-          @PathVariable Long mediaFileId
-  ) {
-    mediaMetadataService.deleteSingleMediaFile(userEmail, tripId, mediaFileId);
-    return RestResponse.success("이미지가 성공적으로 삭제되었습니다.");
   }
 
   @Tag(name = "4. 이미지 수정 페이지 API")
@@ -108,9 +83,10 @@ public class MediaMetadataController {
   @DeleteMapping
   public RestResponse<String> deleteMultipleMediaFiles(
           @AuthenticationPrincipal String userEmail,
-          @PathVariable Long tripId,
+          @PathVariable String tripKey,
           @RequestBody MediaFileBatchDeleteRequestDTO requestDTO
   ) {
+    Long tripId = tripKeyConverter.convertToTripId(tripKey);
     int deleteCount = mediaMetadataService.deleteMultipleMediaFiles(userEmail, tripId, requestDTO);
     return RestResponse.success(deleteCount + "개의 이미지가 성공적으로 삭제되었습니다.");
   }
@@ -121,7 +97,8 @@ public class MediaMetadataController {
   @GetMapping("/unlocated")
   public RestResponse<List<UnlocatedImageResponseDTO>> getUnlocatedImages(
           @AuthenticationPrincipal String userEmail,
-          @PathVariable Long tripId) {
+          @PathVariable String tripKey) {
+    Long tripId = tripKeyConverter.convertToTripId(tripKey);
     List<UnlocatedImageResponseDTO> response = mediaMetadataService.getUnlocatedImages(userEmail, tripId);
     return RestResponse.success(response);
   }
@@ -132,10 +109,10 @@ public class MediaMetadataController {
   @PatchMapping("/unlocated/{mediaFileId}")
   public RestResponse<String> updateImageLocation(
           @AuthenticationPrincipal String userEmail,
-          @PathVariable Long tripId,
+          @PathVariable String tripKey,
           @PathVariable Long mediaFileId,
           @RequestBody UpdateMediaFileLocationRequestDTO updateMediaFileLocation) {
-
+    Long tripId = tripKeyConverter.convertToTripId(tripKey);
     mediaMetadataService.updateImageLocation(userEmail, tripId, mediaFileId, updateMediaFileLocation);
     return RestResponse.success("이미지 위치 정보가 업데이트 되었습니다.");
   }

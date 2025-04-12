@@ -33,9 +33,9 @@ public class S3UploadService {
 
     try {
       PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-          .bucket(bucketName)
-          .key(mediaKey)
-          .build();
+              .bucket(bucketName)
+              .key(mediaKey)
+              .build();
       s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
 
       String mediaLink = "https://" + bucketName + ".s3.amazonaws.com/" + mediaKey;
@@ -53,13 +53,13 @@ public class S3UploadService {
   public void deleteFiles(List<String> mediaKeys) {
     try {
       List<ObjectIdentifier> objects = mediaKeys.stream()
-          .map(key -> ObjectIdentifier.builder().key(key).build())
-          .collect(Collectors.toList());
+              .map(key -> ObjectIdentifier.builder().key(key).build())
+              .collect(Collectors.toList());
 
       DeleteObjectsRequest deleteObjectsRequest = DeleteObjectsRequest.builder()
-          .bucket(bucketName)
-          .delete(Delete.builder().objects(objects).build())
-          .build();
+              .bucket(bucketName)
+              .delete(Delete.builder().objects(objects).build())
+              .build();
 
       s3Client.deleteObjects(deleteObjectsRequest);
     } catch (S3Exception e) {

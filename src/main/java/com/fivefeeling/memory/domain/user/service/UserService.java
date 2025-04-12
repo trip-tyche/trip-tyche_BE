@@ -68,7 +68,7 @@ public class UserService {
 
     TripSummaryResponseDTO tripSummary = tripRepository.findFirstByUserAndStatusOrderByCreatedAtDesc(user, "CONFIRMED")
             .map(recentTrip -> new TripSummaryResponseDTO(
-                    recentTrip.getTripId(),
+                    recentTrip.getTripKey(),
                     recentTrip.getTripTitle(),
                     recentTrip.getCountry(),
                     recentTrip.getStartDate(),

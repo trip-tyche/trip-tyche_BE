@@ -9,6 +9,7 @@ import com.fivefeeling.memory.global.common.RestResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,8 +28,10 @@ public class ShareController {
   @Operation(summary = "특정 사용자에게 공유요청", description = "<a href='https://www.notion"
           + ".so/maristadev/17766958e5b380139607e90275d52298?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping("/v1/trips/share")
-  public RestResponse<ShareCreateResponseDTO> createShare(@RequestBody ShareCreateRequestDTO requestDTO) {
-    return RestResponse.success(shareService.createShare(requestDTO));
+  public RestResponse<ShareCreateResponseDTO> createShare(
+          @AuthenticationPrincipal String userEmail,
+          @RequestBody ShareCreateRequestDTO requestDTO) {
+    return RestResponse.success(shareService.createShare(requestDTO, userEmail));
   }
 
   @Operation(summary = "공유요청 상세조회", description = "<a href='https://www.notion"
