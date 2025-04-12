@@ -12,8 +12,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TripRepository extends JpaRepository<Trip, Long> {
 
-  Optional<Trip> findByTripId(Long tripId);
-
   // 접근 권한이 있는 여행(소유하거나 공유된 사용자, 상태가 CONFIRMED)만 반환하는 메서드
   @Query("""
           SELECT DISTINCT t
@@ -24,6 +22,8 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
           """)
   Optional<Trip> findAccessibleTrip(@Param("tripId") Long tripId,
                                     @Param("userId") Long userId);
+
+  Optional<Trip> findByTripKey(String tripKey);
 
   @Query("""
           SELECT DISTINCT t

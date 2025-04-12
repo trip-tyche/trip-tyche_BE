@@ -27,14 +27,14 @@ public class PresignedURLController {
 
   @Operation(summary = "Presigned URL 요청", description = "<a href='https://www.notion"
           + ".so/maristadev/15066958e5b380cb92cec07208539ca8?pvs=4' target='_blank'>API 명세서</a>")
-  @PostMapping("{tripId}/presigned-url")
+  @PostMapping("{tripKey}/presigned-url")
   public RestResponse<FilePresignedResponse> generatePresignedUrl(
-          @PathVariable Long tripId,
+          @PathVariable String tripKey,
           @RequestBody FilePresignedRequest request) {
 
     List<PresignedUrlDetail> presignedUrls = request.files().stream()
             .map(file -> {
-              String fileKey = "upload/" + tripId + "/" + file.fileName();
+              String fileKey = "upload/" + tripKey + "/" + file.fileName();
               String presignedPutUrl = presignedURLService.generatePresignedPutUrl(
                       fileKey, Duration.ofMinutes(10)
               );
