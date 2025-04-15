@@ -90,6 +90,8 @@ public class SecurityConfig {
             "https://triptyche.world",
             "http://ec2-43-200-110-25.ap-northeast-2.compute.amazonaws.com",
             "http://ec2-43-200-110-25.ap-northeast-2.compute.amazonaws.com:3000",
+            "https://triptychetest.shop",
+            "https://www.triptychetest.shop",
             "https://local.triptyche.world:3000",
             "https://triptychetest.shop:3000",
             "https://local.triptychetest.shop:3000"
