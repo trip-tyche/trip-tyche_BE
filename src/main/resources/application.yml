@@ -21,7 +21,13 @@ spring:
       host: localhost
       port: 6379
       password:
-      timeout: 1000
+      timeout: 5000
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: 1000ms
   jpa:
     hibernate:
       ddl-auto: update
@@ -138,7 +144,13 @@ spring:
     redis:
       host: redis
       port: 6379
-      timeout: 1000
+      timeout: 5000
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: 1000ms
   jpa:
     hibernate:
       ddl-auto: none
@@ -241,7 +253,13 @@ spring:
     redis:
       host: redis
       port: 6379
-      timeout: 1000
+      timeout: 5000
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: 1000ms
   jpa:
     hibernate:
       ddl-auto: update
