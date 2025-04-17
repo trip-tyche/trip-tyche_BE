@@ -34,11 +34,20 @@ public class RedisConfig {
   @Value("${spring.data.redis.timeout:5000}")
   private int timeout;
 
+  @Value("${spring.data.redis.password:}")
+  private String password;
+
   @Bean
   public RedisConnectionFactory redisConnectionFactory() {
+
     // Redis 서버 구성
     RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration(host, port);
 
+    // 비밀번호 설정 추가
+    if (password != null && !password.isEmpty()) {
+      redisConfig.setPassword(password);
+    }
+    
     // 커넥션 풀 설정 - 제네릭 타입 지정 (Object)
     GenericObjectPoolConfig<Object> poolConfig = new GenericObjectPoolConfig<>();
     poolConfig.setMaxTotal(8);         // 최대 연결 수
