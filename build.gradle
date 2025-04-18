@@ -29,7 +29,6 @@ dependencies {
     implementation 'org.springframework.security:spring-security-oauth2-jose'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'mysql:mysql-connector-java:8.0.33'
 
     // Lombok 관련 의존성 추가
@@ -67,23 +66,20 @@ dependencies {
     // Jackson Databind 의존성 추가
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.0'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.15.0'
+
     // Optional, JDK8 관련 타입 지원
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0'
-    // Optional, 날짜 타입 지원
-    // Actuator
-    implementation 'io.micrometer:micrometer-registry-prometheus:1.11.0'
+
+    // Prometheus와 Actuator 모니터링을 위한 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 
     // Redis 설정
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-//    implementation 'org.springframework.session:spring-session-data-redis'
     implementation 'org.apache.commons:commons-pool2'
-
 
     // hibernate
     implementation 'org.hibernate.common:hibernate-commons-annotations:6.0.6.Final'
-
-    // Kafka
-//    implementation 'org.springframework.kafka:spring-kafka'
 
     // Websocket 관련
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
