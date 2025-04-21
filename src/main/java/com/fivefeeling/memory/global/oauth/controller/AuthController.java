@@ -62,14 +62,12 @@ public class AuthController {
   public RestResponse<String> logout(HttpServletRequest request, HttpServletResponse response) {
     String refreshToken = cookieUtil.getCookieValue(request, "refresh_token");
     if (refreshToken != null) {
-      logoutService.logout(refreshToken);
+      logoutService.logout(response, refreshToken);
     } else {
       log.warn("로그아웃 시, refresh_token 쿠키가 존재하지 않음");
+      cookieUtil.deleteCookie(response, "access_token");
+      cookieUtil.deleteCookie(response, "refresh_token");
     }
-
-    cookieUtil.deleteCookie(response, "access_token");
-    cookieUtil.deleteCookie(response, "refresh_token");
-
     return RestResponse.success("성공적으로 로그아웃되었습니다.");
   }
 }
