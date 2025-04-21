@@ -58,7 +58,8 @@ public class SecurityConfig {
                             "/ws/**",
                             "/app/**",
                             "/topic/**",
-                            "/v1/auth/refresh"
+                            "/v1/auth/refresh",
+                            "/v1/auth/logout"
                     )
                     .permitAll()
                     .requestMatchers("/v1/**").authenticated()
