@@ -1,6 +1,7 @@
 package com.fivefeeling.memory.domain.share.dto;
 
 import com.fivefeeling.memory.domain.share.model.ShareStatus;
+import java.util.List;
 import lombok.Builder;
 
 @Builder
@@ -13,7 +14,7 @@ public record ShareResponseDTO(
         String country,
         String startDate,
         String endDate,
-        String hashtags
+        List<String> hashtags
 ) {
 
 }
