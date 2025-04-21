@@ -87,7 +87,7 @@ public class ShareService {
             .country(share.getTrip().getCountry())
             .startDate(share.getTrip().getStartDate().toString())
             .endDate(share.getTrip().getEndDate().toString())
-            .hashtags(share.getTrip().getHashtags())
+            .hashtags(share.getTrip().getHashtagsAsList())
             .build();
   }
 
