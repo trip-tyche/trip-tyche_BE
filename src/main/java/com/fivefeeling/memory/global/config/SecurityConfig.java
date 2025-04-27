@@ -73,6 +73,8 @@ public class SecurityConfig {
                     )
                     .successHandler(oAuth2LoginSuccessHandler)
                     .failureHandler(customOAuth2AuthenticationFailureHandler)
+                    .redirectionEndpoint(redirection -> redirection
+                            .baseUri("/signin/oauth2/authorization/*"))
             )
             .exceptionHandling(exceptionHandling ->
                     exceptionHandling
