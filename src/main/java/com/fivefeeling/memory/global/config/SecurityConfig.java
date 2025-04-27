@@ -73,8 +73,10 @@ public class SecurityConfig {
                     )
                     .successHandler(oAuth2LoginSuccessHandler)
                     .failureHandler(customOAuth2AuthenticationFailureHandler)
+                    .authorizationEndpoint(authorization -> authorization
+                            .baseUri("/oauth2/authorization"))  // 인증 시작 경로
                     .redirectionEndpoint(redirection -> redirection
-                            .baseUri("/signin/oauth2/code/*"))
+                            .baseUri("/signin/oauth2/code/*"))  // 인증 콜백 경로
             )
             .exceptionHandling(exceptionHandling ->
                     exceptionHandling
