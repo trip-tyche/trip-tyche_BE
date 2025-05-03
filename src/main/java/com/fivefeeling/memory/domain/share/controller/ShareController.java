@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -50,5 +51,16 @@ public class ShareController {
   ) {
     shareService.updateShareStatus(shareId, status);
     return RestResponse.success("공유 요청 상태 변경 완료");
+  }
+
+
+  @Operation(summary = "공유 관계 해제", description = "<a href='https://www.notion"
+          + ".so/maristadev/1e866958e5b380eb97b9f11040270bd0?pvs=4' target='_blank'>API 명세서</a>")
+  @DeleteMapping("/v1/shares/{shareId}")
+  public RestResponse<String> deleteShare(
+          @AuthenticationPrincipal String userEmail,
+          @PathVariable Long shareId) {
+    shareService.deleteShare(shareId, userEmail);
+    return RestResponse.success("공유 관계 해제 완료");
   }
 }
