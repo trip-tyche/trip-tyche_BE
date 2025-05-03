@@ -11,6 +11,8 @@ import com.fivefeeling.memory.domain.media.repository.MediaFileRepository;
 import com.fivefeeling.memory.domain.pinpoint.model.PinPoint;
 import com.fivefeeling.memory.domain.pinpoint.model.PinPointResponseDTO;
 import com.fivefeeling.memory.domain.pinpoint.repository.PinPointRepository;
+import com.fivefeeling.memory.domain.share.model.Share;
+import com.fivefeeling.memory.domain.share.repository.ShareRepository;
 import com.fivefeeling.memory.domain.trip.dto.MapViewResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.PinPointImageGalleryResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.TripResponseDTO;
@@ -44,6 +46,7 @@ public class TripQueryService {
   private final PinPointRepository pinPointRepository;
   private final UserRepository userRepository;
   private final MediaFileRepository mediaFileRepository;
+  private final ShareRepository shareRepository;
   private final TripAccessValidator tripAccessValidator;
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -67,6 +70,11 @@ public class TripQueryService {
                       .map(User::getUserNickName)
                       .toList();
 
+              Long shareId = shareRepository
+                      .findByTripAndRecipientId(trip, user.getUserId())
+                      .map(Share::getShareId)
+                      .orElse(null);
+
               return new TripResponseDTO(
                       trip.getTripKey(),
                       trip.getTripTitle(),
@@ -75,7 +83,8 @@ public class TripQueryService {
                       formatLocalDateToString(trip.getEndDate()),
                       trip.getHashtagsAsList(),
                       ownerNickname,
-                      sharedUserNicknames
+                      sharedUserNicknames,
+                      shareId
               );
             })
             .collect(Collectors.toList());

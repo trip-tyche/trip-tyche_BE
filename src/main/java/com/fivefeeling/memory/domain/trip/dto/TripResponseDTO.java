@@ -10,7 +10,8 @@ public record TripResponseDTO(
         String endDate,
         List<String> hashtags,
         String ownerNickname,
-        List<String> sharedUsersNicknames
+        List<String> sharedUsersNicknames,
+        Long sharId
 ) {
 
 }
