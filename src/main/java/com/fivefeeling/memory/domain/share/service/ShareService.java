@@ -128,4 +128,26 @@ public class ShareService {
       ));
     }
   }
+
+  @Transactional
+  public void deleteShare(Long shareId, String userEmail) {
+    Share share = shareRepository.findById(shareId)
+            .orElseThrow(() -> new CustomException(ResultCode.SHARE_NOT_FOUND));
+
+    User requester = userRepository.findByUserEmail(userEmail)
+            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+    Long requesterId = requester.getUserId();
+
+    boolean isOwner = share.getTrip().getUser().getUserId().equals(requesterId);
+    boolean isRecipient = share.getRecipientId().equals(requesterId);
+
+    if (!isOwner && !isRecipient) {
+      throw new CustomException(ResultCode.NOT_SHARE_OWNER_OR_RECIPIENT);
+    }
+
+    Trip trip = share.getTrip();
+    trip.getSharedUsers().removeIf(u -> u.getUserId().equals(requesterId));
+
+    shareRepository.delete(share);
+  }
 }
