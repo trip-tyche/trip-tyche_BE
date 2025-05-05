@@ -10,12 +10,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
+@Transactional
 public class NotificationService {
 
   private final NotificationRepository notificationRepository;
@@ -68,14 +72,31 @@ public class NotificationService {
 
 
   public void markAsDeleted(List<Long> notificationIds) {
+    log.debug("▶▶▶ markAsDeleted 호출, ids = {}", notificationIds);
     notificationIds.forEach(id -> {
       Notification notification = notificationRepository.findById(id)
               .orElseThrow(() -> new CustomException(ResultCode.NOTIFICATION_NOT_FOUND));
 
-      if (notification.getStatus() == NotificationStatus.READ) {
-        notification.markAsDeleted();
-        notification = notificationRepository.save(notification);
+      // 이미 DELETE 상태면 건너뜁니다.
+      if (notification.getStatus() == NotificationStatus.DELETE) {
+        return;
       }
+
+      // Redis Stream에 발행된 메시지도 함께 삭제
+      if (notification.getStreamMessageId() != null) {
+        try {
+          redisTemplate.opsForStream().delete(
+                  "shareRequests",
+                  RecordId.of(notification.getStreamMessageId())
+          );
+        } catch (Exception e) {
+          throw new RuntimeException("Redis Stream 삭제 중 오류가 발생했습니다: " + e.getMessage(), e);
+        }
+      }
+
+      // 엔티티 상태를 DELETE로 변경하고 저장
+      notification.markAsDeleted();
+      log.debug("[{}] after status = {}", id, notification.getStatus());
     });
   }
 
