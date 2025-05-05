@@ -10,12 +10,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
+@Transactional
 public class NotificationService {
 
   private final NotificationRepository notificationRepository;
@@ -68,6 +72,7 @@ public class NotificationService {
 
 
   public void markAsDeleted(List<Long> notificationIds) {
+    log.debug("▶▶▶ markAsDeleted 호출, ids = {}", notificationIds);
     notificationIds.forEach(id -> {
       Notification notification = notificationRepository.findById(id)
               .orElseThrow(() -> new CustomException(ResultCode.NOTIFICATION_NOT_FOUND));
@@ -91,7 +96,7 @@ public class NotificationService {
 
       // 엔티티 상태를 DELETE로 변경하고 저장
       notification.markAsDeleted();
-      notificationRepository.save(notification);
+      log.debug("[{}] after status = {}", id, notification.getStatus());
     });
   }
 
