@@ -51,6 +51,4 @@ public class NotificationController {
     notificationService.markAsDeleted(notificationIds);
     return RestResponse.success("알림 상태 변경(READ -> DELETE) 완료");
   }
-
-
 }
