@@ -30,7 +30,7 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
           FROM Trip t
               LEFT JOIN t.sharedUsers su
           WHERE (t.user.userId = :userId OR su.userId = :userId)
-                    AND t.status = 'CONFIRMED'
+                    AND t.status = 'CONFIRMED' OR t.status = 'IMAGES_UPLOADED'
           """)
   List<Trip> findAllAccessibleTrips(@Param("userId") Long userId);
 

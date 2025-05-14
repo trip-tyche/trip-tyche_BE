@@ -11,7 +11,8 @@ public record TripResponseDTO(
         List<String> hashtags,
         String ownerNickname,
         List<String> sharedUsersNicknames,
-        Long shareId
+        Long shareId,
+        Boolean confirmed
 ) {
 
 }
