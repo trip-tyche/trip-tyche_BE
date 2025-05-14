@@ -48,6 +48,18 @@ public class TripController {
   }
 
   @Tag(name = "3. 여행등록 페이지 API")
+  @Operation(summary = "이미지 업로드 완료 상태 업데이트", description = "<a href='https://www.notion"
+          + ".so/maristadev/1f366958e5b38030b6a0f62a2eeef8ab?pvs=4' target='_blank'>API 명세서</a>")
+  @PatchMapping("/{tripKey}/images-uploaded")
+  public RestResponse<String> markImagesUploaded(
+          @AuthenticationPrincipal String userEmail,
+          @PathVariable("tripKey") String tripKey) {
+    Long tripId = tripKeyConverter.convertToTripId(tripKey);
+    tripManagementService.markImagesUploaded(userEmail, tripId);
+    return RestResponse.success("이미지 업로드 완료 상태로 변경되었습니다.");
+  }
+
+  @Tag(name = "3. 여행등록 페이지 API")
   @Operation(summary = "Trip 최종 확정", description = "<a href='https://www.notion"
           + ".so/maristadev/Trip-1c566958e5b38062b7afd6ed16c69ea1?pvs=4' target='_blank'>API 명세서</a>")
   @PatchMapping("/{tripKey}/finalize")

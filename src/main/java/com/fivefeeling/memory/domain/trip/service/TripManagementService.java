@@ -5,6 +5,7 @@ import com.fivefeeling.memory.domain.share.repository.ShareRepository;
 import com.fivefeeling.memory.domain.trip.dto.TripCreationResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.TripInfoRequestDTO;
 import com.fivefeeling.memory.domain.trip.model.Trip;
+import com.fivefeeling.memory.domain.trip.model.TripStatus;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.trip.validator.TripAccessValidator;
 import com.fivefeeling.memory.domain.user.model.User;
@@ -38,7 +39,7 @@ public class TripManagementService {
             .startDate(LocalDate.now())
             .endDate(LocalDate.now())
             .hashtags("")
-            .status("DRAFT")
+            .status(TripStatus.DRAFT)
             .build();
 
     tripRepository.save(trip);
@@ -46,15 +47,28 @@ public class TripManagementService {
   }
 
   @Transactional
+  public void markImagesUploaded(String userEmail, Long tripId) {
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+
+    // 이미 업로드된 경우 예외 처리
+    if (trip.getStatus() != TripStatus.DRAFT) {
+      throw new CustomException(ResultCode.INVALID_TRIP_STATE);
+    }
+
+    trip.setStatus(TripStatus.IMAGES_UPLOADED);
+    tripRepository.save(trip);
+  }
+
+  @Transactional
   public void finalizeTrip(String userEmail, Long tripId) {
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
     // 이미 확정된 경우 예외 처리
-    if (!"DRAFT".equals(trip.getStatus())) {
+    if (trip.getStatus() != TripStatus.IMAGES_UPLOADED) {
       throw new CustomException(ResultCode.INVALID_TRIP_STATE);
     }
 
-    trip.setStatus("CONFIRMED");
+    trip.setStatus(TripStatus.CONFIRMED);
     tripRepository.save(trip);
   }
 
