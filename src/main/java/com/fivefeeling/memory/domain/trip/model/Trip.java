@@ -7,6 +7,8 @@ import com.fivefeeling.memory.global.util.TripKeyGenerator;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -59,8 +61,9 @@ public class Trip {
   @Column(name = "hashtags", length = 255)
   private String hashtags;
 
+  @Enumerated(EnumType.STRING)
   @Column(name = "status")
-  private String status;
+  private TripStatus status;
 
   @Column(name = "created_at", updatable = false)
   private LocalDateTime createdAt;

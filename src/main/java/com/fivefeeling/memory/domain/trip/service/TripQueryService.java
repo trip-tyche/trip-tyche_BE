@@ -19,6 +19,7 @@ import com.fivefeeling.memory.domain.trip.dto.TripResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.TripsResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.UpdateTripInfoResponseDTO;
 import com.fivefeeling.memory.domain.trip.model.Trip;
+import com.fivefeeling.memory.domain.trip.model.TripStatus;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.trip.validator.TripAccessValidator;
 import com.fivefeeling.memory.domain.user.model.User;
@@ -63,6 +64,7 @@ public class TripQueryService {
                     user.getUserId())
             .stream()
             .map(trip -> {
+              boolean confirmed = trip.getStatus() == TripStatus.CONFIRMED;
               String ownerNickname = trip.getUser().getUserNickName();
 
               List<String> sharedUserNicknames = trip.getSharedUsers()
@@ -84,7 +86,8 @@ public class TripQueryService {
                       trip.getHashtagsAsList(),
                       ownerNickname,
                       sharedUserNicknames,
-                      shareId
+                      shareId,
+                      confirmed
               );
             })
             .collect(Collectors.toList());
