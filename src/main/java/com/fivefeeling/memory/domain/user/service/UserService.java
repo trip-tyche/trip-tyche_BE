@@ -1,6 +1,7 @@
 package com.fivefeeling.memory.domain.user.service;
 
 import com.fivefeeling.memory.domain.trip.dto.TripSummaryResponseDTO;
+import com.fivefeeling.memory.domain.trip.model.TripStatus;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.user.dto.UserSearchResponseDTO;
 import com.fivefeeling.memory.domain.user.dto.UserSummaryResponseDTO;
@@ -64,9 +65,10 @@ public class UserService {
     User user = userRepository.findByUserEmail(userEmail.trim().toLowerCase())
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
-    long tripsCount = tripRepository.countByUserAndStatus(user, "CONFIRMED");
+    long tripsCount = tripRepository.countByUserAndStatus(user, TripStatus.CONFIRMED);
 
-    TripSummaryResponseDTO tripSummary = tripRepository.findFirstByUserAndStatusOrderByCreatedAtDesc(user, "CONFIRMED")
+    TripSummaryResponseDTO tripSummary = tripRepository.findFirstByUserAndStatusOrderByCreatedAtDesc(user,
+                    TripStatus.CONFIRMED)
             .map(recentTrip -> new TripSummaryResponseDTO(
                     recentTrip.getTripKey(),
                     recentTrip.getTripTitle(),

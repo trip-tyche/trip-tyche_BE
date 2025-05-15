@@ -1,6 +1,7 @@
 package com.fivefeeling.memory.domain.trip.repository;
 
 import com.fivefeeling.memory.domain.trip.model.Trip;
+import com.fivefeeling.memory.domain.trip.model.TripStatus;
 import com.fivefeeling.memory.domain.user.model.User;
 import java.util.List;
 import java.util.Optional;
@@ -35,10 +36,10 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
   List<Trip> findAllAccessibleTrips(@Param("userId") Long userId);
 
 
-  long countByUserAndStatus(User user, String status);
+  long countByUserAndStatus(User user, TripStatus status);
 
   // 최근여행 조회
-  Optional<Trip> findFirstByUserAndStatusOrderByCreatedAtDesc(User user, String status);
+  Optional<Trip> findFirstByUserAndStatusOrderByCreatedAtDesc(User user, TripStatus status);
 
-  List<Trip> findByStatus(String status);
+  List<Trip> findByStatus(TripStatus status);
 }
