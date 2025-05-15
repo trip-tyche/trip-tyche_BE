@@ -1,3 +1,4 @@
+/*
 package com.fivefeeling.memory.global.redis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,15 +62,6 @@ public class RedisStreamMessageListener implements StreamListener<String, MapRec
         return;
       }
 
-      /*// ShareCreatedEvent 객체 생성
-      ShareCreatedEvent event = new ShareCreatedEvent(
-              Long.parseLong(shareId),
-              Long.parseLong(tripId),
-              Long.parseLong(recipientId)
-      );
-      log.info("Redis Stream 메시지를 ShareCreatedEvent로 변환: {}", event);
-      */
-
       // WebSocket으로 알림 메시지 전송
       Map<String, Object> notificationMessage = new HashMap<>();
       notificationMessage.put("recipientId", Long.parseLong(recipientId));
@@ -97,3 +89,4 @@ public class RedisStreamMessageListener implements StreamListener<String, MapRec
     }
   }
 }
+*/
