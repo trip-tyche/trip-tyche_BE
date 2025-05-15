@@ -4,6 +4,8 @@ import com.fivefeeling.memory.domain.media.service.MediaProcessingService;
 import com.fivefeeling.memory.domain.share.repository.ShareRepository;
 import com.fivefeeling.memory.domain.trip.dto.TripCreationResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.TripInfoRequestDTO;
+import com.fivefeeling.memory.domain.trip.event.TripDeletedEvent;
+import com.fivefeeling.memory.domain.trip.event.TripUpdatedEvent;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.model.TripStatus;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
@@ -14,6 +16,7 @@ import com.fivefeeling.memory.global.common.ResultCode;
 import com.fivefeeling.memory.global.exception.CustomException;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +29,7 @@ public class TripManagementService {
   private final ShareRepository shareRepository;
   private final MediaProcessingService mediaProcessingService;
   private final TripAccessValidator tripAccessValidator;
+  private final ApplicationEventPublisher eventPublisher;
 
 
   public TripCreationResponseDTO createTripId(String userEmail) {
@@ -82,14 +86,17 @@ public class TripManagementService {
     trip.setStartDate(tripInfoRequestDTO.startDate());
     trip.setEndDate(tripInfoRequestDTO.endDate());
     trip.setHashtagsFromList(tripInfoRequestDTO.hashtags());
-
     tripRepository.save(trip);
+
+    eventPublisher.publishEvent(new TripUpdatedEvent(trip));
   }
 
   // 사용자 여행 정보 삭제
   @Transactional
   public void deleteTrip(String userEmail, Long tripId) {
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+
+    eventPublisher.publishEvent(new TripDeletedEvent(trip));
 
     shareRepository.deleteAllByTrip(trip);
 
@@ -98,5 +105,7 @@ public class TripManagementService {
 
     // 여행 삭제
     tripRepository.delete(trip);
+
+
   }
 }
