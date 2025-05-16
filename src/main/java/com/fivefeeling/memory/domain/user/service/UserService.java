@@ -1,6 +1,7 @@
 package com.fivefeeling.memory.domain.user.service;
 
-import com.fivefeeling.memory.domain.trip.dto.TripSummaryResponseDTO;
+import com.fivefeeling.memory.domain.notification.model.NotificationStatus;
+import com.fivefeeling.memory.domain.notification.repository.NotificationRepository;
 import com.fivefeeling.memory.domain.trip.model.TripStatus;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.user.dto.UserSearchResponseDTO;
@@ -20,6 +21,7 @@ public class UserService {
 
   private final UserRepository userRepository;
   private final TripRepository tripRepository;
+  private final NotificationRepository notificationRepository;
 
   public void updateUserNickNameByEmail(String userEmail, String userNickName) {
     User user = userRepository.findByUserEmail(userEmail.trim().toLowerCase())
@@ -67,22 +69,14 @@ public class UserService {
 
     long tripsCount = tripRepository.countByUserAndStatus(user, TripStatus.CONFIRMED);
 
-    TripSummaryResponseDTO tripSummary = tripRepository.findFirstByUserAndStatusOrderByCreatedAtDesc(user,
-                    TripStatus.CONFIRMED)
-            .map(recentTrip -> new TripSummaryResponseDTO(
-                    recentTrip.getTripKey(),
-                    recentTrip.getTripTitle(),
-                    recentTrip.getCountry(),
-                    recentTrip.getStartDate(),
-                    recentTrip.getEndDate(),
-                    recentTrip.getHashtagsAsList()))
-            .orElse(null);
+    long unreadNotificationCount = notificationRepository.countByUserIdAndStatus(user.getUserId(),
+            NotificationStatus.UNREAD);
 
     return new UserSummaryResponseDTO(
             user.getUserId(),
             user.getUserNickName(),
             tripsCount,
-            tripSummary
+            unreadNotificationCount
     );
   }
 }
