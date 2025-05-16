@@ -39,12 +39,13 @@ public class MediaMetadataController {
           + ".so/maristadev/15066958e5b3806ab0d7d567c80c975b?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping
   public RestResponse<String> processMetadata(
+          @AuthenticationPrincipal String userEmail,
           @PathVariable("tripKey") String tripKey,
           @RequestBody List<UpdateMediaFileInfoRequestDTO> files
   ) {
     Long tripId = tripKeyConverter.convertToTripId(tripKey);
     // 한 번의 호출로 배치 처리
-    mediaMetadataService.processAndSaveMetadataBatch(tripId, files);
+    mediaMetadataService.processAndSaveMetadataBatch(userEmail, tripId, files);
 
     return RestResponse.success("등록에 성공했습니다.");
   }

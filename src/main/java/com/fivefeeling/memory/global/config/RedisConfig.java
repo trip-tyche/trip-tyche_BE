@@ -1,10 +1,8 @@
 package com.fivefeeling.memory.global.config;
 
-import com.fivefeeling.memory.global.redis.RedisStreamMessageListener;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.SocketOptions;
 import java.time.Duration;
-import java.util.concurrent.Executors;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.data.redis.RedisHealthIndicator;
@@ -15,12 +13,8 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
-import org.springframework.data.redis.connection.stream.MapRecord;
-import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-import org.springframework.data.redis.stream.StreamMessageListenerContainer;
-import org.springframework.data.redis.stream.StreamMessageListenerContainer.StreamMessageListenerContainerOptions;
 
 @Configuration
 public class RedisConfig {
@@ -47,7 +41,7 @@ public class RedisConfig {
     if (password != null && !password.isEmpty()) {
       redisConfig.setPassword(password);
     }
-    
+
     // 커넥션 풀 설정 - 제네릭 타입 지정 (Object)
     GenericObjectPoolConfig<Object> poolConfig = new GenericObjectPoolConfig<>();
     poolConfig.setMaxTotal(8);         // 최대 연결 수
@@ -100,31 +94,31 @@ public class RedisConfig {
     return redisTemplate;
   }
 
-  @Bean
-  public StreamMessageListenerContainer<String, MapRecord<String, String, String>> redisStreamListenerContainer(
-          RedisConnectionFactory connectionFactory,
-          RedisStreamMessageListener listener) {
-
-    StreamMessageListenerContainerOptions<String, MapRecord<String, String, String>> options =
-            StreamMessageListenerContainerOptions.builder()
-                    .batchSize(10)
-                    .pollTimeout(Duration.ofSeconds(1))
-                    .executor(Executors.newSingleThreadExecutor())
-                    // 예외 핸들러 추가
-                    .errorHandler(throwable -> {
-                      System.err.println("Redis Stream 처리 중 오류 발생: " + throwable.getMessage());
-                      throwable.printStackTrace();
-                    })
-                    .build();
-
-    StreamMessageListenerContainer<String, MapRecord<String, String, String>> container =
-            StreamMessageListenerContainer.create(connectionFactory, options);
-
-    container.receive(StreamOffset.fromStart("shareRequests"), listener);
-    container.start();
-
-    return container;
-  }
+//  @Bean
+//  public StreamMessageListenerContainer<String, MapRecord<String, String, String>> redisStreamListenerContainer(
+//          RedisConnectionFactory connectionFactory,
+//          RedisStreamMessageListener listener) {
+//
+//    StreamMessageListenerContainerOptions<String, MapRecord<String, String, String>> options =
+//            StreamMessageListenerContainerOptions.builder()
+//                    .batchSize(10)
+//                    .pollTimeout(Duration.ofSeconds(1))
+//                    .executor(Executors.newSingleThreadExecutor())
+//                    // 예외 핸들러 추가
+//                    .errorHandler(throwable -> {
+//                      System.err.println("Redis Stream 처리 중 오류 발생: " + throwable.getMessage());
+//                      throwable.printStackTrace();
+//                    })
+//                    .build();
+//
+//    StreamMessageListenerContainer<String, MapRecord<String, String, String>> container =
+//            StreamMessageListenerContainer.create(connectionFactory, options);
+//
+//    container.receive(StreamOffset.fromStart("shareRequests"), listener);
+//    container.start();
+//
+//    return container;
+//  }
 
   // Redis 연결 상태 확인을 위한 헬스 체크 빈
   @Bean
