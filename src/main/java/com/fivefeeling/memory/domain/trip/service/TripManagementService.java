@@ -1,10 +1,11 @@
 package com.fivefeeling.memory.domain.trip.service;
 
 import com.fivefeeling.memory.domain.media.service.MediaProcessingService;
+import com.fivefeeling.memory.domain.share.model.Share;
 import com.fivefeeling.memory.domain.share.repository.ShareRepository;
 import com.fivefeeling.memory.domain.trip.dto.TripCreationResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.TripInfoRequestDTO;
-import com.fivefeeling.memory.domain.trip.event.TripDeletedEvent;
+import com.fivefeeling.memory.domain.trip.event.TripUpdatedByCollaboratorEvent;
 import com.fivefeeling.memory.domain.trip.event.TripUpdatedEvent;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.model.TripStatus;
@@ -80,7 +81,6 @@ public class TripManagementService {
   @Transactional
   public void updateTrip(String userEmail, Long tripId, TripInfoRequestDTO tripInfoRequestDTO) {
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
-
     trip.setTripTitle(tripInfoRequestDTO.tripTitle());
     trip.setCountry(tripInfoRequestDTO.country());
     trip.setStartDate(tripInfoRequestDTO.startDate());
@@ -88,7 +88,22 @@ public class TripManagementService {
     trip.setHashtagsFromList(tripInfoRequestDTO.hashtags());
     tripRepository.save(trip);
 
-    eventPublisher.publishEvent(new TripUpdatedEvent(trip));
+    // 이벤트 발행: 소유자 vs 공유자 구분
+    User operator = userRepository.findByUserEmail(userEmail)
+            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+    if (!operator.getUserId().equals(trip.getUser().getUserId())) {
+      // 공유받은 사람이 수정
+      eventPublisher.publishEvent(
+              new TripUpdatedByCollaboratorEvent(
+                      trip,
+                      operator.getUserId(),
+                      operator.getUserNickName()
+              )
+      );
+    } else {
+      // 소유자 직접 수정
+      eventPublisher.publishEvent(new TripUpdatedEvent(trip));
+    }
   }
 
   // 사용자 여행 정보 삭제
@@ -96,7 +111,16 @@ public class TripManagementService {
   public void deleteTrip(String userEmail, Long tripId) {
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
-    eventPublisher.publishEvent(new TripDeletedEvent(trip));
+    User currentUser = userRepository.findByUserEmail(userEmail)
+            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+    Long actorId = currentUser.getUserId();
+    Share share = shareRepository
+            .findByTripAndRecipientId(trip, actorId)
+            .orElseThrow(() -> new CustomException(ResultCode.SHARE_NOT_FOUND));
+    Long referenceId = share.getShareId();
+
+    // 3) 이벤트 발행
+    eventPublisher.publishEvent(new TripUpdatedEvent(trip));
 
     shareRepository.deleteAllByTrip(trip);
 
