@@ -1,10 +1,10 @@
 package com.fivefeeling.memory.domain.trip.service;
 
 import com.fivefeeling.memory.domain.media.service.MediaProcessingService;
-import com.fivefeeling.memory.domain.share.model.Share;
 import com.fivefeeling.memory.domain.share.repository.ShareRepository;
 import com.fivefeeling.memory.domain.trip.dto.TripCreationResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.TripInfoRequestDTO;
+import com.fivefeeling.memory.domain.trip.event.TripDeletedEvent;
 import com.fivefeeling.memory.domain.trip.event.TripUpdatedByCollaboratorEvent;
 import com.fivefeeling.memory.domain.trip.event.TripUpdatedEvent;
 import com.fivefeeling.memory.domain.trip.model.Trip;
@@ -111,16 +111,8 @@ public class TripManagementService {
   public void deleteTrip(String userEmail, Long tripId) {
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
-    User currentUser = userRepository.findByUserEmail(userEmail)
-            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-    Long actorId = currentUser.getUserId();
-    Share share = shareRepository
-            .findByTripAndRecipientId(trip, actorId)
-            .orElseThrow(() -> new CustomException(ResultCode.SHARE_NOT_FOUND));
-    Long referenceId = share.getShareId();
-
     // 3) 이벤트 발행
-    eventPublisher.publishEvent(new TripUpdatedEvent(trip));
+    eventPublisher.publishEvent(new TripDeletedEvent(trip));
 
     shareRepository.deleteAllByTrip(trip);
 
