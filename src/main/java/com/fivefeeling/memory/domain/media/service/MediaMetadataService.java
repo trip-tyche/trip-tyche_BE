@@ -4,12 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fivefeeling.memory.domain.media.dto.MediaFileBatchDeleteRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.MediaFileBatchUpdateRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.UnlocatedImageResponseDTO;
+import com.fivefeeling.memory.domain.media.dto.UnlocatedImageResponseDTO.Media;
 import com.fivefeeling.memory.domain.media.dto.UpdateMediaFileInfoRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.UpdateMediaFileLocationRequestDTO;
+import com.fivefeeling.memory.domain.media.event.MediaFileAddedByCollaboratorEvent;
 import com.fivefeeling.memory.domain.media.event.MediaFileAddedEvent;
-import com.fivefeeling.memory.domain.media.event.MediaFileDateUpdatedEvent;
+import com.fivefeeling.memory.domain.media.event.MediaFileDeletedByCollaboratorEvent;
 import com.fivefeeling.memory.domain.media.event.MediaFileDeletedEvent;
 import com.fivefeeling.memory.domain.media.event.MediaFileLocationUpdatedEvent;
+import com.fivefeeling.memory.domain.media.event.MediaFileUpdatedByCollaboratorEvent;
+import com.fivefeeling.memory.domain.media.event.MediaFileUpdatedEvent;
 import com.fivefeeling.memory.domain.media.model.MediaFile;
 import com.fivefeeling.memory.domain.media.repository.MediaFileRepository;
 import com.fivefeeling.memory.domain.pinpoint.model.PinPoint;
@@ -17,6 +21,8 @@ import com.fivefeeling.memory.domain.pinpoint.service.PinPointService;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.domain.trip.validator.TripAccessValidator;
+import com.fivefeeling.memory.domain.user.model.User;
+import com.fivefeeling.memory.domain.user.repository.UserRepository;
 import com.fivefeeling.memory.global.common.ResultCode;
 import com.fivefeeling.memory.global.exception.CustomException;
 import com.fivefeeling.memory.global.redis.ImageQueueService;
@@ -27,6 +33,7 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +47,7 @@ public class MediaMetadataService {
 
   private final TripRepository tripRepository;
   private final MediaFileRepository mediaFileRepository;
+  private final UserRepository userRepository;
   private final PinPointService pinPointService;
   private final RedisDataService redisDataService;
   private final S3UploadService s3UploadService;
@@ -52,9 +60,23 @@ public class MediaMetadataService {
   private String bucketName;
 
   // ✅
-  public void processAndSaveMetadataBatch(Long tripId, List<UpdateMediaFileInfoRequestDTO> files) {
+  public void processAndSaveMetadataBatch(String userEmail, Long tripId, List<UpdateMediaFileInfoRequestDTO> files) {
     Trip trip = tripRepository.findById(tripId)
             .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+    boolean isOwner = trip.getUser().getUserEmail().equals(userEmail);
+
+    Long collaboratorId;
+    String collaboratorNickname;
+    if (!isOwner) {
+      // 사용자 정보 조회
+      User user = userRepository.findByUserEmail(userEmail)
+              .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+      collaboratorId = user.getUserId();
+      collaboratorNickname = user.getUserNickName();
+    } else {
+      collaboratorId = null;
+      collaboratorNickname = null;
+    }
 
     // 엔티티 생성 및 배치 저장
     List<MediaFile> mediaFiles = files.stream()
@@ -89,8 +111,16 @@ public class MediaMetadataService {
                 mf.getRecordDate().toString()
         );
       }
-      // 이벤트 발행
-      eventPublisher.publishEvent(new MediaFileAddedEvent(trip, mediaId));
+
+      // 소유자/공유자에 따라 다른 이벤트 발행
+      if (isOwner) {
+        // 소유자가 추가한 경우
+        eventPublisher.publishEvent(new MediaFileAddedEvent(trip, mediaId));
+      } else {
+        // 공유자가 추가한 경우
+        eventPublisher.publishEvent(new MediaFileAddedByCollaboratorEvent(
+                trip, collaboratorId, collaboratorNickname));
+      }
     });
   }
 
@@ -116,6 +146,11 @@ public class MediaMetadataService {
   public int updateMultipleMediaFiles(String userEmail, Long tripId, MediaFileBatchUpdateRequestDTO requestDTO) {
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
+    User currentUser = userRepository.findByUserEmail(userEmail)
+            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+    Long actorId = currentUser.getUserId();
+    String actorNickname = currentUser.getUserNickName();
+
     List<MediaFile> updatedMediaFiles = requestDTO.mediaFiles().stream()
             .map(request -> {
               MediaFile mf = mediaFileRepository.findById(request.mediaFileId())
@@ -132,9 +167,25 @@ public class MediaMetadataService {
             })
             .toList();
 
-    updatedMediaFiles.forEach(mf ->
-            eventPublisher.publishEvent(new MediaFileDateUpdatedEvent(trip, mf.getMediaFileId()))
-    );
+    // 4) 이벤트 발행: 소유자 vs 공유받은 사람
+    updatedMediaFiles.forEach(mf -> {
+      Long mediaFileId = mf.getMediaFileId();
+      if (actorId.equals(trip.getUser().getUserId())) {
+        // 소유자가 직접 수정
+        eventPublisher.publishEvent(
+                new MediaFileUpdatedEvent(trip, mediaFileId)
+        );
+      } else {
+        // 공유받은 사람이 수정
+        eventPublisher.publishEvent(
+                new MediaFileUpdatedByCollaboratorEvent(
+                        trip,
+                        actorId,
+                        actorNickname
+                )
+        );
+      }
+    });
 
     return updatedMediaFiles.size();
   }
@@ -155,6 +206,11 @@ public class MediaMetadataService {
   public int deleteMultipleMediaFiles(String userEmail, Long tripId, MediaFileBatchDeleteRequestDTO requestDTO) {
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
+    User currentUser = userRepository.findByUserEmail(userEmail)
+            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+    Long actorId = currentUser.getUserId();
+    String actorNickname = currentUser.getUserNickName();
+
     List<MediaFile> mediaFiles = mediaFileRepository.findAllById(requestDTO.mediaFileIds());
     List<String> mediaKeys = mediaFiles.stream()
             .map(MediaFile::getMediaKey)
@@ -163,13 +219,27 @@ public class MediaMetadataService {
     s3UploadService.deleteFiles(mediaKeys);
     mediaFileRepository.deleteAll(mediaFiles);
 
-    mediaFiles.forEach(mf ->
-            eventPublisher.publishEvent(new MediaFileDeletedEvent(trip, mf.getMediaFileId()))
-    );
-
+    mediaFiles.forEach(mf -> {
+      Long mediaFileId = mf.getMediaFileId();
+      if (actorId.equals(trip.getUser().getUserId())) {
+        // 소유자 삭제
+        eventPublisher.publishEvent(
+                new MediaFileDeletedEvent(trip, mediaFileId)
+        );
+      } else {
+        // 공유받은 사람 삭제
+        eventPublisher.publishEvent(
+                new MediaFileDeletedByCollaboratorEvent(
+                        trip,
+                        actorId,
+                        actorNickname
+                )
+        );
+      }
+    });
     return mediaFiles.size();
   }
-  
+
   @Transactional(readOnly = true)
   public List<UnlocatedImageResponseDTO> getUnlocatedImages(String userEmail, Long tripId) {
     tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
@@ -182,7 +252,7 @@ public class MediaMetadataService {
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    Map<String, List<UnlocatedImageResponseDTO.Media>> groupedByDate = redisData.entrySet().stream()
+    Map<String, List<Media>> groupedByDate = redisData.entrySet().stream()
             .map(entry -> {
               try {
                 Long mediaFileId = Long.valueOf(entry.getKey().toString());
@@ -192,18 +262,18 @@ public class MediaMetadataService {
                 LocalDateTime recordDateTime = LocalDateTime.parse(recordDateString);
                 String formattedDate = DateFormatter.formatLocalDateToString(recordDateTime.toLocalDate());
 
-                return Map.entry(formattedDate, new UnlocatedImageResponseDTO.Media(mediaFileId, mediaLink));
+                return Map.entry(formattedDate, new Media(mediaFileId, mediaLink));
               } catch (Exception e) {
                 throw new RuntimeException("Json 파싱 오류", e);
               }
             })
             .collect(Collectors.groupingBy(
-                    Map.Entry::getKey,
-                    Collectors.mapping(Map.Entry::getValue, Collectors.toList())
+                    Entry::getKey,
+                    Collectors.mapping(Entry::getValue, Collectors.toList())
             ));
 
     return groupedByDate.entrySet().stream()
-            .sorted(Map.Entry.comparingByKey())
+            .sorted(Entry.comparingByKey())
             .map(entry -> new UnlocatedImageResponseDTO(entry.getKey(), entry.getValue()))
             .collect(Collectors.toList());
   }
