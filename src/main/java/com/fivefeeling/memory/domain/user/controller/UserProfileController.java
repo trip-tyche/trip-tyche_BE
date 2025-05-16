@@ -4,7 +4,6 @@ import com.fivefeeling.memory.domain.user.dto.UpdateNickNameRequest;
 import com.fivefeeling.memory.domain.user.dto.UserSummaryResponseDTO;
 import com.fivefeeling.memory.domain.user.service.UserService;
 import com.fivefeeling.memory.global.common.RestResponse;
-import com.fivefeeling.memory.global.util.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserProfileController {
 
   private final UserService userService;
-  private final JwtTokenProvider jwtTokenProvider;
 
   @Operation(summary = "사용자 요약 정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/1ca66958e5b380478db5da52e40aa8d8?pvs=4' target='_blank'>API 명세서</a>")
