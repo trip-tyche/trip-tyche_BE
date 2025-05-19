@@ -174,6 +174,7 @@ public class NotificationEventListener {
         payload.put("recipientId", recipientId);
         payload.put("type", NotificationType.MEDIA_FILE_UPDATED.name());
         payload.put("tripKey", trip.getTripKey());
+        payload.put("senderNickname", trip.getUser().getUserNickName());
 
         String json = objectMapper.writeValueAsString(payload);
         messagingTemplate.convertAndSend(
@@ -198,7 +199,7 @@ public class NotificationEventListener {
       Long recipientId = share.getRecipientId();
       Notification notification = Notification.builder()
               .userId(recipientId)
-              .message(NotificationType.MEDIA_FILE_LOCATION_UPDATED)
+              .message(NotificationType.MEDIA_FILE_UPDATED)
               .status(NotificationStatus.UNREAD)
               .referenceId(trip.getTripId())
               .senderNickname(trip.getUser().getUserNickName())
@@ -208,8 +209,9 @@ public class NotificationEventListener {
       try {
         Map<String, Object> payload = new HashMap<>();
         payload.put("recipientId", recipientId);
-        payload.put("type", NotificationType.MEDIA_FILE_LOCATION_UPDATED.name());
+        payload.put("type", NotificationType.MEDIA_FILE_UPDATED.name());
         payload.put("tripKey", trip.getTripKey());
+        payload.put("senderNickname", trip.getUser().getUserNickName());
 
         String json = objectMapper.writeValueAsString(payload);
         messagingTemplate.convertAndSend(
@@ -246,7 +248,7 @@ public class NotificationEventListener {
         payload.put("recipientId", recipientId);
         payload.put("type", NotificationType.MEDIA_FILE_DELETED.name());
         payload.put("tripKey", trip.getTripKey());
-        payload.put("mediaFileId", event.mediaFileId());
+        payload.put("senderNickname", trip.getUser().getUserNickName());
 
         String json = objectMapper.writeValueAsString(payload);
         messagingTemplate.convertAndSend(
@@ -278,7 +280,7 @@ public class NotificationEventListener {
               // DB 저장
               Notification notification = Notification.builder()
                       .userId(recipientId)
-                      .message(NotificationType.TRIP_UPDATED_BY_COLLABORATOR)
+                      .message(NotificationType.TRIP_UPDATED)
                       .status(NotificationStatus.UNREAD)
                       .referenceId(trip.getTripId())
                       .senderNickname(event.collaboratorNickname())
@@ -289,7 +291,7 @@ public class NotificationEventListener {
               try {
                 Map<String, Object> payload = Map.of(
                         "recipientId", recipientId,
-                        "type", NotificationType.TRIP_UPDATED_BY_COLLABORATOR.name(),
+                        "type", NotificationType.TRIP_UPDATED.name(),
                         "tripTitle", trip.getTripTitle(),
                         "senderNickname", event.collaboratorNickname()
                 );
@@ -298,9 +300,9 @@ public class NotificationEventListener {
                         "/topic/share-notifications/" + recipientId,
                         json
                 );
-                log.info("📤[TRIP_UPDATED_BY_COLLABORATOR] Sent → {}", json);
+                log.info("📤[TRIP_UPDATED_BY_COLLABORATOR] 알림 전송 → {}", json);
               } catch (Exception e) {
-                log.error("❌[TRIP_UPDATED_BY_COLLABORATOR] Failed → recipientId={}", recipientId, e);
+                log.error("❌[TRIP_UPDATED_BY_COLLABORATOR] 알림 전송 실패 → recipientId={}", recipientId, e);
               }
             });
   }
@@ -320,10 +322,11 @@ public class NotificationEventListener {
             .distinct()
             .forEach(recipientId -> sendNotification(
                     recipientId,
-                    NotificationType.MEDIA_FILE_ADDED_BY_COLLABORATOR,
+                    NotificationType.MEDIA_FILE_ADDED,
                     Map.of(
                             "recipientId", recipientId,
-                            "type", NotificationType.MEDIA_FILE_ADDED_BY_COLLABORATOR.name(),
+                            "type", NotificationType.MEDIA_FILE_ADDED.name(),
+                            "tripKey", trip.getTripKey(),
                             "tripTitle", trip.getTripTitle(),
                             "senderNickname", actorNickname
                     ),
@@ -347,10 +350,11 @@ public class NotificationEventListener {
             .distinct()
             .forEach(recipientId -> sendNotification(
                     recipientId,
-                    NotificationType.MEDIA_FILE_LOCATION_UPDATED_BY_COLLABORATOR,
+                    NotificationType.MEDIA_FILE_UPDATED,
                     Map.of(
                             "recipientId", recipientId,
-                            "type", NotificationType.MEDIA_FILE_LOCATION_UPDATED_BY_COLLABORATOR.name(),
+                            "type", NotificationType.MEDIA_FILE_UPDATED.name(),
+                            "tripKey", trip.getTripKey(),
                             "tripTitle", trip.getTripTitle(),
                             "senderNickname", actorNickname
                     ),
@@ -374,10 +378,11 @@ public class NotificationEventListener {
             .distinct()
             .forEach(recipientId -> sendNotification(
                     recipientId,
-                    NotificationType.MEDIA_FILE_UPDATED_BY_COLLABORATOR,
+                    NotificationType.MEDIA_FILE_UPDATED,
                     Map.of(
                             "recipientId", recipientId,
-                            "type", NotificationType.MEDIA_FILE_UPDATED_BY_COLLABORATOR.name(),
+                            "type", NotificationType.MEDIA_FILE_UPDATED.name(),
+                            "tripKey", trip.getTripKey(),
                             "tripTitle", trip.getTripTitle(),
                             "senderNickname", actorNickname
                     ),
@@ -401,10 +406,11 @@ public class NotificationEventListener {
             .distinct()
             .forEach(recipientId -> sendNotification(
                     recipientId,
-                    NotificationType.MEDIA_FILE_DELETED_BY_COLLABORATOR,
+                    NotificationType.MEDIA_FILE_DELETED,
                     Map.of(
                             "recipientId", recipientId,
-                            "type", NotificationType.MEDIA_FILE_DELETED_BY_COLLABORATOR.name(),
+                            "type", NotificationType.MEDIA_FILE_DELETED.name(),
+                            "tripKey", trip.getTripKey(),
                             "tripTitle", trip.getTripTitle(),
                             "senderNickname", actorNickname
                     ),
@@ -433,7 +439,7 @@ public class NotificationEventListener {
               "/topic/share-notifications/" + recipientId,
               json
       );
-      log.info("📤[{}] Sent → {}", type, json);
+      log.info("📤[{}] 알림 전송 → {}", type, json);
     } catch (Exception e) {
       log.error("❌[{}] Send failed → {}", type, recipientId, e);
     }
