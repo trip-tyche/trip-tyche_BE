@@ -120,9 +120,11 @@ public class TripQueryService {
 
   public MapViewResponseDTO getTripInfoById(String userEmail, Long tripId) {
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+    LocalDateTime defaultDate = LocalDateTime.of(1980, 1, 1, 0, 0, 0);
 
-    List<PinPointResponseDTO> pinPoints = pinPointRepository.findEarliestSingleMediaFileForEachPinPointByTripId(tripId);
-    List<MediaFileResponseDTO> mediaFiles = pinPointRepository.findMediaFilesByTripId(tripId);
+    List<PinPointResponseDTO> pinPoints = pinPointRepository.findEarliestSingleMediaFileForEachPinPointByTripId(tripId,
+            defaultDate);
+    List<MediaFileResponseDTO> mediaFiles = pinPointRepository.findMediaFilesByTripId(tripId, defaultDate);
 
     return new MapViewResponseDTO(
             trip.getTripTitle(),
@@ -148,8 +150,10 @@ public class TripQueryService {
     PinPoint pinPoint = pinPointRepository.findById(pinPointId)
             .orElseThrow(() -> new CustomException(ResultCode.PINPOINT_NOT_FOUND));
 
+    LocalDateTime defaultDate = LocalDateTime.of(1980, 1, 1, 0, 0);
+
     List<PinPointMediaFilesResponseDTO> mediaFiles = mediaFileRepository.findByTripTripIdAndPinPointPinPointId(tripId,
-            pinPointId);
+            pinPointId, defaultDate);
     if (mediaFiles.isEmpty()) {
       throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
     }
@@ -173,8 +177,10 @@ public class TripQueryService {
 
     LocalDateTime startOfDay = parsedDate.atStartOfDay();
     LocalDateTime endOfDay = parsedDate.atTime(23, 59, 59);
+    LocalDateTime defaultDate = LocalDateTime.of(1980, 1, 1, 0, 0);
 
-    List<MediaFilesByDate> mediaFiles = mediaFileRepository.findByTripTripIdAndRecordDate(tripId, startOfDay, endOfDay);
+    List<MediaFilesByDate> mediaFiles = mediaFileRepository.findByTripTripIdAndRecordDate(tripId, startOfDay, endOfDay,
+            defaultDate);
     if (mediaFiles.isEmpty()) {
       throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
     }
