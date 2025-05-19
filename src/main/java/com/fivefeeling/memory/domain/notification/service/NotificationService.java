@@ -1,9 +1,12 @@
 package com.fivefeeling.memory.domain.notification.service;
 
+import com.fivefeeling.memory.domain.notification.dto.NotificationDetailDTO;
 import com.fivefeeling.memory.domain.notification.dto.NotificationResponseDTO;
 import com.fivefeeling.memory.domain.notification.model.Notification;
 import com.fivefeeling.memory.domain.notification.model.NotificationStatus;
 import com.fivefeeling.memory.domain.notification.repository.NotificationRepository;
+import com.fivefeeling.memory.domain.trip.model.Trip;
+import com.fivefeeling.memory.domain.trip.repository.TripRepository;
 import com.fivefeeling.memory.global.common.ResultCode;
 import com.fivefeeling.memory.global.exception.CustomException;
 import java.util.List;
@@ -23,7 +26,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationService {
 
   private final NotificationRepository notificationRepository;
+  private final TripRepository tripRepository;
   private final RedisTemplate<String, Object> redisTemplate;
+
 
   public List<NotificationResponseDTO> getUnreadNotifications(Long userId) {
     List<Notification> notifications = notificationRepository.findByUserId(userId);
@@ -68,6 +73,19 @@ public class NotificationService {
     notification.markAsRead();
 
     Notification saved = notificationRepository.save(notification);
+  }
+
+  public NotificationDetailDTO getNotificationDetail(Long notificationId) {
+    Notification notification = notificationRepository.findById(notificationId)
+            .orElseThrow(() -> new CustomException(ResultCode.NOTIFICATION_NOT_FOUND));
+    Optional<Trip> trip = tripRepository.findById(notification.getReferenceId());
+    String tripTitle = trip.map(Trip::getTripTitle).orElse("UNKNOWN_TRIP");
+
+    return new NotificationDetailDTO(
+            tripTitle,
+            notification.getMessage(),
+            notification.getSenderNickname()
+    );
   }
 
 

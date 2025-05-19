@@ -13,6 +13,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TripRepository extends JpaRepository<Trip, Long> {
 
+  @Query("SELECT t.tripTitle FROM Trip t WHERE t.tripId = :tripId")
+  Optional<String> findTripTitleById(@Param("tripId") Long tripId);
+
   // 접근 권한이 있는 여행(소유하거나 공유된 사용자, 상태가 CONFIRMED)만 반환하는 메서드
   @Query("""
           SELECT DISTINCT t
@@ -38,8 +41,6 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
 
   long countByUserAndStatus(User user, TripStatus status);
 
-  // 최근여행 조회
-  Optional<Trip> findFirstByUserAndStatusOrderByCreatedAtDesc(User user, TripStatus status);
 
   List<Trip> findByStatus(TripStatus status);
 }
