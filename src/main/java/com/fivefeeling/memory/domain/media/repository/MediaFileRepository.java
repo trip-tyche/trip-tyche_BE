@@ -14,19 +14,59 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
 
-  // tripId와 pinPointId에 해당하는 MediaFile 조회
-  List<PinPointMediaFilesResponseDTO> findByTripTripIdAndPinPointPinPointId(Long tripId, Long pinPointId);
+  /**
+   * 특정 tripId, pinPointId 에 대해
+   * – latitude/longitude = (0,0)인 레코드 제외
+   * – recordDate = defaultDate인 레코드 제외
+   */
+  @Query("""
+              SELECT new com.fivefeeling.memory.domain.media.dto.PinPointMediaFilesResponseDTO(
+                  m.mediaFileId,
+                  m.mediaLink,
+                  m.recordDate,
+                  m.latitude,
+                  m.longitude
+              )
+              FROM MediaFile m
+              WHERE m.pinPoint.trip.tripId   = :tripId
+                AND m.pinPoint.pinPointId     = :pinPointId
+                AND NOT (m.latitude = 0 AND m.longitude = 0)
+                AND m.recordDate <> :defaultDate
+              ORDER BY m.recordDate ASC
+          """)
+  List<PinPointMediaFilesResponseDTO> findByTripTripIdAndPinPointPinPointId(
+          @Param("tripId") Long tripId,
+          @Param("pinPointId") Long pinPointId,
+          @Param("defaultDate") LocalDateTime defaultDate
+  );
 
-  @Query("SELECT new com.fivefeeling.memory.domain.media.dto.MediaFilesByDate(" +
-          "m.mediaFileId, m.mediaLink, m.recordDate, m.latitude, m.longitude) " +
-          "FROM MediaFile m " +
-          "WHERE m.trip.tripId = :tripId " +
-          "AND m.recordDate BETWEEN :startOfDay AND :endOfDay " +
-          "ORDER BY m.recordDate ASC")
+  /**
+   * tripId에 속한 미디어 중,
+   * – recordDate가 startOfDay~endOfDay 사이
+   * – latitude/longitude = (0,0)인 경우 제외
+   * – recordDate = 1980-01-01T00:00:00인 경우 제외
+   */
+  @Query("""
+              SELECT new com.fivefeeling.memory.domain.media.dto.MediaFilesByDate(
+                m.mediaFileId,
+                m.mediaLink,
+                m.recordDate,
+                m.latitude,
+                m.longitude
+              )
+              FROM MediaFile m
+              WHERE m.trip.tripId = :tripId
+                AND m.recordDate BETWEEN :startOfDay AND :endOfDay
+                AND NOT (m.latitude = 0 AND m.longitude = 0)
+                AND m.recordDate <> :defaultDate
+              ORDER BY m.recordDate ASC
+          """)
   List<MediaFilesByDate> findByTripTripIdAndRecordDate(
           @Param("tripId") Long tripId,
           @Param("startOfDay") LocalDateTime startOfDay,
-          @Param("endOfDay") LocalDateTime endOfDay
+          @Param("endOfDay") LocalDateTime endOfDay,
+          @Param("defaultDate") LocalDateTime defaultDate
+
   );
 
   List<MediaFile> findAllByTrip(Trip trip);
