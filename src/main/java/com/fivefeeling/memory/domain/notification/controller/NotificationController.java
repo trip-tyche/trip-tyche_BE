@@ -53,7 +53,7 @@ public class NotificationController {
 
   @Operation(summary = "알림 상태 변경 (READ -> DELETE)", description = "<a href='https://www.notion"
           + ".so/maristadev/READ-DELETE-19f66958e5b380b4ab36dd53d3b4f26e?pvs=4' target='_blank'>API 명세서</a>")
-  @PatchMapping("/delete")
+  @PatchMapping("/notifications/delete")
   public RestResponse<String> markAsDeleted(
           @RequestBody List<Long> notificationIds
   ) {
