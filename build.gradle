@@ -73,6 +73,8 @@ dependencies {
     // Prometheus와 Actuator 모니터링을 위한 의존성
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'io.prometheus:prometheus-metrics-core:1.1.0'
+
 
     // Redis 설정
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
