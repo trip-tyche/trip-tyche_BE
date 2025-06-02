@@ -7,7 +7,6 @@ import com.fivefeeling.memory.domain.media.dto.UnlocatedImageResponseDTO;
 import com.fivefeeling.memory.domain.media.dto.UnlocatedImageResponseDTO.Media;
 import com.fivefeeling.memory.domain.media.dto.UpdateMediaFileInfoRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.UpdateMediaFileLocationRequestDTO;
-import com.fivefeeling.memory.domain.media.event.MediaFileAddedByCollaboratorEvent;
 import com.fivefeeling.memory.domain.media.event.MediaFileAddedEvent;
 import com.fivefeeling.memory.domain.media.event.MediaFileDeletedByCollaboratorEvent;
 import com.fivefeeling.memory.domain.media.event.MediaFileDeletedEvent;
@@ -63,20 +62,11 @@ public class MediaMetadataService {
   public void processAndSaveMetadataBatch(String userEmail, Long tripId, List<UpdateMediaFileInfoRequestDTO> files) {
     Trip trip = tripRepository.findById(tripId)
             .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
-    boolean isOwner = trip.getUser().getUserEmail().equals(userEmail);
 
-    Long collaboratorId;
-    String collaboratorNickname;
-    if (!isOwner) {
-      // 사용자 정보 조회
-      User user = userRepository.findByUserEmail(userEmail)
-              .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-      collaboratorId = user.getUserId();
-      collaboratorNickname = user.getUserNickName();
-    } else {
-      collaboratorId = null;
-      collaboratorNickname = null;
-    }
+    User actor = userRepository.findByUserEmail(userEmail)
+            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+
+    boolean isOwner = trip.getUser().getUserEmail().equals(userEmail);
 
     // 엔티티 생성 및 배치 저장
     List<MediaFile> mediaFiles = files.stream()
@@ -99,29 +89,24 @@ public class MediaMetadataService {
             .collect(Collectors.toList());
     List<MediaFile> savedMediaFiles = mediaFileRepository.saveAll(mediaFiles);
 
-    // 저장 후 Redis 및 이벤트 발행 처리
-    savedMediaFiles.forEach(mf -> {
-      Long mediaId = mf.getMediaFileId();
-      // Redis 저장: 위치 0.0인 경우
-      if (mf.getLatitude() == 0.0 && mf.getLongitude() == 0.0) {
-        redisDataService.saveZeroLocationData(
-                tripId,
-                mediaId,
-                mf.getMediaLink(),
-                mf.getRecordDate().toString()
-        );
-      }
+    // Redis 처리 (위치 0.0인 파일들만)
+    savedMediaFiles.stream()
+            .filter(mf -> mf.getLatitude() == 0.0 && mf.getLongitude() == 0.0)
+            .forEach(mf -> {
+              redisDataService.saveZeroLocationData(
+                      tripId,
+                      mf.getMediaFileId(),
+                      mf.getMediaLink(),
+                      mf.getRecordDate().toString()
+              );
+            });
 
-      // 소유자/공유자에 따라 다른 이벤트 발행
-      if (isOwner) {
-        // 소유자가 추가한 경우
-        eventPublisher.publishEvent(new MediaFileAddedEvent(trip, mediaId));
-      } else {
-        // 공유자가 추가한 경우
-        eventPublisher.publishEvent(new MediaFileAddedByCollaboratorEvent(
-                trip, collaboratorId, collaboratorNickname));
-      }
-    });
+    eventPublisher.publishEvent(new MediaFileAddedEvent(
+            trip,
+            actor.getUserId(),
+            actor.getUserNickName(),
+            isOwner,
+            savedMediaFiles.size()));
   }
 
 //  @Transactional
