@@ -66,7 +66,7 @@ public class MediaMetadataService {
     User actor = userRepository.findByUserEmail(userEmail)
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
-    boolean isOwner = trip.getUser().getUserEmail().equals(userEmail);
+    boolean isOwner = trip.getUser().getUserId().equals(actor.getUserId());
 
     // 엔티티 생성 및 배치 저장
     List<MediaFile> mediaFiles = files.stream()

@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -124,10 +125,12 @@ public class NotificationEventListener {
     int count = event.count();
 
     Set<Long> recipientIds = new HashSet<>();
+
     if (isOwner) {
       shareRepository.findAllByTrip(trip).stream()
               .filter(s -> s.getShareStatus() == ShareStatus.APPROVED)
               .map(Share::getRecipientId)
+              .filter(Objects::nonNull)
               .forEach(recipientIds::add);
     } else {
       recipientIds.add(trip.getUser().getUserId());
@@ -146,6 +149,7 @@ public class NotificationEventListener {
                     "recipientId", recipientId,
                     "type", NotificationType.MEDIA_FILE_ADDED.name(),
                     "tripKey", trip.getTripKey(),
+                    "tripTitle", trip.getTripTitle(),
                     "senderNickname", actorNickname,
                     "count", count
             ),
