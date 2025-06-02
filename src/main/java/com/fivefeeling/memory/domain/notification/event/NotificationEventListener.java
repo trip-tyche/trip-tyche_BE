@@ -3,10 +3,7 @@ package com.fivefeeling.memory.domain.notification.event;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fivefeeling.memory.domain.media.event.MediaFileAddedEvent;
 import com.fivefeeling.memory.domain.media.event.MediaFileDeletedByCollaboratorEvent;
-import com.fivefeeling.memory.domain.media.event.MediaFileDeletedEvent;
-import com.fivefeeling.memory.domain.media.event.MediaFileLocationUpdatedByCollaboratorEvent;
 import com.fivefeeling.memory.domain.media.event.MediaFileLocationUpdatedEvent;
-import com.fivefeeling.memory.domain.media.event.MediaFileUpdatedByCollaboratorEvent;
 import com.fivefeeling.memory.domain.media.event.MediaFileUpdatedEvent;
 import com.fivefeeling.memory.domain.notification.model.Notification;
 import com.fivefeeling.memory.domain.notification.model.NotificationStatus;
@@ -16,7 +13,6 @@ import com.fivefeeling.memory.domain.share.model.Share;
 import com.fivefeeling.memory.domain.share.model.ShareStatus;
 import com.fivefeeling.memory.domain.share.repository.ShareRepository;
 import com.fivefeeling.memory.domain.trip.event.TripDeletedEvent;
-import com.fivefeeling.memory.domain.trip.event.TripUpdatedByCollaboratorEvent;
 import com.fivefeeling.memory.domain.trip.event.TripUpdatedEvent;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import java.util.HashMap;
@@ -161,38 +157,42 @@ public class NotificationEventListener {
   @EventListener
   public void handleMediaFileUpdated(MediaFileUpdatedEvent event) {
     Trip trip = event.trip();
-    List<Share> shares = shareRepository.findAllByTrip(trip).stream()
-            .filter(share -> share.getShareStatus() == ShareStatus.APPROVED)
-            .toList();
+    Long actorId = event.actorId();
+    String actorNickname = event.actorNickname();
+    boolean isOwner = event.isOwner();
+    int count = event.count();
 
-    shares.forEach(share -> {
-      Long recipientId = share.getRecipientId();
-      Notification notification = Notification.builder()
-              .userId(recipientId)
-              .message(NotificationType.MEDIA_FILE_UPDATED)
-              .status(NotificationStatus.UNREAD)
-              .referenceId(trip.getTripId())
-              .senderNickname(trip.getUser().getUserNickName())
-              .build();
-      notificationRepository.save(notification);
+    Set<Long> recipientIds = new HashSet<>();
+    if (isOwner) {
+      shareRepository.findAllByTrip(trip).stream()
+              .filter(share -> share.getShareStatus() == ShareStatus.APPROVED)
+              .map(Share::getRecipientId)
+              .filter(Objects::nonNull)
+              .forEach(recipientIds::add);
+    } else {
+      recipientIds.add(trip.getUser().getUserId());
 
-      try {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("recipientId", recipientId);
-        payload.put("type", NotificationType.MEDIA_FILE_UPDATED.name());
-        payload.put("tripKey", trip.getTripKey());
-        payload.put("senderNickname", trip.getUser().getUserNickName());
+      shareRepository.findAllByTrip(trip).stream()
+              .filter(share -> share.getShareStatus() == ShareStatus.APPROVED)
+              .map(Share::getRecipientId)
+              .filter(id -> !id.equals(actorId))
+              .forEach(recipientIds::add);
+    }
 
-        String json = objectMapper.writeValueAsString(payload);
-        messagingTemplate.convertAndSend(
-                "/topic/share-notifications/" + recipientId,
-                json
-        );
-        log.info("📤 [MEDIA_FILE_DATE_UPDATED] 알림 전송: {}", json);
-      } catch (Exception e) {
-        log.error("❌ [MEDIA_FILE_DATE_UPDATED] 알림 전송 실패 {}", recipientId, e);
-      }
-    });
+    recipientIds.forEach(recipientId -> sendNotification(
+            recipientId,
+            NotificationType.MEDIA_FILE_UPDATED,
+            Map.of(
+                    "recipientId", recipientId,
+                    "type", NotificationType.MEDIA_FILE_UPDATED.name(),
+                    "tripKey", trip.getTripKey(),
+                    "tripTitle", trip.getTripTitle(),
+                    "senderNickname", actorNickname,
+                    "count", count
+            ),
+            trip.getTripId(),
+            actorNickname
+    ));
   }
 
   @EventListener
@@ -231,146 +231,7 @@ public class NotificationEventListener {
       }
     });
   }
-
-  @EventListener
-  public void handleMediaFileDeleted(MediaFileDeletedEvent event) {
-    Trip trip = event.trip();
-    List<Share> shares = shareRepository.findAllByTrip(trip).stream()
-            .filter(share -> share.getShareStatus() == ShareStatus.APPROVED)
-            .toList();
-
-    shares.forEach(share -> {
-      Long recipientId = share.getRecipientId();
-      Notification notification = Notification.builder()
-              .userId(recipientId)
-              .message(NotificationType.MEDIA_FILE_DELETED)
-              .status(NotificationStatus.UNREAD)
-              .referenceId(trip.getTripId())
-              .senderNickname(trip.getUser().getUserNickName())
-              .build();
-      notificationRepository.save(notification);
-
-      try {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("recipientId", recipientId);
-        payload.put("type", NotificationType.MEDIA_FILE_DELETED.name());
-        payload.put("tripKey", trip.getTripKey());
-        payload.put("senderNickname", trip.getUser().getUserNickName());
-
-        String json = objectMapper.writeValueAsString(payload);
-        messagingTemplate.convertAndSend(
-                "/topic/share-notifications/" + recipientId,
-                json
-        );
-        log.info("📤 [MEDIA_FILE_DELETED]알림 전송: {}", json);
-      } catch (Exception e) {
-        log.error("❌ [MEDIA_FILE_DELETED] 알림 전송 실패 {}", recipientId, e);
-      }
-    });
-  }
-
-  @EventListener
-  public void handleTripUpdatedByCollaborator(TripUpdatedByCollaboratorEvent event) {
-    Trip trip = event.trip();
-    Long actorId = event.collaboratorId();
-
-    Stream<Long> collaboratorStream = shareRepository.findAllByTrip(trip).stream()
-            .filter(s -> s.getShareStatus() == ShareStatus.APPROVED)
-            .map(Share::getRecipientId)
-            .filter(id -> !id.equals(actorId));
-
-    Stream<Long> ownerStream = Stream.of(trip.getUser().getUserId());
-
-    Stream.concat(collaboratorStream, ownerStream)
-            .distinct()
-            .forEach(recipientId -> {
-              // DB 저장
-              Notification notification = Notification.builder()
-                      .userId(recipientId)
-                      .message(NotificationType.TRIP_UPDATED)
-                      .status(NotificationStatus.UNREAD)
-                      .referenceId(trip.getTripId())
-                      .senderNickname(event.collaboratorNickname())
-                      .build();
-              notificationRepository.save(notification);
-
-              // WebSocket 전송
-              try {
-                Map<String, Object> payload = Map.of(
-                        "recipientId", recipientId,
-                        "type", NotificationType.TRIP_UPDATED.name(),
-                        "tripTitle", trip.getTripTitle(),
-                        "senderNickname", event.collaboratorNickname()
-                );
-                String json = objectMapper.writeValueAsString(payload);
-                messagingTemplate.convertAndSend(
-                        "/topic/share-notifications/" + recipientId,
-                        json
-                );
-                log.info("📤[TRIP_UPDATED_BY_COLLABORATOR] 알림 전송 → {}", json);
-              } catch (Exception e) {
-                log.error("❌[TRIP_UPDATED_BY_COLLABORATOR] 알림 전송 실패 → recipientId={}", recipientId, e);
-              }
-            });
-  }
-
-
-  @EventListener
-  public void handleMediaFileLocationUpdatedByCollaborator(MediaFileLocationUpdatedByCollaboratorEvent event) {
-    Trip trip = event.trip();
-    Long actorId = event.collaboratorId();
-    String actorNickname = event.collaboratorNickname();
-
-    Stream<Long> recipients = shareRepository.findAllByTrip(trip).stream()
-            .filter(s -> s.getShareStatus() == ShareStatus.APPROVED)
-            .map(Share::getRecipientId)
-            .filter(id -> !id.equals(actorId));
-
-    Stream.concat(recipients, Stream.of(trip.getUser().getUserId()))
-            .distinct()
-            .forEach(recipientId -> sendNotification(
-                    recipientId,
-                    NotificationType.MEDIA_FILE_UPDATED,
-                    Map.of(
-                            "recipientId", recipientId,
-                            "type", NotificationType.MEDIA_FILE_UPDATED.name(),
-                            "tripKey", trip.getTripKey(),
-                            "tripTitle", trip.getTripTitle(),
-                            "senderNickname", actorNickname
-                    ),
-                    trip.getTripId(),
-                    actorNickname
-            ));
-  }
-
-  @EventListener
-  public void handleMediaFileUpdatedByCollaborator(MediaFileUpdatedByCollaboratorEvent event) {
-    Trip trip = event.trip();
-    Long actorId = event.collaboratorId();
-    String actorNickname = event.collaboratorNickname();
-
-    Stream<Long> recipients = shareRepository.findAllByTrip(trip).stream()
-            .filter(s -> s.getShareStatus() == ShareStatus.APPROVED)
-            .map(Share::getRecipientId)
-            .filter(id -> !id.equals(actorId));
-
-    Stream.concat(recipients, Stream.of(trip.getUser().getUserId()))
-            .distinct()
-            .forEach(recipientId -> sendNotification(
-                    recipientId,
-                    NotificationType.MEDIA_FILE_UPDATED,
-                    Map.of(
-                            "recipientId", recipientId,
-                            "type", NotificationType.MEDIA_FILE_UPDATED.name(),
-                            "tripKey", trip.getTripKey(),
-                            "tripTitle", trip.getTripTitle(),
-                            "senderNickname", actorNickname
-                    ),
-                    trip.getTripId(),
-                    actorNickname
-            ));
-  }
-
+  
   @EventListener
   public void handleMediaFileDeletedByCollaborator(MediaFileDeletedByCollaboratorEvent event) {
     Trip trip = event.trip();

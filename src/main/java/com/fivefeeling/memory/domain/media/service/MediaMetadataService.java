@@ -11,7 +11,6 @@ import com.fivefeeling.memory.domain.media.event.MediaFileAddedEvent;
 import com.fivefeeling.memory.domain.media.event.MediaFileDeletedByCollaboratorEvent;
 import com.fivefeeling.memory.domain.media.event.MediaFileDeletedEvent;
 import com.fivefeeling.memory.domain.media.event.MediaFileLocationUpdatedEvent;
-import com.fivefeeling.memory.domain.media.event.MediaFileUpdatedByCollaboratorEvent;
 import com.fivefeeling.memory.domain.media.event.MediaFileUpdatedEvent;
 import com.fivefeeling.memory.domain.media.model.MediaFile;
 import com.fivefeeling.memory.domain.media.repository.MediaFileRepository;
@@ -109,24 +108,6 @@ public class MediaMetadataService {
             savedMediaFiles.size()));
   }
 
-//  @Transactional
-//  public void updateMediaFileMetadata(String userEmail, Long tripId, Long mediaFileId,
-//                                      MediaFileUpdateRequestDTO request) {
-//    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
-//
-//    MediaFile mediaFile = mediaFileRepository.findById(mediaFileId)
-//            .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
-//
-//    PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, request.latitude(), request.longitude());
-//
-//    mediaFile.setRecordDate(request.recordDate());
-//    mediaFile.setLatitude(request.latitude());
-//    mediaFile.setLongitude(request.longitude());
-//    mediaFile.setPinPoint(pinPoint);
-//
-//    mediaFileRepository.save(mediaFile);
-//  }
-
   @Transactional
   public int updateMultipleMediaFiles(String userEmail, Long tripId, MediaFileBatchUpdateRequestDTO requestDTO) {
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
@@ -135,6 +116,7 @@ public class MediaMetadataService {
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
     Long actorId = currentUser.getUserId();
     String actorNickname = currentUser.getUserNickName();
+    boolean isOwner = trip.getUser().getUserId().equals(actorId);
 
     List<MediaFile> updatedMediaFiles = requestDTO.mediaFiles().stream()
             .map(request -> {
@@ -152,26 +134,13 @@ public class MediaMetadataService {
             })
             .toList();
 
-    // 4) 이벤트 발행: 소유자 vs 공유받은 사람
-    updatedMediaFiles.forEach(mf -> {
-      Long mediaFileId = mf.getMediaFileId();
-      if (actorId.equals(trip.getUser().getUserId())) {
-        // 소유자가 직접 수정
-        eventPublisher.publishEvent(
-                new MediaFileUpdatedEvent(trip, mediaFileId)
-        );
-      } else {
-        // 공유받은 사람이 수정
-        eventPublisher.publishEvent(
-                new MediaFileUpdatedByCollaboratorEvent(
-                        trip,
-                        actorId,
-                        actorNickname
-                )
-        );
-      }
-    });
-
+    eventPublisher.publishEvent(new MediaFileUpdatedEvent(
+            trip,
+            actorId,
+            actorNickname,
+            isOwner,
+            updatedMediaFiles.size()
+    ));
     return updatedMediaFiles.size();
   }
 
@@ -264,7 +233,9 @@ public class MediaMetadataService {
   }
 
   @Transactional
-  public void updateImageLocation(String userEmail, Long tripId, Long mediaFileId,
+  public void updateImageLocation(String userEmail,
+                                  Long tripId,
+                                  Long mediaFileId,
                                   UpdateMediaFileLocationRequestDTO requestDTO) {
 
     Double newLat = requestDTO.latitude();
