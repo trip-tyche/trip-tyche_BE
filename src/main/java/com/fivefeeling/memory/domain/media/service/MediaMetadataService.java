@@ -8,7 +8,6 @@ import com.fivefeeling.memory.domain.media.dto.UnlocatedImageResponseDTO.Media;
 import com.fivefeeling.memory.domain.media.dto.UpdateMediaFileInfoRequestDTO;
 import com.fivefeeling.memory.domain.media.dto.UpdateMediaFileLocationRequestDTO;
 import com.fivefeeling.memory.domain.media.event.MediaFileAddedEvent;
-import com.fivefeeling.memory.domain.media.event.MediaFileDeletedByCollaboratorEvent;
 import com.fivefeeling.memory.domain.media.event.MediaFileDeletedEvent;
 import com.fivefeeling.memory.domain.media.event.MediaFileLocationUpdatedEvent;
 import com.fivefeeling.memory.domain.media.event.MediaFileUpdatedEvent;
@@ -144,18 +143,6 @@ public class MediaMetadataService {
     return updatedMediaFiles.size();
   }
 
-//  @Transactional
-//  public void deleteSingleMediaFile(String userEmail, Long tripId, Long mediaFileId) {
-//    tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
-//
-//    MediaFile mediaFile = mediaFileRepository.findById(mediaFileId)
-//            .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
-//
-//    s3UploadService.deleteFiles(List.of(mediaFile.getMediaKey()));
-//
-//    mediaFileRepository.delete(mediaFile);
-//  }
-
   @Transactional
   public int deleteMultipleMediaFiles(String userEmail, Long tripId, MediaFileBatchDeleteRequestDTO requestDTO) {
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
@@ -164,8 +151,10 @@ public class MediaMetadataService {
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
     Long actorId = currentUser.getUserId();
     String actorNickname = currentUser.getUserNickName();
+    boolean isOwner = trip.getUser().getUserId().equals(actorId);
 
     List<MediaFile> mediaFiles = mediaFileRepository.findAllById(requestDTO.mediaFileIds());
+
     List<String> mediaKeys = mediaFiles.stream()
             .map(MediaFile::getMediaKey)
             .toList();
@@ -173,24 +162,14 @@ public class MediaMetadataService {
     s3UploadService.deleteFiles(mediaKeys);
     mediaFileRepository.deleteAll(mediaFiles);
 
-    mediaFiles.forEach(mf -> {
-      Long mediaFileId = mf.getMediaFileId();
-      if (actorId.equals(trip.getUser().getUserId())) {
-        // 소유자 삭제
-        eventPublisher.publishEvent(
-                new MediaFileDeletedEvent(trip, mediaFileId)
-        );
-      } else {
-        // 공유받은 사람 삭제
-        eventPublisher.publishEvent(
-                new MediaFileDeletedByCollaboratorEvent(
-                        trip,
-                        actorId,
-                        actorNickname
-                )
-        );
-      }
-    });
+    eventPublisher.publishEvent(new MediaFileDeletedEvent(
+            trip,
+            actorId,
+            actorNickname,
+            isOwner,
+            mediaFiles.size()
+    ));
+
     return mediaFiles.size();
   }
 
