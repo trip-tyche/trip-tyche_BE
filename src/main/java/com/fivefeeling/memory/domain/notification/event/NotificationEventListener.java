@@ -40,12 +40,17 @@ public class NotificationEventListener {
 
   @EventListener
   public void onTripUpdated(TripUpdatedEvent event) {
-    processTripEvent(event.trip(), NotificationType.TRIP_UPDATED);
+    processTripUpdatedEvent(
+            event.trip(),
+            event.actorId(),
+            event.actorNickname(),
+            event.isOwner(),
+            NotificationType.TRIP_UPDATED);
   }
 
   @EventListener
   public void onTripDeleted(TripDeletedEvent event) {
-    processTripEvent(event.trip(), NotificationType.TRIP_DELETED);
+    processTripDeletedEvent(event.trip(), NotificationType.TRIP_DELETED);
   }
 
   @EventListener
@@ -122,9 +127,30 @@ public class NotificationEventListener {
   }
 
   /**
-   * Trip 이벤트 처리 (소유자만 수정 가능)
+   * Trip 수정 이벤트 처리 (소유자/공유자 모두 가능)
    */
-  private void processTripEvent(Trip trip, NotificationType type) {
+  private void processTripUpdatedEvent(Trip trip,
+                                       Long actorId,
+                                       String actorNickname,
+                                       boolean isOwner,
+                                       NotificationType type) {
+    Set<Long> recipientIds = determineMediaEventRecipients(trip, actorId, isOwner);
+
+    recipientIds.forEach(recipientId ->
+            sendNotification(
+                    recipientId,
+                    type,
+                    buildTripUpdatePayload(recipientId, trip, actorNickname, type),
+                    trip.getTripId(),
+                    actorNickname
+            )
+    );
+  }
+
+  /**
+   * Trip 삭제 이벤트 처리 (소유자만 가능)
+   */
+  private void processTripDeletedEvent(Trip trip, NotificationType type) {
     Set<Long> recipientIds = getApprovedShareRecipientIds(trip);
 
     recipientIds.forEach(recipientId ->
@@ -193,7 +219,7 @@ public class NotificationEventListener {
   }
 
   /**
-   * Trip 이벤트용 페이로드 생성
+   * Trip 삭제 이벤트용 페이로드 생성
    */
   private Map<String, Object> buildTripPayload(Long recipientId, Trip trip, NotificationType type) {
     return Map.of(
@@ -201,6 +227,20 @@ public class NotificationEventListener {
             "type", type.name(),
             "tripTitle", trip.getTripTitle(),
             "senderNickname", trip.getUser().getUserNickName()
+    );
+  }
+
+  /**
+   * Trip 수정 이벤트용 페이로드 생성
+   */
+  private Map<String, Object> buildTripUpdatePayload(Long recipientId, Trip trip,
+                                                     String senderNickname, NotificationType type) {
+    return Map.of(
+            "recipientId", recipientId,
+            "type", type.name(),
+            "tripKey", trip.getTripKey(),
+            "tripTitle", trip.getTripTitle() != null ? trip.getTripTitle() : "",
+            "senderNickname", senderNickname
     );
   }
 

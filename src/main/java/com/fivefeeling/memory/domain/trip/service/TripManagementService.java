@@ -5,7 +5,6 @@ import com.fivefeeling.memory.domain.share.repository.ShareRepository;
 import com.fivefeeling.memory.domain.trip.dto.TripCreationResponseDTO;
 import com.fivefeeling.memory.domain.trip.dto.TripInfoRequestDTO;
 import com.fivefeeling.memory.domain.trip.event.TripDeletedEvent;
-import com.fivefeeling.memory.domain.trip.event.TripUpdatedByCollaboratorEvent;
 import com.fivefeeling.memory.domain.trip.event.TripUpdatedEvent;
 import com.fivefeeling.memory.domain.trip.model.Trip;
 import com.fivefeeling.memory.domain.trip.model.TripStatus;
@@ -88,22 +87,16 @@ public class TripManagementService {
     trip.setHashtagsFromList(tripInfoRequestDTO.hashtags());
     tripRepository.save(trip);
 
-    // 이벤트 발행: 소유자 vs 공유자 구분
-    User operator = userRepository.findByUserEmail(userEmail)
+    User actor = userRepository.findByUserEmail(userEmail)
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-    if (!operator.getUserId().equals(trip.getUser().getUserId())) {
-      // 공유받은 사람이 수정
-      eventPublisher.publishEvent(
-              new TripUpdatedByCollaboratorEvent(
-                      trip,
-                      operator.getUserId(),
-                      operator.getUserNickName()
-              )
-      );
-    } else {
-      // 소유자 직접 수정
-      eventPublisher.publishEvent(new TripUpdatedEvent(trip));
-    }
+
+    boolean isOwner = trip.getUser().getUserId().equals(actor.getUserId());
+    eventPublisher.publishEvent(new TripUpdatedEvent(
+            trip,
+            actor.getUserId(),
+            actor.getUserNickName(),
+            isOwner
+    ));
   }
 
   // 사용자 여행 정보 삭제
