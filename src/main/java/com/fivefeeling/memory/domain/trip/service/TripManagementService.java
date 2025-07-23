@@ -115,6 +115,5 @@ public class TripManagementService {
     // 여행 삭제
     tripRepository.delete(trip);
 
-
   }
 }
