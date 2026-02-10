@@ -250,3 +250,7 @@ gradle-app.setting
 # End of https://www.toptal.com/developers/gitignore/api/intellij+all,macos,java,gradle,visualstudiocode,git,netbeans,windows!/k6-test/*
 
 k6-test
+
+# Claude Code
+CLAUDE.md
+.claude/
