@@ -1,5 +1,5 @@
-FROM openjdk:17
-ARG JAR_FILE=build/libs/memory-0.0.1-SNAPSHOT.jar
-COPY ${JAR_FILE} ./memory-0.0.1-SNAPSHOT.jar
+FROM eclipse-temurin:17-jre
+ARG JAR_FILE=build/libs/*.jar
+COPY ${JAR_FILE} app.jar
 ENV TZ=Asia/Seoul
-ENTRYPOINT ["java", "-jar", "./memory-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
