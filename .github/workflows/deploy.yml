@@ -6,169 +6,86 @@ on:
       - main
 
 jobs:
-  build-prod:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: 리포지토리의 코드를 체크아웃하는 단계
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Java 17 환경을 설정합니다.
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
-          distribution: 'temurin'  # 필수: Java 배포판을 지정
+          distribution: 'temurin'
 
-      # Step 3: Gradle을 사용하여 프로젝트를 빌드
-      - name: Build with Gradle Production
-        run: ./gradlew clean build -Dspring.profiles.active=prod
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
 
-      # Step 4: Docker Hub에 로그인하는 단계입니다.
+      - name: Build with Gradle
+        run: ./gradlew clean build -x test
+
+      # Oracle VM이 ARM(aarch64)이므로 QEMU + Buildx로 크로스 빌드
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Step 5: Docker 이미지를 빌드하고 Docker Hub에 푸시하는 단계입니다.
       - name: Build and Push Docker Image
-        run: |
-          docker build -t maristadev/feeling-memory-app:prod .
-          docker push maristadev/feeling-memory-app:prod
-        env:
-          # GitHub Secrets를 통해 환경 변수 관리
-          SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
-          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-          SPRING_REDIS_PASSWORD: ${{ secrets.SPRING_REDIS_PASSWORD }}
-          KAKAO_OAUTH_CLIENT_ID: ${{ secrets.KAKAO_OAUTH_CLIENT_ID }}
-          KAKAO_OAUTH_CLIENT_SECRET: ${{ secrets.KAKAO_OAUTH_CLIENT_SECRET }}
-          KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
-          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
-          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
-          GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          tags: maristadev/triptyche-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-  deploy-prod:
+  deploy:
     runs-on: ubuntu-latest
-    needs: build-prod
+    needs: build
 
     steps:
-      # Step 6: 배포용 EC2에 배포
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Deploy to Oracle VM
+        uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ secrets.OCI_HOST }}
           username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
+          key: ${{ secrets.OCI_SSH_KEY }}
           script: |
-            cd ~/project
-            
-            # 최신 Docker 이미지를 가져옵니다.
-            docker pull maristadev/feeling-memory-app:prod
-            
-            # 기존의 Docker Compose 서비스를 중지합니다.
-            docker-compose down
-            
-            # Docker Compose 환경변수를 GitHub Secrets에서 주입하여 실행합니다.
-            SPRING_PROFILES_ACTIVE=prod \
-            SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }} \
-            SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }} \
-            SPRING_REDIS_PASSWORD=${{ secrets.SPRING_REDIS_PASSWORD }} \
-            KAKAO_OAUTH_CLIENT_ID=${{ secrets.KAKAO_OAUTH_CLIENT_ID }} \
-            KAKAO_OAUTH_CLIENT_SECRET=${{ secrets.KAKAO_OAUTH_CLIENT_SECRET }} \
-            KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }} \
-            GOOGLE_OAUTH_CLIENT_ID=${{ secrets.GOOGLE_OAUTH_CLIENT_ID }} \
-            GOOGLE_OAUTH_CLIENT_SECRET=${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }} \
-            GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }} \
-            AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }} \
-            AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }} \
-            docker-compose up -d
-  build-staging:
-    runs-on: ubuntu-latest
+            cd ~/triptyche
 
-    steps:
-      # Step 1: 리포지토리의 코드를 체크아웃하는 단계
-      - name: Checkout repository
-        uses: actions/checkout@v4
+            # .env 파일 생성 (GitHub Secrets → 서버 환경변수)
+            cat > .env << 'ENVEOF'
+            SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}
+            SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+            SPRING_REDIS_PASSWORD=${{ secrets.SPRING_REDIS_PASSWORD }}
+            KAKAO_OAUTH_CLIENT_ID=${{ secrets.KAKAO_OAUTH_CLIENT_ID }}
+            KAKAO_OAUTH_CLIENT_SECRET=${{ secrets.KAKAO_OAUTH_CLIENT_SECRET }}
+            KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }}
+            GOOGLE_OAUTH_CLIENT_ID=${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+            GOOGLE_OAUTH_CLIENT_SECRET=${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+            GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
+            AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
+            AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
+            ENVEOF
 
-      # Step 2: Java 17 환경을 설정합니다.
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'temurin'  # 필수: Java 배포판을 지정
+            # 최신 이미지 pull 후 재시작
+            docker compose pull app
+            docker compose up -d
 
-      # Step 3: Gradle을 사용하여 프로젝트를 빌드
-      - name: Build with Gradle Production
-        run: ./gradlew clean build -Dspring.profiles.active=staging
-
-      # Step 4: Docker Hub에 로그인하는 단계입니다.
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      # Step 5: Docker 이미지를 빌드하고 Docker Hub에 푸시하는 단계입니다.
-      - name: Build and Push Docker Image
-        run: |
-          # Docker 이미지를 빌드
-          docker build -t maristadev/feeling-memory-app:staging .
-          # Docker Hub에 푸시
-          docker push maristadev/feeling-memory-app:staging
-        env:
-          # GitHub Secrets를 통해 환경 변수 관리
-          SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
-          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-          SPRING_REDIS_PASSWORD: ${{ secrets.SPRING_REDIS_PASSWORD }}
-          KAKAO_OAUTH_CLIENT_ID: ${{ secrets.KAKAO_OAUTH_CLIENT_ID }}
-          KAKAO_OAUTH_CLIENT_SECRET: ${{ secrets.KAKAO_OAUTH_CLIENT_SECRET }}
-          KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
-          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
-          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
-          STAGING_GOOGLE_REDIRECT_URI: ${{ secrets.STAGING_GOOGLE_REDIRECT_URI }}
-          STAGING_AWS_ACCESS_KEY: ${{ secrets.STAGING_AWS_ACCESS_KEY }}
-          STAGING_AWS_SECRET_KEY: ${{ secrets.STAGING_AWS_SECRET_KEY }}
-
-  deploy-staging:
-    runs-on: ubuntu-latest
-    needs: build-staging
-    #    needs: build-prod
-
-    steps:
-      # Step 6: 배포용 EC2에 배포
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.STAGING_EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.STAGING_EC2_SSH_KEY }}
-          script: |
-            cd ~/project
-            
-            # 최신 Docker 이미지를 가져옵니다.
-            docker pull maristadev/feeling-memory-app:staging
-            
-            # MySQL 이미지 재빌드
-            docker-compose build db
-            
-            # 기존의 Docker Compose 서비스를 중지합니다.
-            docker-compose down
-            
-            # Docker Compose 환경변수를 GitHub Secrets에서 주입하여 실행합니다.
-            SPRING_PROFILES_ACTIVE=staging \
-            SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }} \
-            SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }} \
-            SPRING_REDIS_PASSWORD=${{ secrets.SPRING_REDIS_PASSWORD }} \
-            KAKAO_OAUTH_CLIENT_ID=${{ secrets.KAKAO_OAUTH_CLIENT_ID }} \
-            KAKAO_OAUTH_CLIENT_SECRET=${{ secrets.KAKAO_OAUTH_CLIENT_SECRET }} \
-            KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }} \
-            GOOGLE_OAUTH_CLIENT_ID=${{ secrets.GOOGLE_OAUTH_CLIENT_ID }} \
-            GOOGLE_OAUTH_CLIENT_SECRET=${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }} \
-            STAGING_GOOGLE_REDIRECT_URI=${{ secrets.STAGING_GOOGLE_REDIRECT_URI }} \
-            STAGING_AWS_ACCESS_KEY=${{ secrets.STAGING_AWS_ACCESS_KEY }} \
-            STAGING_AWS_SECRET_KEY=${{ secrets.STAGING_AWS_SECRET_KEY }} \
-            docker-compose up -d
+            # 사용하지 않는 이전 이미지 정리
+            docker image prune -f
