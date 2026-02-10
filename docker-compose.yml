@@ -1,15 +1,10 @@
-version: '3.8'
-
 services:
   app:
-    container_name: feeling-memory-app
-    build: .
+    container_name: triptyche-api
+    image: maristadev/triptyche-api:latest
     depends_on:
-      - db
-      - redis
-      - kafka
-      - flyway
-    image: maristadev/feeling-memory-app:prod
+      db:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
@@ -22,8 +17,13 @@ services:
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
       AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
       AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+      SPRING_REDIS_PASSWORD: ${SPRING_REDIS_PASSWORD}
     ports:
       - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
     restart: always
     logging:
       driver: "json-file"
@@ -34,77 +34,43 @@ services:
       - app-network
 
   db:
-    build:
-      context: .
-      dockerfile: ./database/Dockerfile
-    container_name: feeling-memory-database
+    image: mysql:8.0
+    container_name: triptyche-db
     environment:
       MYSQL_DATABASE: feeling_memory
       MYSQL_ROOT_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      TZ: Asia/Seoul
     volumes:
       - ./database/config:/etc/mysql/conf.d
       - db_data:/var/lib/mysql
     ports:
       - "3306:3306"
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
     networks:
       - app-network
-    restart: always
 
   redis:
-    image: redis:latest
-    container_name: redis
-    ports:
-      - "6379:6379"
+    image: redis:7-alpine
+    container_name: triptyche-redis
+    command: ["redis-server", "--requirepass", "${SPRING_REDIS_PASSWORD}", "--appendonly", "yes", "--maxmemory", "200mb"]
     volumes:
       - redis_data:/data
-    networks:
-      - app-network
-    command: [ "redis-server", "--appendonly", "yes" ]
-    restart: always
-
-  kafka:
-    image: bitnami/kafka:3.7.0
-    container_name: kafka
     ports:
-      - "9092:9092"
-      - "10000:10000"
-    environment:
-      - KAFKA_ENABLE_KRAFT=yes
-      - KAFKA_CFG_BROKER_ID=1
-      - KAFKA_CFG_NODE_ID=1
-      - KAFKA_KRAFT_CLUSTER_ID=ApK2vG30R7-yWmjsKJrUrA
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
-      - KAFKA_CFG_PROCESS_ROLES=controller,broker
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:10000
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:10000
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
-      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=1
-      - KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
-      - KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR=1
-    networks:
-      - app-network
-    volumes:
-      - kafka_data:/bitnami/kafka
-
-  flyway:
-    image: flyway/flyway:latest
-    container_name: flyway
-    depends_on:
-      - db
-    command:
-      - -url=jdbc:mysql://db:3306/feeling_memory?useSSL=false&allowPublicKeyRetrieval=true
-      - -user=root
-      - -password=${SPRING_DATASOURCE_PASSWORD}
-      - -schemas=feeling_memory
-      - -baselineOnMigrate=true
-      - migrate
-    environment:
-      FLYWAY_PLACEHOLDERS_MYSQL_DATABASE: feeling_memory
-    volumes:
-      - ./database/migration:/flyway/sql
+      - "6379:6379"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    restart: always
     networks:
       - app-network
 
