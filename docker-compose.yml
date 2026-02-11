@@ -5,10 +5,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
       KAKAO_OAUTH_CLIENT_ID: ${KAKAO_OAUTH_CLIENT_ID}
       KAKAO_OAUTH_CLIENT_SECRET: ${KAKAO_OAUTH_CLIENT_SECRET}
       KAKAO_REDIRECT_URI: ${KAKAO_REDIRECT_URI}
@@ -17,14 +20,13 @@ services:
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
       AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
       AWS_SECRET_KEY: ${AWS_SECRET_KEY}
-      SPRING_REDIS_PASSWORD: ${SPRING_REDIS_PASSWORD}
     ports:
       - "8080:8080"
     deploy:
       resources:
         limits:
           memory: 1024M
-    restart: always
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
@@ -37,14 +39,16 @@ services:
     image: mysql:8.0
     container_name: triptyche-db
     environment:
-      MYSQL_DATABASE: feeling_memory
-      MYSQL_ROOT_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       TZ: Asia/Seoul
     volumes:
       - ./database/config:/etc/mysql/conf.d
       - db_data:/var/lib/mysql
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     deploy:
       resources:
         limits:
@@ -54,23 +58,37 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: always
+    restart: unless-stopped
     networks:
       - app-network
 
   redis:
     image: redis:7-alpine
     container_name: triptyche-redis
-    command: ["redis-server", "--requirepass", "${SPRING_REDIS_PASSWORD}", "--appendonly", "yes", "--maxmemory", "200mb"]
+    command:
+      - redis-server
+      - --requirepass
+      - ${REDIS_PASSWORD}
+      - --appendonly
+      - "yes"
+      - --maxmemory
+      - 200mb
+      - --maxmemory-policy
+      - allkeys-lru
     volumes:
       - redis_data:/data
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     deploy:
       resources:
         limits:
           memory: 256M
-    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
     networks:
       - app-network
 
