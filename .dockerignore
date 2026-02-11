@@ -1,0 +1,11 @@
+.git
+.github
+.gradle
+.idea
+.vscode
+build
+k6-test
+docs
+*.md
+.env
+.DS_Store
