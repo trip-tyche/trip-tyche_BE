@@ -4,6 +4,7 @@
 .idea
 .vscode
 build
+!build/libs
 k6-test
 docs
 *.md
