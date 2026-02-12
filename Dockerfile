@@ -1,22 +1,9 @@
-# === Build ===
-FROM eclipse-temurin:17-jdk AS build
-WORKDIR /app
-
-COPY gradlew .
-COPY gradle gradle
-COPY build.gradle settings.gradle ./
-RUN chmod +x gradlew && ./gradlew dependencies --no-daemon
-
-COPY src src
-RUN ./gradlew bootJar --no-daemon -x test
-
-# === Runtime ===
 FROM eclipse-temurin:17-jre
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /app/build/libs/*.jar app.jar
+COPY build/libs/*.jar app.jar
 
 ENV TZ=Asia/Seoul
 
