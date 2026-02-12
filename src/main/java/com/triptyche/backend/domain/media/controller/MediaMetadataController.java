@@ -33,7 +33,6 @@ public class MediaMetadataController {
   private final TripImagesService tripImagesService;
   private final TripKeyConverter tripKeyConverter;
 
-  //✅
   @Tag(name = "3. 여행등록 페이지 API")
   @Operation(summary = "미디어 메타데이터 등록", description = "<a href='https://www.notion"
           + ".so/maristadev/15066958e5b3806ab0d7d567c80c975b?pvs=4' target='_blank'>API 명세서</a>")
@@ -50,7 +49,6 @@ public class MediaMetadataController {
     return RestResponse.success("등록에 성공했습니다.");
   }
 
-  //✅
   @Tag(name = "4. 이미지 수정 페이지 API")
   @Operation(summary = "해당 여행 이미지 목록 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/389c7561d6514feba1b5b008909ed9d3?pvs=4' target='_blank'>API 명세서</a>")
@@ -63,7 +61,6 @@ public class MediaMetadataController {
     return RestResponse.success(responseDTO);
   }
 
-  //✅
   @Tag(name = "4. 이미지 수정 페이지 API")
   @Operation(summary = "여러 개 이미지 수정", description = "<a href='https://www.notion"
           + ".so/maristadev/19366958e5b380809038c6c23bd83689?pvs=4' target='_blank'>API 명세서</a>")

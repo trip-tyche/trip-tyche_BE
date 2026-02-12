@@ -52,7 +52,6 @@ public class TripQueryService {
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 
-  // ✅
   public TripsResponseDTO getTripsByUserEmail(String userEmail) {
     log.info("userEmail: {}", userEmail);
     User user = userRepository.findByUserEmail(userEmail)
