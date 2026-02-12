@@ -29,7 +29,6 @@ dependencies {
     implementation 'org.springframework.security:spring-security-oauth2-jose'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'mysql:mysql-connector-java:8.0.33'
 
     // Lombok 관련 의존성 추가
     compileOnly 'org.projectlombok:lombok'
@@ -53,9 +52,6 @@ dependencies {
 
     // Swagger 관련 의존성 추가
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
-
-    // thymeleaf 관련 의존성 추가
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
     // 메타데이터 추출용 의존성
     implementation 'com.drewnoakes:metadata-extractor:2.18.0'

@@ -93,33 +93,6 @@ public class RedisConfig {
     redisTemplate.afterPropertiesSet();
     return redisTemplate;
   }
-
-//  @Bean
-//  public StreamMessageListenerContainer<String, MapRecord<String, String, String>> redisStreamListenerContainer(
-//          RedisConnectionFactory connectionFactory,
-//          RedisStreamMessageListener listener) {
-//
-//    StreamMessageListenerContainerOptions<String, MapRecord<String, String, String>> options =
-//            StreamMessageListenerContainerOptions.builder()
-//                    .batchSize(10)
-//                    .pollTimeout(Duration.ofSeconds(1))
-//                    .executor(Executors.newSingleThreadExecutor())
-//                    // 예외 핸들러 추가
-//                    .errorHandler(throwable -> {
-//                      System.err.println("Redis Stream 처리 중 오류 발생: " + throwable.getMessage());
-//                      throwable.printStackTrace();
-//                    })
-//                    .build();
-//
-//    StreamMessageListenerContainer<String, MapRecord<String, String, String>> container =
-//            StreamMessageListenerContainer.create(connectionFactory, options);
-//
-//    container.receive(StreamOffset.fromStart("shareRequests"), listener);
-//    container.start();
-//
-//    return container;
-//  }
-
   // Redis 연결 상태 확인을 위한 헬스 체크 빈
   @Bean
   public RedisHealthIndicator redisHealthIndicator(RedisConnectionFactory redisConnectionFactory) {
