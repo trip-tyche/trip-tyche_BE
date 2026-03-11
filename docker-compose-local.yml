@@ -3,7 +3,7 @@ services:
     image: mysql:8.0
     container_name: triptyche-db
     environment:
-      MYSQL_DATABASE: feeling_memory
+      MYSQL_DATABASE: trip_tyche
       MYSQL_ROOT_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       TZ: Asia/Seoul
     volumes:
