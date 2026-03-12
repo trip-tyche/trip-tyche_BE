@@ -33,6 +33,7 @@ public class ShareService {
   private final TripKeyConverter tripKeyConverter;
   private final TripAccessValidator tripAccessValidator;
 
+  @Transactional
   public ShareCreateResponseDTO createShare(ShareCreateRequestDTO requestDTO, String userEmail) {
 
     Long tripId = tripKeyConverter.convertToTripId(requestDTO.tripKey());

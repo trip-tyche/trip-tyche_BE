@@ -28,14 +28,8 @@ public class TripAccessValidator {
     var user = userRepository.findByUserEmail(userEmail)
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
-    var trip = tripRepository.findById(tripId)
-            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
-
-    if (!trip.isOwnedBy(user.getUserId())) {
-      throw new CustomException(ResultCode.UNAUTHORIZED_ACCESS);
-    }
-
-    return trip;
+    return tripRepository.findByTripIdAndOwner(tripId, user.getUserId())
+            .orElseThrow(() -> new CustomException(ResultCode.UNAUTHORIZED_ACCESS));
   }
 
   public TripAccessResult validateWithUser(Long tripId, String userEmail) {

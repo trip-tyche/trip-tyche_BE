@@ -3,6 +3,7 @@ package com.triptyche.backend.domain.trip.repository;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.model.TripStatus;
 import com.triptyche.backend.domain.user.model.User;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -57,4 +58,10 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
 
 
   List<Trip> findByStatus(TripStatus status);
+
+  @Query("SELECT t FROM Trip t WHERE t.tripId = :tripId AND t.user.userId = :userId")
+  Optional<Trip> findByTripIdAndOwner(@Param("tripId") Long tripId, @Param("userId") Long userId);
+
+  @Query("SELECT t FROM Trip t WHERE t.deletedAt IS NOT NULL AND t.deletedAt < :threshold")
+  List<Trip> findSoftDeletedBefore(@Param("threshold") LocalDateTime threshold);
 }
