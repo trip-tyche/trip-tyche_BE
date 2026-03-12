@@ -16,13 +16,20 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
   @Query("SELECT t.tripTitle FROM Trip t WHERE t.tripId = :tripId")
   Optional<String> findTripTitleById(@Param("tripId") Long tripId);
 
-  // 접근 권한이 있는 여행(소유하거나 공유된 사용자, 상태가 CONFIRMED)만 반환하는 메서드
+  // 접근 권한이 있는 여행(소유하거나 공유 승인된 사용자)만 반환하는 메서드
   @Query("""
-          SELECT DISTINCT t
+          SELECT t
           FROM Trip t
-              LEFT JOIN t.sharedUsers su
-          WHERE (t.user.userId = :userId OR su.userId = :userId)
-            AND t.tripId = :tripId
+          WHERE t.tripId = :tripId
+            AND (
+              t.user.userId = :userId
+              OR EXISTS (
+                  SELECT s FROM Share s
+                  WHERE s.trip = t
+                    AND s.recipientId = :userId
+                    AND s.shareStatus = 'APPROVED'
+              )
+            )
           """)
   Optional<Trip> findAccessibleTrip(@Param("tripId") Long tripId,
                                     @Param("userId") Long userId);
@@ -30,11 +37,18 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
   Optional<Trip> findByTripKey(String tripKey);
 
   @Query("""
-          SELECT DISTINCT t
+          SELECT t
           FROM Trip t
-              LEFT JOIN t.sharedUsers su
-          WHERE (t.user.userId = :userId OR su.userId = :userId)
-                    AND (t.status = 'CONFIRMED' OR t.status = 'IMAGES_UPLOADED')
+          WHERE (t.status = 'CONFIRMED' OR t.status = 'IMAGES_UPLOADED')
+            AND (
+              t.user.userId = :userId
+              OR EXISTS (
+                  SELECT s FROM Share s
+                  WHERE s.trip = t
+                    AND s.recipientId = :userId
+                    AND s.shareStatus = 'APPROVED'
+              )
+            )
           """)
   List<Trip> findAllAccessibleTrips(@Param("userId") Long userId);
 

@@ -66,9 +66,14 @@ public class TripQueryService {
               boolean confirmed = trip.getStatus() == TripStatus.CONFIRMED;
               String ownerNickname = trip.getUser().getUserNickName();
 
-              List<String> sharedUserNicknames = trip.getSharedUsers()
+              List<String> sharedUserNicknames = shareRepository.findAllByTrip(trip)
                       .stream()
-                      .map(User::getUserNickName)
+                      .filter(s -> s.getShareStatus() == com.triptyche.backend.domain.share.model.ShareStatus.APPROVED)
+                      .map(Share::getRecipientId)
+                      .map(recipientId -> userRepository.findById(recipientId)
+                              .map(User::getUserNickName)
+                              .orElse(null))
+                      .filter(java.util.Objects::nonNull)
                       .toList();
 
               Long shareId = shareRepository

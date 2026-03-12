@@ -16,8 +16,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
@@ -35,7 +33,7 @@ import lombok.ToString;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@ToString(exclude = {"user", "pinPoints", "sharedUsers"})
+@ToString(exclude = {"user", "pinPoints"})
 @Builder
 @Entity
 public class Trip {
@@ -77,15 +75,6 @@ public class Trip {
   @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<PinPoint> pinPoints = new ArrayList<>();
 
-  @Builder.Default
-  @ManyToMany
-  @JoinTable(
-          name = "trip_shared_users",
-          joinColumns = @JoinColumn(name = "trip_id"),
-          inverseJoinColumns = @JoinColumn(name = "user_id")
-  )
-  private List<User> sharedUsers = new ArrayList<>();
-
   // 해시태그 리스트로 처리
   public void setHashtagsFromList(List<String> hashtags) {
     this.hashtags = String.join(",", hashtags);
@@ -93,12 +82,6 @@ public class Trip {
 
   public List<String> getHashtagsAsList() {
     return List.of(this.hashtags.split(","));
-  }
-
-  public void addSharedUser(User user) {
-    if (!this.sharedUsers.contains(user)) {
-      this.sharedUsers.add(user);
-    }
   }
 
   public void updateInfo(String tripTitle, String country,
