@@ -1,7 +1,5 @@
 package com.triptyche.backend.domain.trip.service;
 
-import com.triptyche.backend.domain.media.service.MediaProcessingService;
-import com.triptyche.backend.domain.share.repository.ShareRepository;
 import com.triptyche.backend.domain.trip.dto.TripCreationResponseDTO;
 import com.triptyche.backend.domain.trip.dto.TripInfoRequestDTO;
 import com.triptyche.backend.domain.trip.event.TripDeletedEvent;
@@ -23,16 +21,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class TripManagementService {
+public class TripCommandService {
 
   private final TripRepository tripRepository;
   private final UserRepository userRepository;
-  private final ShareRepository shareRepository;
-  private final MediaProcessingService mediaProcessingService;
   private final TripAccessValidator tripAccessValidator;
   private final ApplicationEventPublisher eventPublisher;
 
 
+  @Transactional
   public TripCreationResponseDTO createTripId(String userEmail) {
     User user = userRepository.findByUserEmail(userEmail)
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
@@ -56,7 +53,6 @@ public class TripManagementService {
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
     trip.markImagesUploaded();
-    tripRepository.save(trip);
   }
 
   @Transactional
@@ -64,7 +60,6 @@ public class TripManagementService {
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
     trip.confirmTrip();
-    tripRepository.save(trip);
   }
 
   // 사용자 여행 정보 저장 및 수정
@@ -81,7 +76,6 @@ public class TripManagementService {
         tripInfoRequestDTO.endDate(),
         tripInfoRequestDTO.hashtags()
     );
-    tripRepository.save(trip);
 
     boolean isOwner = trip.getUser().getUserId().equals(actor.getUserId());
     eventPublisher.publishEvent(new TripUpdatedEvent(
@@ -97,16 +91,13 @@ public class TripManagementService {
   public void deleteTrip(String userEmail, Long tripId) {
     Trip trip = tripAccessValidator.validateOwner(tripId, userEmail);
 
-    // 3) 이벤트 발행
-    eventPublisher.publishEvent(new TripDeletedEvent(trip));
+    trip.softDelete();
 
-    shareRepository.deleteAllByTrip(trip);
-
-    // 미디어 파일 삭제
-    mediaProcessingService.deleteMediaFilesByTrip(trip);
-
-    // 여행 삭제
-    tripRepository.delete(trip);
-
+    eventPublisher.publishEvent(new TripDeletedEvent(
+        trip.getTripId(),
+        trip.getTripTitle(),
+        trip.getUser().getUserNickName(),
+        trip.getUser().getUserId()
+    ));
   }
 }
