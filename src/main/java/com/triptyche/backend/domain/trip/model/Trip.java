@@ -3,6 +3,8 @@ package com.triptyche.backend.domain.trip.model;
 
 import com.triptyche.backend.domain.pinpoint.model.PinPoint;
 import com.triptyche.backend.domain.user.model.User;
+import com.triptyche.backend.global.common.ResultCode;
+import com.triptyche.backend.global.exception.CustomException;
 import com.triptyche.backend.global.util.TripKeyGenerator;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -23,16 +25,19 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
-@Data
-@Entity
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@ToString(exclude = {"user", "pinPoints", "sharedUsers"})
 @Builder
+@Entity
 public class Trip {
 
   @Id
@@ -68,9 +73,11 @@ public class Trip {
   @Column(name = "created_at", updatable = false)
   private LocalDateTime createdAt;
 
+  @Builder.Default
   @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<PinPoint> pinPoints;
+  private List<PinPoint> pinPoints = new ArrayList<>();
 
+  @Builder.Default
   @ManyToMany
   @JoinTable(
           name = "trip_shared_users",
@@ -92,6 +99,38 @@ public class Trip {
     if (!this.sharedUsers.contains(user)) {
       this.sharedUsers.add(user);
     }
+  }
+
+  public void updateInfo(String tripTitle, String country,
+                         LocalDate startDate, LocalDate endDate,
+                         List<String> hashtags) {
+    this.tripTitle = tripTitle;
+    this.country = country;
+    this.startDate = startDate;
+    this.endDate = endDate;
+    this.hashtags = String.join(",", hashtags);
+  }
+
+  public void markImagesUploaded() {
+    if (this.status != TripStatus.DRAFT) {
+      throw new CustomException(ResultCode.INVALID_TRIP_STATE);
+    }
+    this.status = TripStatus.IMAGES_UPLOADED;
+  }
+
+  public void confirmTrip() {
+    if (this.status != TripStatus.IMAGES_UPLOADED) {
+      throw new CustomException(ResultCode.INVALID_TRIP_STATE);
+    }
+    this.status = TripStatus.CONFIRMED;
+  }
+
+  public boolean isOwnedBy(Long userId) {
+    return this.user.getUserId().equals(userId);
+  }
+
+  public boolean isConfirmed() {
+    return this.status == TripStatus.CONFIRMED;
   }
 
   @PrePersist

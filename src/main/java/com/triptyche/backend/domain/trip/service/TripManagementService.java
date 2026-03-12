@@ -54,12 +54,7 @@ public class TripManagementService {
   public void markImagesUploaded(String userEmail, Long tripId) {
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
-    // 이미 업로드된 경우 예외 처리
-    if (trip.getStatus() != TripStatus.DRAFT) {
-      throw new CustomException(ResultCode.INVALID_TRIP_STATE);
-    }
-
-    trip.setStatus(TripStatus.IMAGES_UPLOADED);
+    trip.markImagesUploaded();
     tripRepository.save(trip);
   }
 
@@ -67,12 +62,7 @@ public class TripManagementService {
   public void finalizeTrip(String userEmail, Long tripId) {
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
 
-    // 이미 확정된 경우 예외 처리
-    if (trip.getStatus() != TripStatus.IMAGES_UPLOADED) {
-      throw new CustomException(ResultCode.INVALID_TRIP_STATE);
-    }
-
-    trip.setStatus(TripStatus.CONFIRMED);
+    trip.confirmTrip();
     tripRepository.save(trip);
   }
 
@@ -80,11 +70,13 @@ public class TripManagementService {
   @Transactional
   public void updateTrip(String userEmail, Long tripId, TripInfoRequestDTO tripInfoRequestDTO) {
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
-    trip.setTripTitle(tripInfoRequestDTO.tripTitle());
-    trip.setCountry(tripInfoRequestDTO.country());
-    trip.setStartDate(tripInfoRequestDTO.startDate());
-    trip.setEndDate(tripInfoRequestDTO.endDate());
-    trip.setHashtagsFromList(tripInfoRequestDTO.hashtags());
+    trip.updateInfo(
+        tripInfoRequestDTO.tripTitle(),
+        tripInfoRequestDTO.country(),
+        tripInfoRequestDTO.startDate(),
+        tripInfoRequestDTO.endDate(),
+        tripInfoRequestDTO.hashtags()
+    );
     tripRepository.save(trip);
 
     User actor = userRepository.findByUserEmail(userEmail)
