@@ -17,6 +17,7 @@ import com.triptyche.backend.domain.pinpoint.model.PinPoint;
 import com.triptyche.backend.domain.pinpoint.service.PinPointService;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
+import com.triptyche.backend.domain.trip.validator.TripAccessResult;
 import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
@@ -108,10 +109,9 @@ public class MediaMetadataService {
 
   @Transactional
   public int updateMultipleMediaFiles(String userEmail, Long tripId, MediaFileBatchUpdateRequestDTO requestDTO) {
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
-
-    User currentUser = userRepository.findByUserEmail(userEmail)
-            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+    TripAccessResult result = tripAccessValidator.validateWithUser(tripId, userEmail);
+    Trip trip = result.trip();
+    User currentUser = result.user();
     Long actorId = currentUser.getUserId();
     String actorNickname = currentUser.getUserNickName();
     boolean isOwner = trip.getUser().getUserId().equals(actorId);
@@ -144,10 +144,9 @@ public class MediaMetadataService {
 
   @Transactional
   public int deleteMultipleMediaFiles(String userEmail, Long tripId, MediaFileBatchDeleteRequestDTO requestDTO) {
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
-
-    User currentUser = userRepository.findByUserEmail(userEmail)
-            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+    TripAccessResult result = tripAccessValidator.validateWithUser(tripId, userEmail);
+    Trip trip = result.trip();
+    User currentUser = result.user();
     Long actorId = currentUser.getUserId();
     String actorNickname = currentUser.getUserNickName();
     boolean isOwner = trip.getUser().getUserId().equals(actorId);

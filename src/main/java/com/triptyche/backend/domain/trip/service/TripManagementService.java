@@ -9,6 +9,7 @@ import com.triptyche.backend.domain.trip.event.TripUpdatedEvent;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.model.TripStatus;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
+import com.triptyche.backend.domain.trip.validator.TripAccessResult;
 import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
@@ -69,7 +70,10 @@ public class TripManagementService {
   // 사용자 여행 정보 저장 및 수정
   @Transactional
   public void updateTrip(String userEmail, Long tripId, TripInfoRequestDTO tripInfoRequestDTO) {
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+    TripAccessResult result = tripAccessValidator.validateWithUser(tripId, userEmail);
+    Trip trip = result.trip();
+    User actor = result.user();
+
     trip.updateInfo(
         tripInfoRequestDTO.tripTitle(),
         tripInfoRequestDTO.country(),
@@ -78,9 +82,6 @@ public class TripManagementService {
         tripInfoRequestDTO.hashtags()
     );
     tripRepository.save(trip);
-
-    User actor = userRepository.findByUserEmail(userEmail)
-            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
     boolean isOwner = trip.getUser().getUserId().equals(actor.getUserId());
     eventPublisher.publishEvent(new TripUpdatedEvent(
@@ -94,7 +95,7 @@ public class TripManagementService {
   // 사용자 여행 정보 삭제
   @Transactional
   public void deleteTrip(String userEmail, Long tripId) {
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+    Trip trip = tripAccessValidator.validateOwner(tripId, userEmail);
 
     // 3) 이벤트 발행
     eventPublisher.publishEvent(new TripDeletedEvent(trip));
