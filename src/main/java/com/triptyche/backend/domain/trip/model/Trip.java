@@ -3,6 +3,8 @@ package com.triptyche.backend.domain.trip.model;
 
 import com.triptyche.backend.domain.pinpoint.model.PinPoint;
 import com.triptyche.backend.domain.user.model.User;
+import com.triptyche.backend.global.common.ResultCode;
+import com.triptyche.backend.global.exception.CustomException;
 import com.triptyche.backend.global.util.TripKeyGenerator;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -14,8 +16,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
@@ -23,16 +23,21 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.hibernate.annotations.SQLRestriction;
 
-@Data
-@Entity
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@ToString(exclude = {"user", "pinPoints"})
 @Builder
+@SQLRestriction("deleted_at IS NULL")
+@Entity
 public class Trip {
 
   @Id
@@ -68,16 +73,12 @@ public class Trip {
   @Column(name = "created_at", updatable = false)
   private LocalDateTime createdAt;
 
-  @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<PinPoint> pinPoints;
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
 
-  @ManyToMany
-  @JoinTable(
-          name = "trip_shared_users",
-          joinColumns = @JoinColumn(name = "trip_id"),
-          inverseJoinColumns = @JoinColumn(name = "user_id")
-  )
-  private List<User> sharedUsers = new ArrayList<>();
+  @Builder.Default
+  @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<PinPoint> pinPoints = new ArrayList<>();
 
   // 해시태그 리스트로 처리
   public void setHashtagsFromList(List<String> hashtags) {
@@ -88,10 +89,44 @@ public class Trip {
     return List.of(this.hashtags.split(","));
   }
 
-  public void addSharedUser(User user) {
-    if (!this.sharedUsers.contains(user)) {
-      this.sharedUsers.add(user);
+  public void updateInfo(String tripTitle, String country,
+                         LocalDate startDate, LocalDate endDate,
+                         List<String> hashtags) {
+    this.tripTitle = tripTitle;
+    this.country = country;
+    this.startDate = startDate;
+    this.endDate = endDate;
+    this.hashtags = String.join(",", hashtags);
+  }
+
+  public void markImagesUploaded() {
+    if (this.status != TripStatus.DRAFT) {
+      throw new CustomException(ResultCode.INVALID_TRIP_STATE);
     }
+    this.status = TripStatus.IMAGES_UPLOADED;
+  }
+
+  public void confirmTrip() {
+    if (this.status != TripStatus.IMAGES_UPLOADED) {
+      throw new CustomException(ResultCode.INVALID_TRIP_STATE);
+    }
+    this.status = TripStatus.CONFIRMED;
+  }
+
+  public boolean isOwnedBy(Long userId) {
+    return this.user.getUserId().equals(userId);
+  }
+
+  public boolean isConfirmed() {
+    return this.status == TripStatus.CONFIRMED;
+  }
+
+  public void softDelete() {
+    this.deletedAt = LocalDateTime.now();
+  }
+
+  public boolean isDeleted() {
+    return this.deletedAt != null;
   }
 
   @PrePersist

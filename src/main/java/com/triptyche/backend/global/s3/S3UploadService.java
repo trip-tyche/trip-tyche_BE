@@ -27,6 +27,9 @@ public class S3UploadService {
   private final S3Client s3Client;
   private final String bucketName;
 
+  @org.springframework.beans.factory.annotation.Value("${spring.cloud.aws.s3.endpoint}")
+  private String endpoint;
+
   public UploadResult uploadFile(MultipartFile file, String dir) {
     String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
     String mediaKey = Paths.get(dir, fileName).toString().replace("\\", "/");
@@ -38,7 +41,7 @@ public class S3UploadService {
               .build();
       s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
 
-      String mediaLink = "https://" + bucketName + ".s3.amazonaws.com/" + mediaKey;
+      String mediaLink = endpoint + "/" + bucketName + "/" + mediaKey;
       return new UploadResult(mediaKey, mediaLink);
     } catch (S3Exception e) {
       log.error("S3에 파일 업로드에 실패했습니다: {}", e.getMessage());

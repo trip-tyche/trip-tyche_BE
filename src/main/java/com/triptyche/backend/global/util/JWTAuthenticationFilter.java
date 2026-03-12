@@ -37,8 +37,11 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     }
 
     try {
-      // 오직 쿠키에서 "access_token"을 추출합니다.
-      String token = getTokenFromCookies(request);
+      // Authorization 헤더 → 쿠키 순으로 토큰 추출
+      String token = getTokenFromHeader(request);
+      if (!StringUtils.hasText(token)) {
+        token = getTokenFromCookies(request);
+      }
       if (StringUtils.hasText(token)) {
         // 토큰 검증 시 만료되거나 유효하지 않으면 CustomException이 발생합니다.
         jwtTokenProvider.validateToken(token);
@@ -60,6 +63,16 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
       return; // 필터 체인을 중단하여 이후 요청 처리하지 않음
     }
     filterChain.doFilter(request, response);
+  }
+
+  private static final String BEARER_PREFIX = "Bearer ";
+
+  private String getTokenFromHeader(HttpServletRequest request) {
+    String bearerToken = request.getHeader("Authorization");
+    if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
+      return bearerToken.substring(BEARER_PREFIX.length());
+    }
+    return null;
   }
 
   /**

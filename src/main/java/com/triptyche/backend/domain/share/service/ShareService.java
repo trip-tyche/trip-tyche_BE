@@ -33,6 +33,7 @@ public class ShareService {
   private final TripKeyConverter tripKeyConverter;
   private final TripAccessValidator tripAccessValidator;
 
+  @Transactional
   public ShareCreateResponseDTO createShare(ShareCreateRequestDTO requestDTO, String userEmail) {
 
     Long tripId = tripKeyConverter.convertToTripId(requestDTO.tripKey());
@@ -102,10 +103,7 @@ public class ShareService {
     User recipient = userRepository.findById(share.getRecipientId())
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
     if (status == ShareStatus.APPROVED) {
-      // APPROVED인 경우: 수신자 정보를 조회하고 공유 사용자로 추가 후 이벤트 발행
       Trip trip = share.getTrip();
-      trip.addSharedUser(recipient);
-      tripRepository.save(trip);
 
       Long ownerId = trip.getUser().getUserId();
       String senderNickname = recipient.getUserNickName();
@@ -144,9 +142,6 @@ public class ShareService {
     if (!isOwner && !isRecipient) {
       throw new CustomException(ResultCode.NOT_SHARE_OWNER_OR_RECIPIENT);
     }
-
-    Trip trip = share.getTrip();
-    trip.getSharedUsers().removeIf(u -> u.getUserId().equals(requesterId));
 
     shareRepository.delete(share);
   }

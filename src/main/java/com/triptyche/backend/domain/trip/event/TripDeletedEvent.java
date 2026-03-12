@@ -1,7 +1,8 @@
 package com.triptyche.backend.domain.trip.event;
 
-import com.triptyche.backend.domain.trip.model.Trip;
-
-public record TripDeletedEvent(Trip trip) {
-
-}
+public record TripDeletedEvent(
+    Long tripId,
+    String tripTitle,
+    String ownerNickname,
+    Long ownerId
+) {}

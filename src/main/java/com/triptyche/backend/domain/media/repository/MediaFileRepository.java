@@ -73,4 +73,8 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
 
   List<MediaFile> findByTripTripId(Long tripId);
 
+  List<MediaFile> findAllByTripIn(List<Trip> trips);
+
+  @Query("SELECT m FROM MediaFile m JOIN m.trip t WHERE t.deletedAt IS NOT NULL AND t.deletedAt < :threshold")
+  List<MediaFile> findByTripDeletedAtBefore(@Param("threshold") LocalDateTime threshold);
 }

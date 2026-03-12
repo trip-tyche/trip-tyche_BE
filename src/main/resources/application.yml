@@ -28,6 +28,11 @@ spring:
           min-idle: 2
           max-wait: 1000ms
 
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -64,12 +69,13 @@ spring:
   cloud:
     aws:
       s3:
-        bucketName: five-feeling-memory
+        bucketName: triptyche-storage
+        endpoint: ${OCI_S3_ENDPOINT}
       credentials:
-        accessKey: ${AWS_ACCESS_KEY}
-        secretKey: ${AWS_SECRET_KEY}
+        accessKey: ${OCI_ACCESS_KEY}
+        secretKey: ${OCI_SECRET_KEY}
       region:
-        static: ap-northeast-2
+        static: ap-chuncheon-1
 
   servlet:
     multipart:
@@ -91,6 +97,10 @@ management:
 springdoc:
   swagger-ui:
     operationsSorter: method
+
+trip:
+  soft-delete:
+    retention-days: 30
 
 logging:
   level:
@@ -127,9 +137,14 @@ spring:
           min-idle: 2
           max-wait: 1000ms
 
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
 
   security:
@@ -160,12 +175,13 @@ spring:
   cloud:
     aws:
       s3:
-        bucketName: five-feeling-memory
+        bucketName: triptyche-storage
+        endpoint: ${OCI_S3_ENDPOINT}
       credentials:
-        accessKey: ${AWS_ACCESS_KEY}
-        secretKey: ${AWS_SECRET_KEY}
+        accessKey: ${OCI_ACCESS_KEY}
+        secretKey: ${OCI_SECRET_KEY}
       region:
-        static: ap-northeast-2
+        static: ap-chuncheon-1
 
   servlet:
     multipart:
@@ -200,6 +216,10 @@ logging:
       max-file-size: 10MB
       max-history: 7
       file-name-pattern: /var/log/spring-boot/application-%d{yyyy-MM-dd}-%i.log
+
+trip:
+  soft-delete:
+    retention-days: 30
 
 server:
   forward-headers-strategy: native

@@ -254,3 +254,5 @@ k6-test
 # Claude Code
 CLAUDE.md
 .claude/
+
+/doc
