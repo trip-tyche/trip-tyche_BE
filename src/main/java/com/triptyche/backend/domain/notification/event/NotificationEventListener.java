@@ -24,9 +24,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
 @Component
@@ -38,7 +41,8 @@ public class NotificationEventListener {
   private final SimpMessagingTemplate messagingTemplate;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
-  @EventListener
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void onTripUpdated(TripUpdatedEvent event) {
     processTripUpdatedEvent(
             event.trip(),
@@ -48,12 +52,19 @@ public class NotificationEventListener {
             NotificationType.TRIP_UPDATED);
   }
 
-  @EventListener
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void onTripDeleted(TripDeletedEvent event) {
-    processTripDeletedEvent(event.trip(), NotificationType.TRIP_DELETED);
+    processTripDeletedEvent(
+            event.tripId(),
+            event.tripTitle(),
+            event.ownerNickname(),
+            NotificationType.TRIP_DELETED
+    );
   }
 
-  @EventListener
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void handleMediaFileAdded(MediaFileAddedEvent event) {
     processMediaEvent(
             event.trip(),
@@ -65,7 +76,8 @@ public class NotificationEventListener {
     );
   }
 
-  @EventListener
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void handleMediaFileUpdated(MediaFileUpdatedEvent event) {
     processMediaEvent(
             event.trip(),
@@ -77,7 +89,8 @@ public class NotificationEventListener {
     );
   }
 
-  @EventListener
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void handleMediaFileLocationUpdated(MediaFileLocationUpdatedEvent event) {
     Trip trip = event.trip();
     List<Share> shares = shareRepository.findAllByTrip(trip).stream()
@@ -114,7 +127,8 @@ public class NotificationEventListener {
     });
   }
 
-  @EventListener
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void handleMediaFileDeleted(MediaFileDeletedEvent event) {
     processMediaEvent(
             event.trip(),
@@ -150,16 +164,20 @@ public class NotificationEventListener {
   /**
    * Trip 삭제 이벤트 처리 (소유자만 가능)
    */
-  private void processTripDeletedEvent(Trip trip, NotificationType type) {
-    Set<Long> recipientIds = getApprovedShareRecipientIds(trip);
+  private void processTripDeletedEvent(
+      Long tripId,
+      String tripTitle,
+      String ownerNickname,
+      NotificationType type) {
 
+    Set<Long> recipientIds = getApprovedShareRecipientsByTripId(tripId);
     recipientIds.forEach(recipientId ->
             sendNotification(
                     recipientId,
                     type,
-                    buildTripPayload(recipientId, trip, type),
-                    trip.getTripId(),
-                    trip.getUser().getUserNickName()
+                    buildDeletedTripPayload(recipientId, tripTitle, ownerNickname, type),
+                    tripId,
+                    ownerNickname
             )
     );
   }
@@ -207,6 +225,14 @@ public class NotificationEventListener {
     return recipientIds;
   }
 
+  private Set<Long> getApprovedShareRecipientsByTripId(Long tripId) {
+    return shareRepository.findAllByTripTripId(tripId).stream()
+            .filter(s -> s.getShareStatus() == ShareStatus.APPROVED)
+            .map(Share::getRecipientId)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+  }
+
   /**
    * 승인된 공유자 ID 목록 조회
    */
@@ -216,6 +242,20 @@ public class NotificationEventListener {
             .map(Share::getRecipientId)
             .filter(Objects::nonNull)
             .collect(Collectors.toSet());
+  }
+
+  private Map<String, Object> buildDeletedTripPayload(
+      Long recipientId,
+      String tripTitle,
+      String ownerNickname,
+      NotificationType type) {
+
+    return Map.of(
+            "recipientId", recipientId,
+            "type", type.name(),
+            "tripTitle", tripTitle != null ? tripTitle : "",
+            "senderNickname", ownerNickname
+    );
   }
 
   /**

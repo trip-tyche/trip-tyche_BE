@@ -29,12 +29,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.hibernate.annotations.SQLRestriction;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @ToString(exclude = {"user", "pinPoints"})
 @Builder
+@SQLRestriction("deleted_at IS NULL")
 @Entity
 public class Trip {
 
@@ -70,6 +72,9 @@ public class Trip {
 
   @Column(name = "created_at", updatable = false)
   private LocalDateTime createdAt;
+
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
 
   @Builder.Default
   @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -114,6 +119,14 @@ public class Trip {
 
   public boolean isConfirmed() {
     return this.status == TripStatus.CONFIRMED;
+  }
+
+  public void softDelete() {
+    this.deletedAt = LocalDateTime.now();
+  }
+
+  public boolean isDeleted() {
+    return this.deletedAt != null;
   }
 
   @PrePersist

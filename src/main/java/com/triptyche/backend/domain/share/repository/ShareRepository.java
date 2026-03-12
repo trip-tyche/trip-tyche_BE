@@ -28,4 +28,8 @@ public interface ShareRepository extends JpaRepository<Share, Long> {
 
   @Query("SELECT s.recipientId FROM Share s WHERE s.trip.tripId IN :tripIds AND s.shareStatus = 'APPROVED'")
   List<Object[]> findApprovedRecipientIdsByTripIds(@Param("tripIds") List<Long> tripIds);
+
+  List<Share> findAllByTripTripId(Long tripId);
+
+  void deleteAllByTripIn(List<Trip> trips);
 }
