@@ -64,12 +64,13 @@ spring:
   cloud:
     aws:
       s3:
-        bucketName: five-feeling-memory
+        bucketName: triptyche-storage
+        endpoint: ${OCI_S3_ENDPOINT}
       credentials:
-        accessKey: ${AWS_ACCESS_KEY}
-        secretKey: ${AWS_SECRET_KEY}
+        accessKey: ${OCI_ACCESS_KEY}
+        secretKey: ${OCI_SECRET_KEY}
       region:
-        static: ap-northeast-2
+        static: ap-chuncheon-1
 
   servlet:
     multipart:
@@ -160,12 +161,13 @@ spring:
   cloud:
     aws:
       s3:
-        bucketName: five-feeling-memory
+        bucketName: triptyche-storage
+        endpoint: ${OCI_S3_ENDPOINT}
       credentials:
-        accessKey: ${AWS_ACCESS_KEY}
-        secretKey: ${AWS_SECRET_KEY}
+        accessKey: ${OCI_ACCESS_KEY}
+        secretKey: ${OCI_SECRET_KEY}
       region:
-        static: ap-northeast-2
+        static: ap-chuncheon-1
 
   servlet:
     multipart:

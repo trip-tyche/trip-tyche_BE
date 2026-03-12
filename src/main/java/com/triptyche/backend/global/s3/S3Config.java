@@ -9,15 +9,15 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
+import java.net.URI;
+
 @Configuration
 public class S3Config {
 
   @Value("${spring.cloud.aws.credentials.accessKey}")
-//  @Value("${AWS_ACCESS_KEY}")
   private String accessKey;
 
   @Value("${spring.cloud.aws.credentials.secretKey}")
-//  @Value("${AWS_SECRET_KEY}")
   private String secretKey;
 
   @Value("${spring.cloud.aws.s3.bucketName}")
@@ -26,6 +26,9 @@ public class S3Config {
   @Value("${spring.cloud.aws.region.static}")
   private String region;
 
+  @Value("${spring.cloud.aws.s3.endpoint}")
+  private String endpoint;
+
   @Bean
   public S3Client s3Client() {
     AwsBasicCredentials awsCredentials = AwsBasicCredentials.create(accessKey, secretKey);
@@ -33,6 +36,7 @@ public class S3Config {
     return S3Client.builder()
         .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
         .region(Region.of(region))
+        .endpointOverride(URI.create(endpoint))
         .build();
   }
 
@@ -43,6 +47,7 @@ public class S3Config {
     return S3Presigner.builder()
         .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
         .region(Region.of(region))
+        .endpointOverride(URI.create(endpoint))
         .build();
   }
 
