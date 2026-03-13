@@ -54,6 +54,7 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
             cd ~/triptyche
+            git pull origin main
             docker compose pull app
             docker compose up -d
             docker image prune -f
