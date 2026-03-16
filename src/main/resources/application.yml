@@ -29,9 +29,7 @@ spring:
           max-wait: 1000ms
 
   flyway:
-    enabled: true
-    baseline-on-migrate: true
-    locations: classpath:db/migration
+    enabled: false
 
   jpa:
     hibernate:
