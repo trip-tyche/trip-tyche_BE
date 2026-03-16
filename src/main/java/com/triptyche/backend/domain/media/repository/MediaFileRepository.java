@@ -4,6 +4,7 @@ import com.triptyche.backend.domain.media.dto.MediaFilesByDate;
 import com.triptyche.backend.domain.media.dto.PinPointMediaFilesResponseDTO;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.trip.model.Trip;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -72,6 +73,18 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
   List<MediaFile> findAllByTrip(Trip trip);
 
   List<MediaFile> findByTripTripId(Long tripId);
+
+  @Query("""
+          SELECT DISTINCT CAST(m.recordDate AS localdate)
+          FROM MediaFile m
+          WHERE m.trip.tripId = :tripId
+            AND m.recordDate <> :defaultDate
+          ORDER BY CAST(m.recordDate AS localdate) ASC
+          """)
+  List<LocalDate> findDistinctRecordDatesByTripId(
+          @Param("tripId") Long tripId,
+          @Param("defaultDate") LocalDateTime defaultDate
+  );
 
   List<MediaFile> findAllByTripIn(List<Trip> trips);
 
