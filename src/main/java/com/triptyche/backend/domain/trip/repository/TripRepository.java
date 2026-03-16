@@ -38,8 +38,9 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
   Optional<Trip> findByTripKey(String tripKey);
 
   @Query("""
-          SELECT t
+          SELECT DISTINCT t
           FROM Trip t
+          JOIN FETCH t.user
           WHERE (t.status = 'CONFIRMED' OR t.status = 'IMAGES_UPLOADED')
             AND (
               t.user.userId = :userId
@@ -51,8 +52,7 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
               )
             )
           """)
-  List<Trip> findAllAccessibleTrips(@Param("userId") Long userId);
-
+  List<Trip> findAllAccessibleTripsWithOwner(@Param("userId") Long userId);
 
   long countByUserAndStatus(User user, TripStatus status);
 

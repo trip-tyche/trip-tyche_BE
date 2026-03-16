@@ -16,6 +16,11 @@ public class TripAccessValidator {
   private final UserRepository userRepository;
   private final TripRepository tripRepository;
 
+  public User getUserByEmail(String userEmail) {
+    return userRepository.findByUserEmail(userEmail)
+            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
+  }
+
   public Trip validateAccessibleTrip(Long tripId, String userEmail) {
     var user = userRepository.findByUserEmail(userEmail)
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
