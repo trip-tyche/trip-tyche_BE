@@ -1,6 +1,6 @@
 package com.triptyche.backend.domain.media.model;
 
-import com.triptyche.backend.domain.pinpoint.model.PinPoint;
+import com.triptyche.backend.domain.trip.model.PinPoint;
 import com.triptyche.backend.domain.trip.model.Trip;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

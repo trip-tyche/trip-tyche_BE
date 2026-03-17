@@ -1,8 +1,8 @@
-package com.triptyche.backend.domain.pinpoint.repository;
+package com.triptyche.backend.domain.trip.repository;
 
 import com.triptyche.backend.domain.media.dto.MediaFileResponseDTO;
-import com.triptyche.backend.domain.pinpoint.model.PinPoint;
-import com.triptyche.backend.domain.pinpoint.model.PinPointResponseDTO;
+import com.triptyche.backend.domain.trip.dto.PinPointResponseDTO;
+import com.triptyche.backend.domain.trip.model.PinPoint;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -16,7 +16,7 @@ public interface PinPointRepository extends JpaRepository<PinPoint, Long> {
   List<PinPoint> findByTripTripId(Long tripId);
 
   @Query("""
-          SELECT new com.triptyche.backend.domain.pinpoint.model.PinPointResponseDTO(
+          SELECT new com.triptyche.backend.domain.trip.dto.PinPointResponseDTO(
               p.pinPointId,
               CAST(COALESCE(mf.latitude, 0.0) AS double),
               CAST(COALESCE(mf.longitude, 0.0) AS double),

@@ -1,7 +1,6 @@
-package com.triptyche.backend.domain.pinpoint.model;
+package com.triptyche.backend.domain.trip.model;
 
 import com.triptyche.backend.domain.media.model.MediaFile;
-import com.triptyche.backend.domain.trip.model.Trip;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

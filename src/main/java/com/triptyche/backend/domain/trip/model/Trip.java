@@ -1,7 +1,6 @@
 package com.triptyche.backend.domain.trip.model;
 
 
-import com.triptyche.backend.domain.pinpoint.model.PinPoint;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;

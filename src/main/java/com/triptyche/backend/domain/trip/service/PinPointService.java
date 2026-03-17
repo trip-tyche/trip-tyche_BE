@@ -1,8 +1,8 @@
-package com.triptyche.backend.domain.pinpoint.service;
+package com.triptyche.backend.domain.trip.service;
 
-import com.triptyche.backend.domain.pinpoint.model.PinPoint;
-import com.triptyche.backend.domain.pinpoint.repository.PinPointRepository;
+import com.triptyche.backend.domain.trip.model.PinPoint;
 import com.triptyche.backend.domain.trip.model.Trip;
+import com.triptyche.backend.domain.trip.repository.PinPointRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
