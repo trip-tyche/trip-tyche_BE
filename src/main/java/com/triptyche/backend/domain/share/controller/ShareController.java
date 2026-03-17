@@ -5,11 +5,12 @@ import com.triptyche.backend.domain.share.dto.ShareCreateResponseDTO;
 import com.triptyche.backend.domain.share.dto.ShareResponseDTO;
 import com.triptyche.backend.domain.share.model.ShareStatus;
 import com.triptyche.backend.domain.share.service.ShareService;
+import com.triptyche.backend.domain.user.model.User;
+import com.triptyche.backend.global.auth.CurrentUser;
 import com.triptyche.backend.global.common.RestResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -30,9 +31,9 @@ public class ShareController {
           + ".so/maristadev/17766958e5b380139607e90275d52298?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping("/v1/trips/share")
   public RestResponse<ShareCreateResponseDTO> createShare(
-          @AuthenticationPrincipal String userEmail,
+          @CurrentUser User user,
           @RequestBody ShareCreateRequestDTO requestDTO) {
-    return RestResponse.success(shareService.createShare(requestDTO, userEmail));
+    return RestResponse.success(shareService.createShare(requestDTO, user));
   }
 
   @Operation(summary = "공유요청 상세조회", description = "<a href='https://www.notion"
@@ -58,9 +59,9 @@ public class ShareController {
           + ".so/maristadev/1e866958e5b380eb97b9f11040270bd0?pvs=4' target='_blank'>API 명세서</a>")
   @DeleteMapping("/v1/shares/{shareId}")
   public RestResponse<String> deleteShare(
-          @AuthenticationPrincipal String userEmail,
+          @CurrentUser User user,
           @PathVariable Long shareId) {
-    shareService.deleteShare(shareId, userEmail);
+    shareService.deleteShare(shareId, user);
     return RestResponse.success("공유 관계 해제 완료");
   }
 }

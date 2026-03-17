@@ -34,11 +34,11 @@ public class ShareService {
   private final TripAccessValidator tripAccessValidator;
 
   @Transactional
-  public ShareCreateResponseDTO createShare(ShareCreateRequestDTO requestDTO, String userEmail) {
+  public ShareCreateResponseDTO createShare(ShareCreateRequestDTO requestDTO, User user) {
 
     Long tripId = tripKeyConverter.convertToTripId(requestDTO.tripKey());
 
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
 
     if (trip.getUser().getUserId().equals(requestDTO.recipientId())) {
       throw new CustomException(ResultCode.CANNOT_SHARE_TO_SELF);
@@ -128,13 +128,11 @@ public class ShareService {
   }
 
   @Transactional
-  public void deleteShare(Long shareId, String userEmail) {
+  public void deleteShare(Long shareId, User user) {
     Share share = shareRepository.findById(shareId)
             .orElseThrow(() -> new CustomException(ResultCode.SHARE_NOT_FOUND));
 
-    User requester = userRepository.findByUserEmail(userEmail)
-            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-    Long requesterId = requester.getUserId();
+    Long requesterId = user.getUserId();
 
     boolean isOwner = share.getTrip().getUser().getUserId().equals(requesterId);
     boolean isRecipient = share.getRecipientId().equals(requesterId);

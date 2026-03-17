@@ -17,10 +17,8 @@ import com.triptyche.backend.domain.pinpoint.model.PinPoint;
 import com.triptyche.backend.domain.pinpoint.service.PinPointService;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
-import com.triptyche.backend.domain.trip.validator.TripAccessResult;
 import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
-import com.triptyche.backend.domain.user.repository.UserRepository;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
 import com.triptyche.backend.global.redis.ImageQueueService;
@@ -45,7 +43,6 @@ public class MediaMetadataService {
 
   private final TripRepository tripRepository;
   private final MediaFileRepository mediaFileRepository;
-  private final UserRepository userRepository;
   private final PinPointService pinPointService;
   private final RedisDataService redisDataService;
   private final S3UploadService s3UploadService;
@@ -57,14 +54,11 @@ public class MediaMetadataService {
   @Value("${spring.cloud.aws.s3.bucketName}")
   private String bucketName;
 
-  public void processAndSaveMetadataBatch(String userEmail, Long tripId, List<UpdateMediaFileInfoRequestDTO> files) {
+  public void processAndSaveMetadataBatch(User user, Long tripId, List<UpdateMediaFileInfoRequestDTO> files) {
     Trip trip = tripRepository.findById(tripId)
             .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
 
-    User actor = userRepository.findByUserEmail(userEmail)
-            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-
-    boolean isOwner = trip.getUser().getUserId().equals(actor.getUserId());
+    boolean isOwner = trip.getUser().getUserId().equals(user.getUserId());
 
     // 엔티티 생성 및 배치 저장
     List<MediaFile> mediaFiles = files.stream()
@@ -101,19 +95,17 @@ public class MediaMetadataService {
 
     eventPublisher.publishEvent(new MediaFileAddedEvent(
             trip,
-            actor.getUserId(),
-            actor.getUserNickName(),
+            user.getUserId(),
+            user.getUserNickName(),
             isOwner,
             savedMediaFiles.size()));
   }
 
   @Transactional
-  public int updateMultipleMediaFiles(String userEmail, Long tripId, MediaFileBatchUpdateRequestDTO requestDTO) {
-    TripAccessResult result = tripAccessValidator.validateWithUser(tripId, userEmail);
-    Trip trip = result.trip();
-    User currentUser = result.user();
-    Long actorId = currentUser.getUserId();
-    String actorNickname = currentUser.getUserNickName();
+  public int updateMultipleMediaFiles(User user, Long tripId, MediaFileBatchUpdateRequestDTO requestDTO) {
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
+    Long actorId = user.getUserId();
+    String actorNickname = user.getUserNickName();
     boolean isOwner = trip.getUser().getUserId().equals(actorId);
 
     List<MediaFile> updatedMediaFiles = requestDTO.mediaFiles().stream()
@@ -143,12 +135,10 @@ public class MediaMetadataService {
   }
 
   @Transactional
-  public int deleteMultipleMediaFiles(String userEmail, Long tripId, MediaFileBatchDeleteRequestDTO requestDTO) {
-    TripAccessResult result = tripAccessValidator.validateWithUser(tripId, userEmail);
-    Trip trip = result.trip();
-    User currentUser = result.user();
-    Long actorId = currentUser.getUserId();
-    String actorNickname = currentUser.getUserNickName();
+  public int deleteMultipleMediaFiles(User user, Long tripId, MediaFileBatchDeleteRequestDTO requestDTO) {
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
+    Long actorId = user.getUserId();
+    String actorNickname = user.getUserNickName();
     boolean isOwner = trip.getUser().getUserId().equals(actorId);
 
     List<MediaFile> mediaFiles = mediaFileRepository.findAllById(requestDTO.mediaFileIds());
@@ -172,8 +162,8 @@ public class MediaMetadataService {
   }
 
   @Transactional(readOnly = true)
-  public List<UnlocatedImageResponseDTO> getUnlocatedImages(String userEmail, Long tripId) {
-    tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+  public List<UnlocatedImageResponseDTO> getUnlocatedImages(User user, Long tripId) {
+    tripAccessValidator.validateAccessibleTrip(tripId, user);
     String redisKey = "trip:" + tripId;
     Map<Object, Object> redisData = imageQueueService.getImageQueue(redisKey);
 
@@ -210,7 +200,7 @@ public class MediaMetadataService {
   }
 
   @Transactional
-  public void updateImageLocation(String userEmail,
+  public void updateImageLocation(User user,
                                   Long tripId,
                                   Long mediaFileId,
                                   UpdateMediaFileLocationRequestDTO requestDTO) {
@@ -221,7 +211,7 @@ public class MediaMetadataService {
       throw new CustomException(ResultCode.INVALID_COORDINATE);
     }
 
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
     MediaFile mf = mediaFileRepository.findById(mediaFileId)
             .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
 

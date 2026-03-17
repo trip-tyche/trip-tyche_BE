@@ -7,12 +7,8 @@ import com.triptyche.backend.domain.trip.event.TripUpdatedEvent;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.model.TripStatus;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
-import com.triptyche.backend.domain.trip.validator.TripAccessResult;
 import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
-import com.triptyche.backend.domain.user.repository.UserRepository;
-import com.triptyche.backend.global.common.ResultCode;
-import com.triptyche.backend.global.exception.CustomException;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -24,16 +20,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class TripCommandService {
 
   private final TripRepository tripRepository;
-  private final UserRepository userRepository;
   private final TripAccessValidator tripAccessValidator;
   private final ApplicationEventPublisher eventPublisher;
 
 
   @Transactional
-  public TripCreationResponseDTO createTripId(String userEmail) {
-    User user = userRepository.findByUserEmail(userEmail)
-            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-
+  public TripCreationResponseDTO createTripId(User user) {
     Trip trip = Trip.builder()
             .user(user)
             .tripTitle("임시 제목")
@@ -49,25 +41,23 @@ public class TripCommandService {
   }
 
   @Transactional
-  public void markImagesUploaded(String userEmail, Long tripId) {
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+  public void markImagesUploaded(User user, Long tripId) {
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
 
     trip.markImagesUploaded();
   }
 
   @Transactional
-  public void finalizeTrip(String userEmail, Long tripId) {
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+  public void finalizeTrip(User user, Long tripId) {
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
 
     trip.confirmTrip();
   }
 
   // 사용자 여행 정보 저장 및 수정
   @Transactional
-  public void updateTrip(String userEmail, Long tripId, TripInfoRequestDTO tripInfoRequestDTO) {
-    TripAccessResult result = tripAccessValidator.validateWithUser(tripId, userEmail);
-    Trip trip = result.trip();
-    User actor = result.user();
+  public void updateTrip(User user, Long tripId, TripInfoRequestDTO tripInfoRequestDTO) {
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
 
     trip.updateInfo(
         tripInfoRequestDTO.tripTitle(),
@@ -77,19 +67,19 @@ public class TripCommandService {
         tripInfoRequestDTO.hashtags()
     );
 
-    boolean isOwner = trip.getUser().getUserId().equals(actor.getUserId());
+    boolean isOwner = trip.getUser().getUserId().equals(user.getUserId());
     eventPublisher.publishEvent(new TripUpdatedEvent(
             trip,
-            actor.getUserId(),
-            actor.getUserNickName(),
+            user.getUserId(),
+            user.getUserNickName(),
             isOwner
     ));
   }
 
   // 사용자 여행 정보 삭제
   @Transactional
-  public void deleteTrip(String userEmail, Long tripId) {
-    Trip trip = tripAccessValidator.validateOwner(tripId, userEmail);
+  public void deleteTrip(User user, Long tripId) {
+    Trip trip = tripAccessValidator.validateOwner(tripId, user);
 
     trip.softDelete();
 

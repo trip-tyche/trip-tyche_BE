@@ -10,11 +10,12 @@ import com.triptyche.backend.domain.trip.dto.TripsResponseDTO;
 import com.triptyche.backend.domain.trip.dto.UpdateTripInfoResponseDTO;
 import com.triptyche.backend.domain.trip.service.TripCommandService;
 import com.triptyche.backend.domain.trip.service.TripQueryService;
+import com.triptyche.backend.domain.user.model.User;
+import com.triptyche.backend.global.auth.CurrentUser;
 import com.triptyche.backend.global.common.RestResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -40,8 +41,8 @@ public class TripController {
           + ".so/maristadev/12d66958e5b380c8b6c2ca99cbc2f752?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping
   public RestResponse<TripCreationResponseDTO> createTrip(
-          @AuthenticationPrincipal String userEmail) {
-    TripCreationResponseDTO tripIdResponse = tripCommandService.createTripId(userEmail);
+          @CurrentUser User user) {
+    TripCreationResponseDTO tripIdResponse = tripCommandService.createTripId(user);
     return RestResponse.success(tripIdResponse);
   }
 
@@ -50,10 +51,10 @@ public class TripController {
           + ".so/maristadev/1f366958e5b38030b6a0f62a2eeef8ab?pvs=4' target='_blank'>API 명세서</a>")
   @PatchMapping("/{tripKey}/images-uploaded")
   public RestResponse<String> markImagesUploaded(
-          @AuthenticationPrincipal String userEmail,
+          @CurrentUser User user,
           @PathVariable("tripKey") String tripKey) {
     Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    tripCommandService.markImagesUploaded(userEmail, tripId);
+    tripCommandService.markImagesUploaded(user, tripId);
     return RestResponse.success("이미지 업로드 완료 상태로 변경되었습니다.");
   }
 
@@ -62,10 +63,10 @@ public class TripController {
           + ".so/maristadev/Trip-1c566958e5b38062b7afd6ed16c69ea1?pvs=4' target='_blank'>API 명세서</a>")
   @PatchMapping("/{tripKey}/finalize")
   public RestResponse<String> finalizeTrip(
-          @AuthenticationPrincipal String userEmail,
+          @CurrentUser User user,
           @PathVariable("tripKey") String tripKey) {
     Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    tripCommandService.finalizeTrip(userEmail, tripId);
+    tripCommandService.finalizeTrip(user, tripId);
     return RestResponse.success("여행이 성공적으로 등록되었습니다.");
   }
 
@@ -74,9 +75,9 @@ public class TripController {
           + ".so/maristadev/680d29996d0941b9aa742a280e2b3b27?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping
   public RestResponse<TripsResponseDTO> getUserTrips(
-          @AuthenticationPrincipal String userEmail) {
+          @CurrentUser User user) {
 
-    TripsResponseDTO tripsResponse = tripQueryService.getTripsByUserEmail(userEmail);
+    TripsResponseDTO tripsResponse = tripQueryService.getTripsByUser(user);
     return RestResponse.success(tripsResponse);
   }
 
@@ -85,10 +86,10 @@ public class TripController {
           + ".so/maristadev/10d66958e5b3803f8dddf7b02d4e83f5?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/{tripKey}")
   public RestResponse<UpdateTripInfoResponseDTO> getTripById(
-          @AuthenticationPrincipal String userEmail,
+          @CurrentUser User user,
           @PathVariable String tripKey) {
     Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    UpdateTripInfoResponseDTO tripInfo = tripQueryService.getTripById(userEmail, tripId);
+    UpdateTripInfoResponseDTO tripInfo = tripQueryService.getTripById(user, tripId);
 
     return RestResponse.success(tripInfo);
   }
@@ -98,11 +99,11 @@ public class TripController {
           + ".so/maristadev/f928c3dc6c2444c9883b8777eadcefc9?pvs=4' target='_blank'>API 명세서</a>")
   @PutMapping("/{tripKey}")
   public RestResponse<String> updateTrip(
-          @AuthenticationPrincipal String userEmail,
+          @CurrentUser User user,
           @PathVariable String tripKey,
           @RequestBody TripInfoRequestDTO tripInfoRequestDTO) {
     Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    tripCommandService.updateTrip(userEmail, tripId, tripInfoRequestDTO);
+    tripCommandService.updateTrip(user, tripId, tripInfoRequestDTO);
 
     return RestResponse.success("성공적으로 여행 정보가 등록되었습니다.");
   }
@@ -112,11 +113,11 @@ public class TripController {
           + ".so/maristadev/38909993a1654e0c9034287a27a483fe?pvs=4' target='_blank'>API 명세서</a>")
   @DeleteMapping("/{tripKey}")
   public RestResponse<String> deleteTrip(
-          @AuthenticationPrincipal String userEmail,
+          @CurrentUser User user,
           @PathVariable String tripKey) {
 
     Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    tripCommandService.deleteTrip(userEmail, tripId);
+    tripCommandService.deleteTrip(user, tripId);
 
     return RestResponse.success("성공적으로 여행 정보가 삭제되었습니다.");
   }
@@ -126,10 +127,10 @@ public class TripController {
           + ".so/maristadev/fc14909a1ec5481ca37b58924637be20?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/{tripKey}/info")
   public RestResponse<MapViewResponseDTO> getTripInfo(
-          @AuthenticationPrincipal String userEmail,
+          @CurrentUser User user,
           @PathVariable String tripKey) {
     Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    MapViewResponseDTO tripInfo = tripQueryService.getTripInfoById(userEmail, tripId);
+    MapViewResponseDTO tripInfo = tripQueryService.getTripInfoById(user, tripId);
     return RestResponse.success(tripInfo);
   }
 
@@ -138,11 +139,11 @@ public class TripController {
           + ".so/maristadev/d172149814414943866df2f04f409970?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/{tripKey}/pinpoints/{pinPointId}/images")
   public RestResponse<PinPointImageGalleryResponseDTO> getPointImages(
-          @AuthenticationPrincipal String userEmail,
+          @CurrentUser User user,
           @PathVariable String tripKey,
           @PathVariable Long pinPointId) {
     Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    PinPointImageGalleryResponseDTO pinPointImageGalleryResponse = tripQueryService.getPointImages(userEmail, tripId,
+    PinPointImageGalleryResponseDTO pinPointImageGalleryResponse = tripQueryService.getPointImages(user, tripId,
             pinPointId);
 
     return RestResponse.success(pinPointImageGalleryResponse);
@@ -153,11 +154,11 @@ public class TripController {
           + ".so/maristadev/de630f9fd0424f1ca1d521037730d296?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/{tripKey}/map")
   public RestResponse<MediaFilesByDateResponseDTO> getImagesByDate(
-          @AuthenticationPrincipal String userEmail,
+          @CurrentUser User user,
           @PathVariable String tripKey,
           @RequestParam String date) {
     Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    MediaFilesByDateResponseDTO dateImageDTO = tripQueryService.getImagesByDate(userEmail, tripId, date);
+    MediaFilesByDateResponseDTO dateImageDTO = tripQueryService.getImagesByDate(user, tripId, date);
 
     return RestResponse.success(dateImageDTO);
   }
