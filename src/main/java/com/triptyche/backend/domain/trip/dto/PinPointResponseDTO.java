@@ -1,4 +1,4 @@
-package com.triptyche.backend.domain.pinpoint.model;
+package com.triptyche.backend.domain.trip.dto;
 
 import java.time.LocalDateTime;
 
@@ -11,4 +11,3 @@ public record PinPointResponseDTO(
 ) {
 
 }
-
