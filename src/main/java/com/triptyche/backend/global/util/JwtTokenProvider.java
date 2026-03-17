@@ -102,7 +102,7 @@ public class JwtTokenProvider {
       Jwts.parserBuilder().setSigningKey(jwtSecretKeyManager.getSecretKey(provider)).build().parseClaimsJws(token);
 
       log.debug("토큰 검증 성공. provider: {}", provider);
-    } catch (SecurityException | MalformedJwtException e) {
+    } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
       log.error("JWT 서명 오류 또는 변조된 토큰: {}", e.getMessage());
       throw new CustomException(ResultCode.INVALID_JWT);
     } catch (ExpiredJwtException e) {
