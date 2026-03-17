@@ -11,7 +11,6 @@ import com.triptyche.backend.domain.share.model.ShareStatus;
 import com.triptyche.backend.domain.share.repository.ShareRepository;
 import com.triptyche.backend.domain.trip.converter.TripKeyConverter;
 import com.triptyche.backend.domain.trip.model.Trip;
-import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
@@ -27,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class ShareService {
 
   private final ShareRepository shareRepository;
-  private final TripRepository tripRepository;
   private final UserRepository userRepository;
   private final ApplicationEventPublisher eventPublisher;
   private final TripKeyConverter tripKeyConverter;
