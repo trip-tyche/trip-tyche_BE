@@ -23,10 +23,7 @@ public class UserService {
   private final TripRepository tripRepository;
   private final NotificationRepository notificationRepository;
 
-  public void updateUserNickNameByEmail(String userEmail, String userNickName) {
-    User user = userRepository.findByUserEmail(userEmail.trim().toLowerCase())
-            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-
+  public void updateUserNickName(User user, String userNickName) {
     user.updateUserNickName(userNickName);
     userRepository.save(user);
   }
@@ -63,10 +60,7 @@ public class UserService {
   }
 
 
-  public UserSummaryResponseDTO getUserSummary(String userEmail) {
-    User user = userRepository.findByUserEmail(userEmail.trim().toLowerCase())
-            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-
+  public UserSummaryResponseDTO getUserSummary(User user) {
     long tripsCount = tripRepository.countByUserAndStatus(user, TripStatus.CONFIRMED);
 
     long unreadNotificationCount = notificationRepository.countByUserIdAndStatus(user.getUserId(),

@@ -9,12 +9,13 @@ import com.triptyche.backend.domain.media.dto.UpdateMediaFileLocationRequestDTO;
 import com.triptyche.backend.domain.media.service.MediaMetadataService;
 import com.triptyche.backend.domain.media.service.TripImagesService;
 import com.triptyche.backend.domain.trip.converter.TripKeyConverter;
+import com.triptyche.backend.domain.user.model.User;
+import com.triptyche.backend.global.auth.CurrentUser;
 import com.triptyche.backend.global.common.RestResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -38,13 +39,12 @@ public class MediaMetadataController {
           + ".so/maristadev/15066958e5b3806ab0d7d567c80c975b?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping
   public RestResponse<String> processMetadata(
-          @AuthenticationPrincipal String userEmail,
+          @CurrentUser User user,
           @PathVariable("tripKey") String tripKey,
           @RequestBody List<UpdateMediaFileInfoRequestDTO> files
   ) {
     Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    // 한 번의 호출로 배치 처리
-    mediaMetadataService.processAndSaveMetadataBatch(userEmail, tripId, files);
+    mediaMetadataService.processAndSaveMetadataBatch(user, tripId, files);
 
     return RestResponse.success("등록에 성공했습니다.");
   }
@@ -54,10 +54,10 @@ public class MediaMetadataController {
           + ".so/maristadev/389c7561d6514feba1b5b008909ed9d3?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping
   public RestResponse<EditableMediaFilesResponseDTO> getTripImages(
-          @AuthenticationPrincipal String userEmail,
+          @CurrentUser User user,
           @PathVariable String tripKey) {
     Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    EditableMediaFilesResponseDTO responseDTO = tripImagesService.getTripImagesByTripId(userEmail, tripId);
+    EditableMediaFilesResponseDTO responseDTO = tripImagesService.getTripImagesByTripId(user, tripId);
     return RestResponse.success(responseDTO);
   }
 
@@ -66,12 +66,12 @@ public class MediaMetadataController {
           + ".so/maristadev/19366958e5b380809038c6c23bd83689?pvs=4' target='_blank'>API 명세서</a>")
   @PatchMapping
   public RestResponse<String> updateMultipleMediaFiles(
-          @AuthenticationPrincipal String userEmail,
+          @CurrentUser User user,
           @PathVariable String tripKey,
           @RequestBody MediaFileBatchUpdateRequestDTO requestDTO
   ) {
     Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    int updatedCount = mediaMetadataService.updateMultipleMediaFiles(userEmail, tripId, requestDTO);
+    int updatedCount = mediaMetadataService.updateMultipleMediaFiles(user, tripId, requestDTO);
     return RestResponse.success(updatedCount + "개의 이미지 정보가 성공적으로 수정되었습니다.");
   }
 
@@ -80,12 +80,12 @@ public class MediaMetadataController {
           + ".so/maristadev/19366958e5b380be8918d23a17810f09?pvs=4' target='_blank'>API 명세서</a>")
   @DeleteMapping
   public RestResponse<String> deleteMultipleMediaFiles(
-          @AuthenticationPrincipal String userEmail,
+          @CurrentUser User user,
           @PathVariable String tripKey,
           @RequestBody MediaFileBatchDeleteRequestDTO requestDTO
   ) {
     Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    int deleteCount = mediaMetadataService.deleteMultipleMediaFiles(userEmail, tripId, requestDTO);
+    int deleteCount = mediaMetadataService.deleteMultipleMediaFiles(user, tripId, requestDTO);
     return RestResponse.success(deleteCount + "개의 이미지가 성공적으로 삭제되었습니다.");
   }
 
@@ -94,10 +94,10 @@ public class MediaMetadataController {
           + ".so/maristadev/f15de88a76ff49da85d3d970d8e64aff?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/unlocated")
   public RestResponse<List<UnlocatedImageResponseDTO>> getUnlocatedImages(
-          @AuthenticationPrincipal String userEmail,
+          @CurrentUser User user,
           @PathVariable String tripKey) {
     Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    List<UnlocatedImageResponseDTO> response = mediaMetadataService.getUnlocatedImages(userEmail, tripId);
+    List<UnlocatedImageResponseDTO> response = mediaMetadataService.getUnlocatedImages(user, tripId);
     return RestResponse.success(response);
   }
 
@@ -106,12 +106,12 @@ public class MediaMetadataController {
           + ".so/maristadev/15b66958e5b380a4bbfafbe23b0f28b0?pvs=4' target='_blank'>API 명세서</a>")
   @PatchMapping("/unlocated/{mediaFileId}")
   public RestResponse<String> updateImageLocation(
-          @AuthenticationPrincipal String userEmail,
+          @CurrentUser User user,
           @PathVariable String tripKey,
           @PathVariable Long mediaFileId,
           @RequestBody UpdateMediaFileLocationRequestDTO updateMediaFileLocation) {
     Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    mediaMetadataService.updateImageLocation(userEmail, tripId, mediaFileId, updateMediaFileLocation);
+    mediaMetadataService.updateImageLocation(user, tripId, mediaFileId, updateMediaFileLocation);
     return RestResponse.success("이미지 위치 정보가 업데이트 되었습니다.");
   }
 }

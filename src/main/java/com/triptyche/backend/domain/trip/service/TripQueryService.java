@@ -51,10 +51,7 @@ public class TripQueryService {
   private static final LocalDateTime DEFAULT_INVALID_DATE = LocalDateTime.of(1980, 1, 1, 0, 0, 0);
 
 
-  public TripsResponseDTO getTripsByUserEmail(String userEmail) {
-    log.info("userEmail: {}", userEmail);
-    User user = tripAccessValidator.getUserByEmail(userEmail);
-
+  public TripsResponseDTO getTripsByUser(User user) {
     List<Trip> trips = tripRepository.findAllAccessibleTripsWithOwner(user.getUserId());
 
     if (trips.isEmpty()) {
@@ -100,8 +97,8 @@ public class TripQueryService {
     return new TripsResponseDTO(tripDTOs);
   }
 
-  public UpdateTripInfoResponseDTO getTripById(String userEmail, Long tripId) {
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+  public UpdateTripInfoResponseDTO getTripById(User user, Long tripId) {
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
 
     List<String> mediaFilesDates = mediaFileRepository
             .findDistinctRecordDatesByTripId(tripId, DEFAULT_INVALID_DATE)
@@ -120,8 +117,8 @@ public class TripQueryService {
     );
   }
 
-  public MapViewResponseDTO getTripInfoById(String userEmail, Long tripId) {
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+  public MapViewResponseDTO getTripInfoById(User user, Long tripId) {
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
 
     List<PinPointResponseDTO> pinPoints = pinPointRepository.findEarliestSingleMediaFileForEachPinPointByTripId(tripId,
             DEFAULT_INVALID_DATE);
@@ -144,8 +141,8 @@ public class TripQueryService {
     );
   }
 
-  public PinPointImageGalleryResponseDTO getPointImages(String userEmail, Long tripId, Long pinPointId) {
-    tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+  public PinPointImageGalleryResponseDTO getPointImages(User user, Long tripId, Long pinPointId) {
+    tripAccessValidator.validateAccessibleTrip(tripId, user);
 
     PinPoint pinPoint = pinPointRepository.findById(pinPointId)
             .orElseThrow(() -> new CustomException(ResultCode.PINPOINT_NOT_FOUND));
@@ -162,8 +159,8 @@ public class TripQueryService {
     );
   }
 
-  public MediaFilesByDateResponseDTO getImagesByDate(String userEmail, Long tripId, String date) {
-    tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+  public MediaFilesByDateResponseDTO getImagesByDate(User user, Long tripId, String date) {
+    tripAccessValidator.validateAccessibleTrip(tripId, user);
 
     LocalDate parsedDate;
     try {

@@ -8,6 +8,7 @@ import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
+import com.triptyche.backend.domain.user.model.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,8 +20,8 @@ public class TripImagesService {
   private final MediaFileRepository mediaFileRepository;
   private final TripAccessValidator tripAccessValidator;
 
-  public EditableMediaFilesResponseDTO getTripImagesByTripId(String userEmail, Long tripId) {
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+  public EditableMediaFilesResponseDTO getTripImagesByTripId(User user, Long tripId) {
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
     List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripId(tripId);
 
     List<EditableMediaFileResponseDTO> mediaFileDTOs = mediaFiles.stream()

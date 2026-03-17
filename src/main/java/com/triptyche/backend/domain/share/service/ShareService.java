@@ -11,7 +11,6 @@ import com.triptyche.backend.domain.share.model.ShareStatus;
 import com.triptyche.backend.domain.share.repository.ShareRepository;
 import com.triptyche.backend.domain.trip.converter.TripKeyConverter;
 import com.triptyche.backend.domain.trip.model.Trip;
-import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
@@ -27,18 +26,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class ShareService {
 
   private final ShareRepository shareRepository;
-  private final TripRepository tripRepository;
   private final UserRepository userRepository;
   private final ApplicationEventPublisher eventPublisher;
   private final TripKeyConverter tripKeyConverter;
   private final TripAccessValidator tripAccessValidator;
 
   @Transactional
-  public ShareCreateResponseDTO createShare(ShareCreateRequestDTO requestDTO, String userEmail) {
+  public ShareCreateResponseDTO createShare(ShareCreateRequestDTO requestDTO, User user) {
 
     Long tripId = tripKeyConverter.convertToTripId(requestDTO.tripKey());
 
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, userEmail);
+    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
 
     if (trip.getUser().getUserId().equals(requestDTO.recipientId())) {
       throw new CustomException(ResultCode.CANNOT_SHARE_TO_SELF);
@@ -128,13 +126,11 @@ public class ShareService {
   }
 
   @Transactional
-  public void deleteShare(Long shareId, String userEmail) {
+  public void deleteShare(Long shareId, User user) {
     Share share = shareRepository.findById(shareId)
             .orElseThrow(() -> new CustomException(ResultCode.SHARE_NOT_FOUND));
 
-    User requester = userRepository.findByUserEmail(userEmail)
-            .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-    Long requesterId = requester.getUserId();
+    Long requesterId = user.getUserId();
 
     boolean isOwner = share.getTrip().getUser().getUserId().equals(requesterId);
     boolean isRecipient = share.getRecipientId().equals(requesterId);
