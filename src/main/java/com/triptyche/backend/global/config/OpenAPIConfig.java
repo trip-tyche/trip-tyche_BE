@@ -7,6 +7,7 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.tags.Tag;
 import java.util.List;
+import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -44,5 +45,15 @@ public class OpenAPIConfig {
                     new Tag().name("8. 공유 관련 API"),
                     new Tag().name("9. 알림 관련 API")
             ));
+  }
+
+  @Bean
+  public OperationCustomizer operationCustomizer() {
+    return (operation, handlerMethod) -> {
+      if (operation.getParameters() != null) {
+        operation.getParameters().removeIf(p -> "user".equals(p.getName()));
+      }
+      return operation;
+    };
   }
 }
