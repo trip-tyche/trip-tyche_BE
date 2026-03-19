@@ -15,6 +15,8 @@ public interface PinPointRepository extends JpaRepository<PinPoint, Long> {
   @EntityGraph(attributePaths = {"mediaFiles"})
   List<PinPoint> findByTripTripId(Long tripId);
 
+  List<PinPoint> findAllByTripTripId(Long tripId);
+
   @Query("""
           SELECT new com.triptyche.backend.domain.trip.dto.PinPointResponseDTO(
               p.pinPointId,

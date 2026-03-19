@@ -34,6 +34,27 @@ public class PinPointService {
     return pinPointRepository.save(newPinPoint);
   }
 
+  public PinPoint findOrCreateFromList(List<PinPoint> existingPinPoints,
+                                       Trip trip,
+                                       Double latitude,
+                                       Double longitude) {
+    for (PinPoint pinPoint : existingPinPoints) {
+      double distance = calculateDistance(pinPoint.getLatitude(), pinPoint.getLongitude(), latitude, longitude);
+      if (distance <= 0.2) { // 200m
+        return pinPoint;
+      }
+    }
+
+    PinPoint newPinPoint = PinPoint.builder()
+            .trip(trip)
+            .latitude(latitude)
+            .longitude(longitude)
+            .build();
+    PinPoint saved = pinPointRepository.save(newPinPoint);
+    existingPinPoints.add(saved);
+    return saved;
+  }
+
   private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
     double latDistance = Math.toRadians(lat2 - lat1);
     double lonDistance = Math.toRadians(lon2 - lon1);
