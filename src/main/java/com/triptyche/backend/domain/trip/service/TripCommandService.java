@@ -69,7 +69,10 @@ public class TripCommandService {
 
     boolean isOwner = trip.getUser().getUserId().equals(user.getUserId());
     eventPublisher.publishEvent(new TripUpdatedEvent(
-            trip,
+            trip.getTripId(),
+            trip.getTripKey(),
+            trip.getTripTitle(),
+            trip.getUser().getUserId(),
             user.getUserId(),
             user.getUserNickName(),
             isOwner
