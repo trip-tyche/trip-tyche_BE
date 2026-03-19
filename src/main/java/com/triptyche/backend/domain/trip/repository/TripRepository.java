@@ -59,6 +59,9 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
 
   List<Trip> findByStatus(TripStatus status);
 
+  @Query("SELECT t FROM Trip t WHERE t.status IN ('DRAFT', 'IMAGES_UPLOADED') AND t.createdAt < :threshold")
+  List<Trip> findAbandonedTripsBefore(@Param("threshold") LocalDateTime threshold);
+
   @Query("SELECT t FROM Trip t WHERE t.tripId = :tripId AND t.user.userId = :userId")
   Optional<Trip> findByTripIdAndOwner(@Param("tripId") Long tripId, @Param("userId") Long userId);
 
