@@ -14,6 +14,7 @@ import com.triptyche.backend.domain.media.event.MediaFileUpdatedEvent;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.trip.model.PinPoint;
+import com.triptyche.backend.domain.trip.repository.PinPointRepository;
 import com.triptyche.backend.domain.trip.service.PinPointService;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
@@ -27,6 +28,7 @@ import com.triptyche.backend.global.util.DateFormatter;
 import com.triptyche.backend.global.util.DateUtil;
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -44,6 +46,7 @@ public class MediaMetadataService {
   private final TripRepository tripRepository;
   private final MediaFileRepository mediaFileRepository;
   private final PinPointService pinPointService;
+  private final PinPointRepository pinPointRepository;
   private final RedisDataService redisDataService;
   private final S3UploadService s3UploadService;
   private final ImageQueueService imageQueueService;
@@ -60,12 +63,14 @@ public class MediaMetadataService {
 
     boolean isOwner = trip.getUser().getUserId().equals(user.getUserId());
 
-    // 엔티티 생성 및 배치 저장
+    List<PinPoint> existingPinPoints = new ArrayList<>(
+            pinPointRepository.findAllByTripTripId(trip.getTripId()));
+
     List<MediaFile> mediaFiles = files.stream()
             .map(file -> {
-              // DTO 필드 매핑
               LocalDateTime recordDateTime = DateUtil.convertToLocalDateTime(file.recordDate());
-              PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, file.latitude(), file.longitude());
+              PinPoint pinPoint = pinPointService.findOrCreateFromList(
+                      existingPinPoints, trip, file.latitude(), file.longitude());
               String mediaKey = extractMediaKey(file.mediaLink());
               return MediaFile.builder()
                       .trip(trip)
@@ -108,13 +113,16 @@ public class MediaMetadataService {
     String actorNickname = user.getUserNickName();
     boolean isOwner = trip.getUser().getUserId().equals(actorId);
 
+    List<PinPoint> existingPinPoints = new ArrayList<>(
+            pinPointRepository.findAllByTripTripId(trip.getTripId()));
+
     List<MediaFile> updatedMediaFiles = requestDTO.mediaFiles().stream()
             .map(request -> {
               MediaFile mf = mediaFileRepository.findById(request.mediaFileId())
                       .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
 
-              PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, request.latitude(),
-                      request.longitude());
+              PinPoint pinPoint = pinPointService.findOrCreateFromList(
+                      existingPinPoints, trip, request.latitude(), request.longitude());
 
               mf.setRecordDate(request.recordDate());
               mf.setLatitude(request.latitude());
