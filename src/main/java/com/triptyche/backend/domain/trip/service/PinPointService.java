@@ -20,12 +20,12 @@ public class PinPointService {
 
     for (PinPoint pinPoint : existingPinPoints) {
       double distance = calculateDistance(pinPoint.getLatitude(), pinPoint.getLongitude(), latitude, longitude);
-      if (distance <= 0.2) { // 1km
+      if (distance <= 0.2) { // 200m
         return pinPoint;
       }
     }
 
-    // 2km 이내에 있는 PinPoint가 없다면 새로운 PinPoint 생성
+    // 200m 이내에 있는 PinPoint가 없다면 새로운 PinPoint 생성
     PinPoint newPinPoint = PinPoint.builder()
             .trip(trip)
             .latitude(latitude)
