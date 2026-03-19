@@ -44,12 +44,7 @@ public class NotificationEventListener {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void onTripUpdated(TripUpdatedEvent event) {
-    processTripUpdatedEvent(
-            event.trip(),
-            event.actorId(),
-            event.actorNickname(),
-            event.isOwner(),
-            NotificationType.TRIP_UPDATED);
+    processTripUpdatedEvent(event, NotificationType.TRIP_UPDATED);
   }
 
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -143,20 +138,18 @@ public class NotificationEventListener {
   /**
    * Trip 수정 이벤트 처리 (소유자/공유자 모두 가능)
    */
-  private void processTripUpdatedEvent(Trip trip,
-                                       Long actorId,
-                                       String actorNickname,
-                                       boolean isOwner,
-                                       NotificationType type) {
-    Set<Long> recipientIds = determineMediaEventRecipients(trip, actorId, isOwner);
+  private void processTripUpdatedEvent(TripUpdatedEvent event, NotificationType type) {
+    Set<Long> recipientIds = determineTripUpdateRecipients(
+            event.tripId(), event.ownerId(), event.actorId(), event.isOwner());
 
     recipientIds.forEach(recipientId ->
             sendNotification(
                     recipientId,
                     type,
-                    buildTripUpdatePayload(recipientId, trip, actorNickname, type),
-                    trip.getTripId(),
-                    actorNickname
+                    buildTripUpdatePayload(recipientId, event.tripKey(),
+                            event.tripTitle(), event.actorNickname(), type),
+                    event.tripId(),
+                    event.actorNickname()
             )
     );
   }
@@ -258,28 +251,34 @@ public class NotificationEventListener {
     );
   }
 
-  /**
-   * Trip 삭제 이벤트용 페이로드 생성
-   */
-  private Map<String, Object> buildTripPayload(Long recipientId, Trip trip, NotificationType type) {
-    return Map.of(
-            "recipientId", recipientId,
-            "type", type.name(),
-            "tripTitle", trip.getTripTitle(),
-            "senderNickname", trip.getUser().getUserNickName()
-    );
+  private Set<Long> determineTripUpdateRecipients(Long tripId, Long ownerId,
+                                                    Long actorId, boolean isOwner) {
+    Set<Long> recipientIds = new HashSet<>();
+    Set<Long> approvedShareIds = getApprovedShareRecipientsByTripId(tripId);
+
+    if (isOwner) {
+      recipientIds.addAll(approvedShareIds);
+    } else {
+      recipientIds.add(ownerId);
+      approvedShareIds.stream()
+              .filter(id -> !id.equals(actorId))
+              .forEach(recipientIds::add);
+    }
+
+    return recipientIds;
   }
 
   /**
    * Trip 수정 이벤트용 페이로드 생성
    */
-  private Map<String, Object> buildTripUpdatePayload(Long recipientId, Trip trip,
-                                                     String senderNickname, NotificationType type) {
+  private Map<String, Object> buildTripUpdatePayload(Long recipientId, String tripKey,
+                                                     String tripTitle, String senderNickname,
+                                                     NotificationType type) {
     return Map.of(
             "recipientId", recipientId,
             "type", type.name(),
-            "tripKey", trip.getTripKey(),
-            "tripTitle", trip.getTripTitle() != null ? trip.getTripTitle() : "",
+            "tripKey", tripKey,
+            "tripTitle", tripTitle != null ? tripTitle : "",
             "senderNickname", senderNickname
     );
   }
