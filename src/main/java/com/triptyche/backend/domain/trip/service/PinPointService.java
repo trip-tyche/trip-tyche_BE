@@ -26,10 +26,11 @@ public class PinPointService {
     }
 
     // 2km 이내에 있는 PinPoint가 없다면 새로운 PinPoint 생성
-    PinPoint newPinPoint = new PinPoint();
-    newPinPoint.setTrip(trip);
-    newPinPoint.setLatitude(latitude);
-    newPinPoint.setLongitude(longitude);
+    PinPoint newPinPoint = PinPoint.builder()
+            .trip(trip)
+            .latitude(latitude)
+            .longitude(longitude)
+            .build();
     return pinPointRepository.save(newPinPoint);
   }
 
