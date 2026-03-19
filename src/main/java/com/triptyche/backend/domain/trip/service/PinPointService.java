@@ -3,6 +3,7 @@ package com.triptyche.backend.domain.trip.service;
 import com.triptyche.backend.domain.trip.model.PinPoint;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.repository.PinPointRepository;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,22 +17,9 @@ public class PinPointService {
   private static final double EARTH_RADIUS_KM = 6371.01; // 지구 반경
 
   public PinPoint findOrCreatePinPoint(Trip trip, Double latitude, Double longitude) {
-    List<PinPoint> existingPinPoints = pinPointRepository.findByTripTripId(trip.getTripId());
-
-    for (PinPoint pinPoint : existingPinPoints) {
-      double distance = calculateDistance(pinPoint.getLatitude(), pinPoint.getLongitude(), latitude, longitude);
-      if (distance <= 0.2) { // 200m
-        return pinPoint;
-      }
-    }
-
-    // 200m 이내에 있는 PinPoint가 없다면 새로운 PinPoint 생성
-    PinPoint newPinPoint = PinPoint.builder()
-            .trip(trip)
-            .latitude(latitude)
-            .longitude(longitude)
-            .build();
-    return pinPointRepository.save(newPinPoint);
+    List<PinPoint> existingPinPoints = new ArrayList<>(
+            pinPointRepository.findByTripTripId(trip.getTripId()));
+    return findOrCreateFromList(existingPinPoints, trip, latitude, longitude);
   }
 
   public PinPoint findOrCreateFromList(List<PinPoint> existingPinPoints,
