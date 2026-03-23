@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -68,7 +69,7 @@ public class TripCommandController {
   public RestResponse<String> updateTrip(
           @CurrentUser User user,
           @PathVariable String tripKey,
-          @RequestBody TripInfoRequestDTO tripInfoRequestDTO) {
+          @Valid @RequestBody TripInfoRequestDTO tripInfoRequestDTO) {
     Long tripId = tripKeyConverter.convertToTripId(tripKey);
     tripCommandService.updateTrip(user, tripId, tripInfoRequestDTO);
 
