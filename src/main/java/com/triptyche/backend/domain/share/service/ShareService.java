@@ -18,6 +18,7 @@ import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,7 +53,12 @@ public class ShareService {
             .recipientId(requestDTO.recipientId())
             .build();
 
-    Share savedShare = shareRepository.save(share);
+    Share savedShare;
+    try {
+      savedShare = shareRepository.save(share);
+    } catch (DataIntegrityViolationException e) {
+      throw new CustomException(ResultCode.DUPLICATE_DATA_CONFLICT);
+    }
 
     eventPublisher.publishEvent(new ShareCreatedEvent(
             savedShare.getShareId(),
@@ -95,8 +101,7 @@ public class ShareService {
     Share share = shareRepository.findById(shareId)
             .orElseThrow(() -> new CustomException(ResultCode.SHARE_NOT_FOUND));
 
-    share.setShareStatus(status);
-    shareRepository.save(share);
+    share.updateStatus(status);
 
     User recipient = userRepository.findById(share.getRecipientId())
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
