@@ -69,7 +69,10 @@ public enum ResultCode {
   NOT_SHARE_OWNER_OR_RECIPIENT(HttpStatus.FORBIDDEN, 8003, "공유 요청의 소유자 또는 수신자가 아닙니다."),
 
   // 알림 관련 오류 코드 (9000번대)
-  NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, 9000, "해당 알림이 존재하지 않습니다.");
+  NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, 9000, "해당 알림이 존재하지 않습니다."),
+
+  // 데이터 무결성 관련 오류 코드 (공통)
+  DUPLICATE_DATA_CONFLICT(HttpStatus.CONFLICT, 9900, "중복된 요청입니다. 잠시 후 다시 시도해 주세요.");
 
   private final HttpStatus httpStatus;
   private final int code;

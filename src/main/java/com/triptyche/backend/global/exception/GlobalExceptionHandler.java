@@ -2,6 +2,7 @@ package com.triptyche.backend.global.exception;
 
 import com.triptyche.backend.global.common.RestResponse;
 import com.triptyche.backend.global.common.ResultCode;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,6 +16,12 @@ public class GlobalExceptionHandler {
     ResultCode resultCode = ex.getResultCode();
     RestResponse<Void> response = RestResponse.error(resultCode);
     return new ResponseEntity<>(response, resultCode.getHttpStatus());
+  }
+
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<RestResponse<Void>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+    RestResponse<Void> response = RestResponse.error(ResultCode.DUPLICATE_DATA_CONFLICT);
+    return new ResponseEntity<>(response, ResultCode.DUPLICATE_DATA_CONFLICT.getHttpStatus());
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
