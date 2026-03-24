@@ -101,8 +101,7 @@ public class ShareService {
     Share share = shareRepository.findById(shareId)
             .orElseThrow(() -> new CustomException(ResultCode.SHARE_NOT_FOUND));
 
-    share.setShareStatus(status);
-    shareRepository.save(share);
+    share.updateStatus(status);
 
     User recipient = userRepository.findById(share.getRecipientId())
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));

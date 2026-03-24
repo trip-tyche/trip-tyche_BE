@@ -8,6 +8,8 @@ import static org.mockito.Mockito.verify;
 
 import com.triptyche.backend.domain.share.dto.ShareCreateRequestDTO;
 import com.triptyche.backend.domain.share.dto.ShareCreateResponseDTO;
+import com.triptyche.backend.domain.share.event.ShareApprovedEvent;
+import com.triptyche.backend.domain.share.event.ShareRejectedEvent;
 import com.triptyche.backend.domain.share.model.Share;
 import com.triptyche.backend.domain.share.model.ShareStatus;
 import com.triptyche.backend.domain.share.repository.ShareRepository;
@@ -19,6 +21,7 @@ import com.triptyche.backend.domain.user.repository.UserRepository;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
 import java.time.LocalDate;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -156,4 +159,79 @@ class ShareServiceTest {
               .isEqualTo(ResultCode.DUPLICATE_DATA_CONFLICT);
     }
   }
+
+  @Nested
+  @DisplayName("updateShareStatus()")
+  class UpdateShareStatus {
+
+    private static final Long SHARE_ID = 10L;
+    private User recipient;
+
+    @BeforeEach
+    void setUp() {
+      recipient = User.builder()
+              .userId(RECIPIENT_ID)
+              .userName("수신자")
+              .userNickName("recipientNick")
+              .userEmail("recipient@example.com")
+              .provider("google")
+              .build();
+    }
+
+    private Share buildShare(ShareStatus status) {
+      return Share.builder()
+              .shareId(SHARE_ID)
+              .trip(trip)
+              .recipientId(RECIPIENT_ID)
+              .shareStatus(status)
+              .build();
+    }
+
+    @Test
+    @DisplayName("PENDING 상태의 공유 요청을 APPROVED로 변경하면 상태가 변경되고 ShareApprovedEvent가 발행된다")
+    void updateShareStatus_givenPendingShare_approvesAndPublishesEvent() {
+      // given
+      Share share = buildShare(ShareStatus.PENDING);
+      given(shareRepository.findById(SHARE_ID)).willReturn(Optional.of(share));
+      given(userRepository.findById(RECIPIENT_ID)).willReturn(Optional.of(recipient));
+
+      // when
+      shareService.updateShareStatus(SHARE_ID, ShareStatus.APPROVED);
+
+      // then
+      assertThat(share.getShareStatus()).isEqualTo(ShareStatus.APPROVED);
+      verify(eventPublisher).publishEvent(any(ShareApprovedEvent.class));
+    }
+
+    @Test
+    @DisplayName("PENDING 상태의 공유 요청을 REJECTED로 변경하면 상태가 변경되고 ShareRejectedEvent가 발행된다")
+    void updateShareStatus_givenPendingShare_rejectsAndPublishesEvent() {
+      // given
+      Share share = buildShare(ShareStatus.PENDING);
+      given(shareRepository.findById(SHARE_ID)).willReturn(Optional.of(share));
+      given(userRepository.findById(RECIPIENT_ID)).willReturn(Optional.of(recipient));
+
+      // when
+      shareService.updateShareStatus(SHARE_ID, ShareStatus.REJECTED);
+
+      // then
+      assertThat(share.getShareStatus()).isEqualTo(ShareStatus.REJECTED);
+      verify(eventPublisher).publishEvent(any(ShareRejectedEvent.class));
+    }
+
+    @Test
+    @DisplayName("PENDING이 아닌 상태의 공유 요청 변경 시 INVALID_SHARE_STATUS_TRANSITION 예외가 발생한다")
+    void updateShareStatus_givenNonPendingShare_throwsInvalidShareStatusTransition() {
+      // given
+      Share share = buildShare(ShareStatus.APPROVED);
+      given(shareRepository.findById(SHARE_ID)).willReturn(Optional.of(share));
+
+      // when & then
+      assertThatThrownBy(() -> shareService.updateShareStatus(SHARE_ID, ShareStatus.REJECTED))
+              .isInstanceOf(CustomException.class)
+              .extracting(e -> ((CustomException) e).getResultCode())
+              .isEqualTo(ResultCode.INVALID_SHARE_STATUS_TRANSITION);
+    }
+  }
+
 }

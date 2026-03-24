@@ -1,6 +1,8 @@
 package com.triptyche.backend.domain.share.model;
 
 import com.triptyche.backend.domain.trip.model.Trip;
+import com.triptyche.backend.global.common.ResultCode;
+import com.triptyche.backend.global.exception.CustomException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,7 +21,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(
@@ -46,7 +47,6 @@ public class Share {
   @Column(name = "recipient_id", nullable = false)
   private Long recipientId;
 
-  @Setter
   @Column(name = "share_status", nullable = false)
   @Enumerated(EnumType.STRING)
   private ShareStatus shareStatus;
@@ -56,6 +56,13 @@ public class Share {
 
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
+
+  public void updateStatus(ShareStatus newStatus) {
+    if (this.shareStatus != ShareStatus.PENDING) {
+      throw new CustomException(ResultCode.INVALID_SHARE_STATUS_TRANSITION);
+    }
+    this.shareStatus = newStatus;
+  }
 
   @PrePersist
   protected void onPersist() {

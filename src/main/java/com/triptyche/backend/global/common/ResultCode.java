@@ -67,6 +67,7 @@ public enum ResultCode {
   SHARE_NOT_FOUND(HttpStatus.NOT_FOUND, 8001, "공유된 여행이 없습니다."),
   CANNOT_SHARE_TO_SELF(HttpStatus.BAD_REQUEST, 8002, "자신에게 공유 요청을 보낼 수 없습니다."),
   NOT_SHARE_OWNER_OR_RECIPIENT(HttpStatus.FORBIDDEN, 8003, "공유 요청의 소유자 또는 수신자가 아닙니다."),
+  INVALID_SHARE_STATUS_TRANSITION(HttpStatus.BAD_REQUEST, 8004, "현재 상태에서는 변경할 수 없습니다. PENDING 상태에서만 수락 또는 거절이 가능합니다."),
 
   // 알림 관련 오류 코드 (9000번대)
   NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, 9000, "해당 알림이 존재하지 않습니다."),
