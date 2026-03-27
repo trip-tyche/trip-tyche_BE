@@ -2,7 +2,6 @@ package com.triptyche.backend.domain.share.repository;
 
 import com.triptyche.backend.domain.share.dto.ShareSummary;
 import com.triptyche.backend.domain.share.model.Share;
-import com.triptyche.backend.domain.share.model.ShareStatus;
 import com.triptyche.backend.domain.trip.model.Trip;
 import java.util.List;
 import java.util.Optional;
@@ -18,12 +17,7 @@ public interface ShareRepository extends JpaRepository<Share, Long> {
 
   List<Share> findAllByRecipientId(Long recipientId);
 
-  void deleteAllByTrip(Trip trip);
-
   List<Share> findAllByTrip(Trip trip);
-
-  boolean existsByTripAndRecipientIdAndShareStatus(
-      Trip trip, Long recipientId, ShareStatus shareStatus);
 
   List<Share> findAllByTripTripId(Long tripId);
 

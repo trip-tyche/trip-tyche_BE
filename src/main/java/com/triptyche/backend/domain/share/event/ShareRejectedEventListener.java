@@ -24,38 +24,38 @@ public class ShareRejectedEventListener {
 
   private final NotificationRepository notificationRepository;
   private final SimpMessagingTemplate messagingTemplate;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper;
 
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void handleShareRejectedEvent(ShareRejectedEvent event) {
-    log.info("🚫처리 중인 ShareRejectedEvent: {}", event);
+    log.info("처리 중인 ShareRejectedEvent: {}", event);
 
     // 1) DB에 알림 저장
     Notification notification = Notification.builder()
-            .userId(event.getOwnerId())
+            .userId(event.ownerId())
             .message(NotificationType.SHARED_REJECTED)
             .status(NotificationStatus.UNREAD)
-            .referenceId(event.getShareId())
-            .senderNickname(event.getSenderNickname())
+            .referenceId(event.shareId())
+            .senderNickname(event.senderNickname())
             .build();
     notificationRepository.save(notification);
-    log.info("💾DB 저장 완료 (SHARED_REJECTED): notificationId={}", notification.getNotificationId());
+    log.info("DB 저장 완료 (SHARED_REJECTED): notificationId={}", notification.getNotificationId());
 
     try {
       // 2) WebSocket으로 JSON 페이로드 전송
       Map<String, Object> payload = new HashMap<>();
-      payload.put("recipientId", event.getOwnerId());
+      payload.put("recipientId", event.ownerId());
       payload.put("type", NotificationType.SHARED_REJECTED.name());
 
       String jsonPayload = objectMapper.writeValueAsString(payload);
       messagingTemplate.convertAndSend(
-              "/topic/share-notifications/" + event.getOwnerId(),
+              "/topic/share-notifications/" + event.ownerId(),
               jsonPayload
       );
-      log.info("📤[SHARED_REJECTED] WebSocket 전송 완료 → {}", jsonPayload);
+      log.info("[SHARED_REJECTED] WebSocket 전송 완료 → {}", jsonPayload);
     } catch (Exception e) {
-      log.error("❌ WebSocket 전송 실패 (SHARED_REJECTED)", e);
+      log.error("WebSocket 전송 실패 (SHARED_REJECTED)", e);
     }
   }
 }

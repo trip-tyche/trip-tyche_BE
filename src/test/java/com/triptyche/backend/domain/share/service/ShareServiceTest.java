@@ -6,8 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
-import com.triptyche.backend.domain.share.dto.ShareCreateRequestDTO;
-import com.triptyche.backend.domain.share.dto.ShareCreateResponseDTO;
+import com.triptyche.backend.domain.share.dto.ShareCreateRequest;
+import com.triptyche.backend.domain.share.dto.ShareCreateResponse;
 import com.triptyche.backend.domain.share.event.ShareApprovedEvent;
 import com.triptyche.backend.domain.share.event.ShareRejectedEvent;
 import com.triptyche.backend.domain.share.model.Share;
@@ -86,11 +86,11 @@ class ShareServiceTest {
   @DisplayName("createShare()")
   class CreateShare {
 
-    private ShareCreateRequestDTO request;
+    private ShareCreateRequest request;
 
     @BeforeEach
     void setUp() {
-      request = new ShareCreateRequestDTO(TEST_TRIP_KEY, RECIPIENT_ID);
+      request = new ShareCreateRequest(TEST_TRIP_KEY, RECIPIENT_ID);
       given(tripKeyConverter.convertToTripId(TEST_TRIP_KEY)).willReturn(TRIP_ID);
       given(tripAccessValidator.validateAccessibleTrip(TRIP_ID, owner)).willReturn(trip);
     }
@@ -109,7 +109,7 @@ class ShareServiceTest {
       given(shareRepository.save(any(Share.class))).willReturn(savedShare);
 
       // when
-      ShareCreateResponseDTO result = shareService.createShare(request, owner);
+      ShareCreateResponse result = shareService.createShare(request, owner);
 
       // then
       verify(shareRepository).save(any(Share.class));
@@ -122,7 +122,7 @@ class ShareServiceTest {
     @DisplayName("자기 자신에게 공유 요청하면 CANNOT_SHARE_TO_SELF 예외가 발생한다")
     void createShare_givenSelfRecipient_throwsCannotShareToSelf() {
       // given
-      ShareCreateRequestDTO selfRequest = new ShareCreateRequestDTO(TEST_TRIP_KEY, OWNER_ID);
+      ShareCreateRequest selfRequest = new ShareCreateRequest(TEST_TRIP_KEY, OWNER_ID);
 
       // when & then
       assertThatThrownBy(() -> shareService.createShare(selfRequest, owner))
