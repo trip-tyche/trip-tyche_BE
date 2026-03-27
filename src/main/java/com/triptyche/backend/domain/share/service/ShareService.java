@@ -76,8 +76,9 @@ public class ShareService {
   }
 
 
+  @Transactional(readOnly = true)
   public ShareResponseDTO getShareDetail(Long shareId) {
-    Share share = shareRepository.findById(shareId)
+    Share share = shareRepository.findByIdWithTripAndOwner(shareId)
             .orElseThrow(() -> new CustomException(ResultCode.SHARE_NOT_FOUND));
 
     User recipient = userRepository.findById(share.getRecipientId())
@@ -98,7 +99,7 @@ public class ShareService {
 
   @Transactional
   public void updateShareStatus(Long shareId, ShareStatus status) {
-    Share share = shareRepository.findById(shareId)
+    Share share = shareRepository.findByIdWithTripAndOwner(shareId)
             .orElseThrow(() -> new CustomException(ResultCode.SHARE_NOT_FOUND));
 
     share.updateStatus(status);
@@ -132,7 +133,7 @@ public class ShareService {
 
   @Transactional
   public void deleteShare(Long shareId, User user) {
-    Share share = shareRepository.findById(shareId)
+    Share share = shareRepository.findByIdWithTripAndOwner(shareId)
             .orElseThrow(() -> new CustomException(ResultCode.SHARE_NOT_FOUND));
 
     Long requesterId = user.getUserId();
