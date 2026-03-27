@@ -1,8 +1,8 @@
 package com.triptyche.backend.domain.share.service;
 
-import com.triptyche.backend.domain.share.dto.ShareCreateRequestDTO;
-import com.triptyche.backend.domain.share.dto.ShareCreateResponseDTO;
-import com.triptyche.backend.domain.share.dto.ShareResponseDTO;
+import com.triptyche.backend.domain.share.dto.ShareCreateRequest;
+import com.triptyche.backend.domain.share.dto.ShareCreateResponse;
+import com.triptyche.backend.domain.share.dto.ShareDetailResponse;
 import com.triptyche.backend.domain.share.event.ShareApprovedEvent;
 import com.triptyche.backend.domain.share.event.ShareCreatedEvent;
 import com.triptyche.backend.domain.share.event.ShareRejectedEvent;
@@ -33,7 +33,7 @@ public class ShareService {
   private final TripAccessValidator tripAccessValidator;
 
   @Transactional
-  public ShareCreateResponseDTO createShare(ShareCreateRequestDTO requestDTO, User user) {
+  public ShareCreateResponse createShare(ShareCreateRequest requestDTO, User user) {
 
     Long tripId = tripKeyConverter.convertToTripId(requestDTO.tripKey());
 
@@ -67,7 +67,7 @@ public class ShareService {
             savedShare.getTrip().getUser().getUserNickName()
     ));
 
-    return new ShareCreateResponseDTO(
+    return new ShareCreateResponse(
             savedShare.getShareId(),
             savedShare.getTrip().getTripId(),
             savedShare.getRecipientId(),
@@ -77,14 +77,14 @@ public class ShareService {
 
 
   @Transactional(readOnly = true)
-  public ShareResponseDTO getShareDetail(Long shareId) {
+  public ShareDetailResponse getShareDetail(Long shareId) {
     Share share = shareRepository.findByIdWithTripAndOwner(shareId)
             .orElseThrow(() -> new CustomException(ResultCode.SHARE_NOT_FOUND));
 
     User recipient = userRepository.findById(share.getRecipientId())
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
-    return ShareResponseDTO.builder()
+    return ShareDetailResponse.builder()
             .shareId(share.getShareId())
             .tripTitle(share.getTrip().getTripTitle())
             .ownerNickname(share.getTrip().getUser().getUserNickName())

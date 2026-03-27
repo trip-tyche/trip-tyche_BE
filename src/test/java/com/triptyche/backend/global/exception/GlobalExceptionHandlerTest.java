@@ -8,7 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptyche.backend.domain.share.controller.ShareController;
-import com.triptyche.backend.domain.share.dto.ShareCreateRequestDTO;
+import com.triptyche.backend.domain.share.dto.ShareCreateRequest;
 import com.triptyche.backend.domain.share.service.ShareService;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
@@ -71,7 +71,7 @@ class GlobalExceptionHandlerTest {
       // given
       given(shareService.createShare(any(), any())).willThrow(DataIntegrityViolationException.class);
 
-      ShareCreateRequestDTO request = new ShareCreateRequestDTO("TRIP_KEY_ABC", 2L);
+      ShareCreateRequest request = new ShareCreateRequest("TRIP_KEY_ABC", 2L);
 
       // when & then
       mockMvc.perform(post("/v1/trips/share")

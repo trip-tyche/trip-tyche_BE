@@ -1,8 +1,8 @@
 package com.triptyche.backend.domain.share.controller;
 
-import com.triptyche.backend.domain.share.dto.ShareCreateRequestDTO;
-import com.triptyche.backend.domain.share.dto.ShareCreateResponseDTO;
-import com.triptyche.backend.domain.share.dto.ShareResponseDTO;
+import com.triptyche.backend.domain.share.dto.ShareCreateRequest;
+import com.triptyche.backend.domain.share.dto.ShareCreateResponse;
+import com.triptyche.backend.domain.share.dto.ShareDetailResponse;
 import com.triptyche.backend.domain.share.model.ShareStatus;
 import com.triptyche.backend.domain.share.service.ShareService;
 import com.triptyche.backend.domain.user.model.User;
@@ -30,16 +30,16 @@ public class ShareController {
   @Operation(summary = "특정 사용자에게 공유요청", description = "<a href='https://www.notion"
           + ".so/maristadev/17766958e5b380139607e90275d52298?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping("/v1/trips/share")
-  public RestResponse<ShareCreateResponseDTO> createShare(
+  public RestResponse<ShareCreateResponse> createShare(
           @CurrentUser User user,
-          @RequestBody ShareCreateRequestDTO requestDTO) {
-    return RestResponse.success(shareService.createShare(requestDTO, user));
+          @RequestBody ShareCreateRequest request) {
+    return RestResponse.success(shareService.createShare(request, user));
   }
 
   @Operation(summary = "공유요청 상세조회", description = "<a href='https://www.notion"
           + ".so/maristadev/17766958e5b380e48caef8641b873c04?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/v1/shares/{shareId}")
-  public RestResponse<ShareResponseDTO> getShareInfo(@PathVariable Long shareId) {
+  public RestResponse<ShareDetailResponse> getShareInfo(@PathVariable Long shareId) {
     return RestResponse.success(shareService.getShareDetail(shareId));
   }
 

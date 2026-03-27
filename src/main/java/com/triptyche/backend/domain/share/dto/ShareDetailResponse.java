@@ -5,7 +5,7 @@ import java.util.List;
 import lombok.Builder;
 
 @Builder
-public record ShareResponseDTO(
+public record ShareDetailResponse(
         Long shareId,
         String tripTitle,
         String ownerNickname,
