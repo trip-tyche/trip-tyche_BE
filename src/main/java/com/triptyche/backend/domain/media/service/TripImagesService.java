@@ -20,9 +20,9 @@ public class TripImagesService {
   private final MediaFileRepository mediaFileRepository;
   private final TripAccessValidator tripAccessValidator;
 
-  public EditableMediaFilesResponseDTO getTripImagesByTripId(User user, Long tripId) {
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
-    List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripId(tripId);
+  public EditableMediaFilesResponseDTO getTripImages(User user, String tripKey) {
+    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
+    List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripId(trip.getTripId());
 
     List<EditableMediaFileResponseDTO> mediaFileDTOs = mediaFiles.stream()
             .map(mediaFile -> new EditableMediaFileResponseDTO(

@@ -13,7 +13,6 @@ import com.triptyche.backend.domain.share.event.ShareRejectedEvent;
 import com.triptyche.backend.domain.share.model.Share;
 import com.triptyche.backend.domain.share.model.ShareStatus;
 import com.triptyche.backend.domain.share.repository.ShareRepository;
-import com.triptyche.backend.domain.trip.converter.TripKeyConverter;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
@@ -44,9 +43,6 @@ class ShareServiceTest {
 
   @Mock
   private ApplicationEventPublisher eventPublisher;
-
-  @Mock
-  private TripKeyConverter tripKeyConverter;
 
   @Mock
   private TripAccessValidator tripAccessValidator;
@@ -91,8 +87,7 @@ class ShareServiceTest {
     @BeforeEach
     void setUp() {
       request = new ShareCreateRequest(TEST_TRIP_KEY, RECIPIENT_ID);
-      given(tripKeyConverter.convertToTripId(TEST_TRIP_KEY)).willReturn(TRIP_ID);
-      given(tripAccessValidator.validateAccessibleTrip(TRIP_ID, owner)).willReturn(trip);
+      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
     }
 
     @Test

@@ -1,8 +1,7 @@
 package com.triptyche.backend.domain.trip.controller;
 
-import com.triptyche.backend.domain.trip.converter.TripKeyConverter;
-import com.triptyche.backend.domain.trip.dto.TripCreationResponseDTO;
-import com.triptyche.backend.domain.trip.dto.TripInfoRequestDTO;
+import com.triptyche.backend.domain.trip.dto.TripCreateResponse;
+import com.triptyche.backend.domain.trip.dto.TripUpdateRequest;
 import com.triptyche.backend.domain.trip.service.TripCommandService;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.auth.CurrentUser;
@@ -26,15 +25,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class TripCommandController {
 
   private final TripCommandService tripCommandService;
-  private final TripKeyConverter tripKeyConverter;
 
   @Tag(name = "3. 여행등록 페이지 API")
   @Operation(summary = "tripId 임시생성", description = "<a href='https://www.notion"
           + ".so/maristadev/12d66958e5b380c8b6c2ca99cbc2f752?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping
-  public RestResponse<TripCreationResponseDTO> createTrip(
+  public RestResponse<TripCreateResponse> createTrip(
           @CurrentUser User user) {
-    TripCreationResponseDTO tripIdResponse = tripCommandService.createTripId(user);
+    TripCreateResponse tripIdResponse = tripCommandService.createTripId(user);
     return RestResponse.success(tripIdResponse);
   }
 
@@ -45,8 +43,7 @@ public class TripCommandController {
   public RestResponse<String> markImagesUploaded(
           @CurrentUser User user,
           @PathVariable("tripKey") String tripKey) {
-    Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    tripCommandService.markImagesUploaded(user, tripId);
+    tripCommandService.markImagesUploaded(user, tripKey);
     return RestResponse.success("이미지 업로드 완료 상태로 변경되었습니다.");
   }
 
@@ -57,8 +54,7 @@ public class TripCommandController {
   public RestResponse<String> finalizeTrip(
           @CurrentUser User user,
           @PathVariable("tripKey") String tripKey) {
-    Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    tripCommandService.finalizeTrip(user, tripId);
+    tripCommandService.finalizeTrip(user, tripKey);
     return RestResponse.success("여행이 성공적으로 등록되었습니다.");
   }
 
@@ -69,9 +65,8 @@ public class TripCommandController {
   public RestResponse<String> updateTrip(
           @CurrentUser User user,
           @PathVariable String tripKey,
-          @Valid @RequestBody TripInfoRequestDTO tripInfoRequestDTO) {
-    Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    tripCommandService.updateTrip(user, tripId, tripInfoRequestDTO);
+          @Valid @RequestBody TripUpdateRequest request) {
+    tripCommandService.updateTrip(user, tripKey, request);
 
     return RestResponse.success("성공적으로 여행 정보가 등록되었습니다.");
   }
@@ -84,8 +79,7 @@ public class TripCommandController {
           @CurrentUser User user,
           @PathVariable String tripKey) {
 
-    Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    tripCommandService.deleteTrip(user, tripId);
+    tripCommandService.deleteTrip(user, tripKey);
 
     return RestResponse.success("성공적으로 여행 정보가 삭제되었습니다.");
   }

@@ -8,8 +8,8 @@ import static org.mockito.Mockito.verify;
 
 import org.mockito.ArgumentCaptor;
 
-import com.triptyche.backend.domain.trip.dto.TripCreationResponseDTO;
-import com.triptyche.backend.domain.trip.dto.TripInfoRequestDTO;
+import com.triptyche.backend.domain.trip.dto.TripCreateResponse;
+import com.triptyche.backend.domain.trip.dto.TripUpdateRequest;
 import com.triptyche.backend.domain.trip.event.TripDeletedEvent;
 import com.triptyche.backend.domain.trip.event.TripUpdatedEvent;
 import com.triptyche.backend.domain.trip.model.Trip;
@@ -48,6 +48,8 @@ class TripCommandServiceTest {
 
   private User owner;
   private User otherUser;
+
+  private static final String TEST_TRIP_KEY = "TRIP_KEY_ABC";
 
   @BeforeEach
   void setUp() {
@@ -92,7 +94,7 @@ class TripCommandServiceTest {
       given(tripRepository.save(any(Trip.class))).willAnswer(invocation -> invocation.getArgument(0));
 
       // when
-      TripCreationResponseDTO result = tripCommandService.createTripId(owner);
+      TripCreateResponse result = tripCommandService.createTripId(owner);
 
       // then
       // tripKey는 @PrePersist에서 생성되므로 실제 DB 없이는 null — 저장 호출 여부만 검증
@@ -125,10 +127,10 @@ class TripCommandServiceTest {
     void markImagesUploaded_givenDraftTrip_statusChangesToImagesUploaded() {
       // given
       Trip trip = createTrip(TripStatus.DRAFT, owner);
-      given(tripAccessValidator.validateAccessibleTrip(1L, owner)).willReturn(trip);
+      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
 
       // when
-      tripCommandService.markImagesUploaded(owner, 1L);
+      tripCommandService.markImagesUploaded(owner, TEST_TRIP_KEY);
 
       // then
       assertThat(trip.getStatus()).isEqualTo(TripStatus.IMAGES_UPLOADED);
@@ -139,10 +141,10 @@ class TripCommandServiceTest {
     void markImagesUploaded_givenNonDraftTrip_throwsInvalidTripState() {
       // given
       Trip trip = createTrip(TripStatus.IMAGES_UPLOADED, owner);
-      given(tripAccessValidator.validateAccessibleTrip(1L, owner)).willReturn(trip);
+      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
 
       // when & then
-      assertThatThrownBy(() -> tripCommandService.markImagesUploaded(owner, 1L))
+      assertThatThrownBy(() -> tripCommandService.markImagesUploaded(owner, TEST_TRIP_KEY))
               .isInstanceOf(CustomException.class)
               .extracting(e -> ((CustomException) e).getResultCode())
               .isEqualTo(ResultCode.INVALID_TRIP_STATE);
@@ -152,11 +154,11 @@ class TripCommandServiceTest {
     @DisplayName("접근 권한이 없는 사용자가 요청하면 UNAUTHORIZED_ACCESS 예외가 발생한다")
     void markImagesUploaded_givenUnauthorizedUser_throwsUnauthorizedAccess() {
       // given
-      given(tripAccessValidator.validateAccessibleTrip(1L, otherUser))
+      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, otherUser))
               .willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS));
 
       // when & then
-      assertThatThrownBy(() -> tripCommandService.markImagesUploaded(otherUser, 1L))
+      assertThatThrownBy(() -> tripCommandService.markImagesUploaded(otherUser, TEST_TRIP_KEY))
               .isInstanceOf(CustomException.class)
               .extracting(e -> ((CustomException) e).getResultCode())
               .isEqualTo(ResultCode.UNAUTHORIZED_ACCESS);
@@ -172,10 +174,10 @@ class TripCommandServiceTest {
     void finalizeTrip_givenImagesUploadedTrip_statusChangesToConfirmed() {
       // given
       Trip trip = createTrip(TripStatus.IMAGES_UPLOADED, owner);
-      given(tripAccessValidator.validateAccessibleTrip(1L, owner)).willReturn(trip);
+      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
 
       // when
-      tripCommandService.finalizeTrip(owner, 1L);
+      tripCommandService.finalizeTrip(owner, TEST_TRIP_KEY);
 
       // then
       assertThat(trip.getStatus()).isEqualTo(TripStatus.CONFIRMED);
@@ -186,10 +188,10 @@ class TripCommandServiceTest {
     void finalizeTrip_givenNonImagesUploadedTrip_throwsInvalidTripState() {
       // given
       Trip trip = createTrip(TripStatus.DRAFT, owner);
-      given(tripAccessValidator.validateAccessibleTrip(1L, owner)).willReturn(trip);
+      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
 
       // when & then
-      assertThatThrownBy(() -> tripCommandService.finalizeTrip(owner, 1L))
+      assertThatThrownBy(() -> tripCommandService.finalizeTrip(owner, TEST_TRIP_KEY))
               .isInstanceOf(CustomException.class)
               .extracting(e -> ((CustomException) e).getResultCode())
               .isEqualTo(ResultCode.INVALID_TRIP_STATE);
@@ -199,11 +201,11 @@ class TripCommandServiceTest {
     @DisplayName("접근 권한이 없는 사용자가 요청하면 UNAUTHORIZED_ACCESS 예외가 발생한다")
     void finalizeTrip_givenUnauthorizedUser_throwsUnauthorizedAccess() {
       // given
-      given(tripAccessValidator.validateAccessibleTrip(1L, otherUser))
+      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, otherUser))
               .willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS));
 
       // when & then
-      assertThatThrownBy(() -> tripCommandService.finalizeTrip(otherUser, 1L))
+      assertThatThrownBy(() -> tripCommandService.finalizeTrip(otherUser, TEST_TRIP_KEY))
               .isInstanceOf(CustomException.class)
               .extracting(e -> ((CustomException) e).getResultCode())
               .isEqualTo(ResultCode.UNAUTHORIZED_ACCESS);
@@ -214,11 +216,11 @@ class TripCommandServiceTest {
   @DisplayName("updateTrip()")
   class UpdateTrip {
 
-    private TripInfoRequestDTO updateRequest;
+    private TripUpdateRequest updateRequest;
 
     @BeforeEach
     void setUp() {
-      updateRequest = new TripInfoRequestDTO(
+      updateRequest = new TripUpdateRequest(
               "수정된 제목",
               "프랑스",
               LocalDate.of(2024, 6, 1),
@@ -232,10 +234,10 @@ class TripCommandServiceTest {
     void updateTrip_givenOwner_updatesInfoAndPublishesEventWithIsOwnerTrue() {
       // given
       Trip trip = createTrip(TripStatus.CONFIRMED, owner);
-      given(tripAccessValidator.validateAccessibleTrip(1L, owner)).willReturn(trip);
+      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
 
       // when
-      tripCommandService.updateTrip(owner, 1L, updateRequest);
+      tripCommandService.updateTrip(owner, TEST_TRIP_KEY, updateRequest);
 
       // then
       assertThat(trip.getTripTitle()).isEqualTo("수정된 제목");
@@ -250,10 +252,10 @@ class TripCommandServiceTest {
     void updateTrip_givenSharedUser_publishesEventWithIsOwnerFalse() {
       // given
       Trip trip = createTrip(TripStatus.CONFIRMED, owner);
-      given(tripAccessValidator.validateAccessibleTrip(1L, otherUser)).willReturn(trip);
+      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, otherUser)).willReturn(trip);
 
       // when
-      tripCommandService.updateTrip(otherUser, 1L, updateRequest);
+      tripCommandService.updateTrip(otherUser, TEST_TRIP_KEY, updateRequest);
 
       // then
       ArgumentCaptor<TripUpdatedEvent> captor = ArgumentCaptor.forClass(TripUpdatedEvent.class);
@@ -265,11 +267,11 @@ class TripCommandServiceTest {
     @DisplayName("접근 권한이 없는 사용자가 수정 요청하면 UNAUTHORIZED_ACCESS 예외가 발생한다")
     void updateTrip_givenUnauthorizedUser_throwsUnauthorizedAccess() {
       // given
-      given(tripAccessValidator.validateAccessibleTrip(1L, otherUser))
+      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, otherUser))
               .willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS));
 
       // when & then
-      assertThatThrownBy(() -> tripCommandService.updateTrip(otherUser, 1L, updateRequest))
+      assertThatThrownBy(() -> tripCommandService.updateTrip(otherUser, TEST_TRIP_KEY, updateRequest))
               .isInstanceOf(CustomException.class)
               .extracting(e -> ((CustomException) e).getResultCode())
               .isEqualTo(ResultCode.UNAUTHORIZED_ACCESS);
@@ -285,10 +287,10 @@ class TripCommandServiceTest {
     void deleteTrip_givenOwner_softDeletesAndPublishesEvent() {
       // given
       Trip trip = createTrip(TripStatus.CONFIRMED, owner);
-      given(tripAccessValidator.validateOwner(1L, owner)).willReturn(trip);
+      given(tripAccessValidator.validateOwnerByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
 
       // when
-      tripCommandService.deleteTrip(owner, 1L);
+      tripCommandService.deleteTrip(owner, TEST_TRIP_KEY);
 
       // then
       assertThat(trip.isDeleted()).isTrue();
@@ -299,11 +301,11 @@ class TripCommandServiceTest {
     @DisplayName("소유자가 아닌 사용자가 삭제 요청하면 UNAUTHORIZED_ACCESS 예외가 발생한다")
     void deleteTrip_givenNonOwner_throwsUnauthorizedAccess() {
       // given
-      given(tripAccessValidator.validateOwner(1L, otherUser))
+      given(tripAccessValidator.validateOwnerByKey(TEST_TRIP_KEY, otherUser))
               .willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS));
 
       // when & then
-      assertThatThrownBy(() -> tripCommandService.deleteTrip(otherUser, 1L))
+      assertThatThrownBy(() -> tripCommandService.deleteTrip(otherUser, TEST_TRIP_KEY))
               .isInstanceOf(CustomException.class)
               .extracting(e -> ((CustomException) e).getResultCode())
               .isEqualTo(ResultCode.UNAUTHORIZED_ACCESS);
@@ -314,10 +316,10 @@ class TripCommandServiceTest {
     void deleteTrip_givenOwner_eventContainsOwnerInfo() {
       // given
       Trip trip = createTrip(TripStatus.CONFIRMED, owner);
-      given(tripAccessValidator.validateOwner(1L, owner)).willReturn(trip);
+      given(tripAccessValidator.validateOwnerByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
 
       // when
-      tripCommandService.deleteTrip(owner, 1L);
+      tripCommandService.deleteTrip(owner, TEST_TRIP_KEY);
 
       // then
       ArgumentCaptor<TripDeletedEvent> captor = ArgumentCaptor.forClass(TripDeletedEvent.class);

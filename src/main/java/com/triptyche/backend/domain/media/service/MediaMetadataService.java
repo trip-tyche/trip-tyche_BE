@@ -17,7 +17,6 @@ import com.triptyche.backend.domain.trip.model.PinPoint;
 import com.triptyche.backend.domain.trip.repository.PinPointRepository;
 import com.triptyche.backend.domain.trip.service.PinPointService;
 import com.triptyche.backend.domain.trip.model.Trip;
-import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.common.ResultCode;
@@ -43,7 +42,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class MediaMetadataService {
 
-  private final TripRepository tripRepository;
   private final MediaFileRepository mediaFileRepository;
   private final PinPointService pinPointService;
   private final PinPointRepository pinPointRepository;
@@ -52,14 +50,14 @@ public class MediaMetadataService {
   private final ImageQueueService imageQueueService;
   private final TripAccessValidator tripAccessValidator;
   private final ApplicationEventPublisher eventPublisher;
+  private final ObjectMapper objectMapper;
 
 
   @Value("${spring.cloud.aws.s3.bucketName}")
   private String bucketName;
 
-  public void processAndSaveMetadataBatch(User user, Long tripId, List<UpdateMediaFileInfoRequestDTO> files) {
-    Trip trip = tripRepository.findById(tripId)
-            .orElseThrow(() -> new CustomException(ResultCode.TRIP_NOT_FOUND));
+  public void processAndSaveMetadataBatch(User user, String tripKey, List<UpdateMediaFileInfoRequestDTO> files) {
+    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
     boolean isOwner = trip.getUser().getUserId().equals(user.getUserId());
 
@@ -91,7 +89,7 @@ public class MediaMetadataService {
             .filter(mf -> mf.getLatitude() == 0.0 && mf.getLongitude() == 0.0)
             .forEach(mf -> {
               redisDataService.saveZeroLocationData(
-                      tripId,
+                      trip.getTripId(),
                       mf.getMediaFileId(),
                       mf.getMediaLink(),
                       mf.getRecordDate().toString()
@@ -107,8 +105,8 @@ public class MediaMetadataService {
   }
 
   @Transactional
-  public int updateMultipleMediaFiles(User user, Long tripId, MediaFileBatchUpdateRequestDTO requestDTO) {
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
+  public int updateMultipleMediaFiles(User user, String tripKey, MediaFileBatchUpdateRequestDTO requestDTO) {
+    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
     boolean isOwner = trip.getUser().getUserId().equals(actorId);
@@ -143,8 +141,8 @@ public class MediaMetadataService {
   }
 
   @Transactional
-  public int deleteMultipleMediaFiles(User user, Long tripId, MediaFileBatchDeleteRequestDTO requestDTO) {
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
+  public int deleteMultipleMediaFiles(User user, String tripKey, MediaFileBatchDeleteRequestDTO requestDTO) {
+    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
     boolean isOwner = trip.getUser().getUserId().equals(actorId);
@@ -170,16 +168,14 @@ public class MediaMetadataService {
   }
 
   @Transactional(readOnly = true)
-  public List<UnlocatedImageResponseDTO> getUnlocatedImages(User user, Long tripId) {
-    tripAccessValidator.validateAccessibleTrip(tripId, user);
-    String redisKey = "trip:" + tripId;
+  public List<UnlocatedImageResponseDTO> getUnlocatedImages(User user, String tripKey) {
+    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
+    String redisKey = "trip:" + trip.getTripId();
     Map<Object, Object> redisData = imageQueueService.getImageQueue(redisKey);
 
     if (redisData.isEmpty()) {
       throw new CustomException(ResultCode.EDIT_DATA_NOT_FOUND);
     }
-
-    ObjectMapper objectMapper = new ObjectMapper();
 
     Map<String, List<Media>> groupedByDate = redisData.entrySet().stream()
             .map(entry -> {
@@ -209,7 +205,7 @@ public class MediaMetadataService {
 
   @Transactional
   public void updateImageLocation(User user,
-                                  Long tripId,
+                                  String tripKey,
                                   Long mediaFileId,
                                   UpdateMediaFileLocationRequestDTO requestDTO) {
 
@@ -219,7 +215,7 @@ public class MediaMetadataService {
       throw new CustomException(ResultCode.INVALID_COORDINATE);
     }
 
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
+    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     MediaFile mf = mediaFileRepository.findById(mediaFileId)
             .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
 
@@ -230,7 +226,7 @@ public class MediaMetadataService {
     mediaFileRepository.save(mf);
 
     // Redis 캐시 삭제
-    String redisKey = "trip:" + tripId;
+    String redisKey = "trip:" + trip.getTripId();
     imageQueueService.deleteFromImageQueue(redisKey, String.valueOf(mediaFileId));
 
     // 이벤트 발행: 위치 갱신

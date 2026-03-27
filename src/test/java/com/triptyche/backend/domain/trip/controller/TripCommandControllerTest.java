@@ -14,9 +14,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.triptyche.backend.domain.trip.converter.TripKeyConverter;
-import com.triptyche.backend.domain.trip.dto.TripCreationResponseDTO;
-import com.triptyche.backend.domain.trip.dto.TripInfoRequestDTO;
+import com.triptyche.backend.domain.trip.dto.TripCreateResponse;
+import com.triptyche.backend.domain.trip.dto.TripUpdateRequest;
 import com.triptyche.backend.domain.trip.service.TripCommandService;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
@@ -50,9 +49,6 @@ class TripCommandControllerTest {
   @MockBean
   private TripCommandService tripCommandService;
 
-  @MockBean
-  private TripKeyConverter tripKeyConverter;
-
   // CurrentUserArgumentResolver가 내부적으로 UserRepository를 사용하므로 MockBean 등록 필요
   @MockBean
   private UserRepository userRepository;
@@ -61,7 +57,6 @@ class TripCommandControllerTest {
   private User mockUser;
   private static final String TEST_EMAIL = "test@example.com";
   private static final String TEST_TRIP_KEY = "TRIP_KEY_ABC";
-  private static final Long TEST_TRIP_ID = 1L;
 
   @BeforeEach
   void setUp() {
@@ -90,7 +85,7 @@ class TripCommandControllerTest {
     @DisplayName("인증된 사용자가 요청하면 tripKey가 포함된 200 응답을 반환한다")
     void createTrip_givenAuthenticatedUser_returns200WithTripKey() throws Exception {
       //given
-      TripCreationResponseDTO response = new TripCreationResponseDTO("ABCD1234");
+      TripCreateResponse response = new TripCreateResponse("ABCD1234");
       given(tripCommandService.createTripId(any(User.class))).willReturn(response);
 
       //when & then
@@ -110,8 +105,7 @@ class TripCommandControllerTest {
       @DisplayName("유효한 tripKey로 요청하면 상태 변경 성공 메시지와 200을 반환한다")
       void markImagesUploaded_givenValidTripKey_returns200() throws Exception {
         //given
-        given(tripKeyConverter.convertToTripId(TEST_TRIP_KEY)).willReturn(TEST_TRIP_ID);
-        willDoNothing().given(tripCommandService).markImagesUploaded(any(User.class), eq(TEST_TRIP_ID));
+        willDoNothing().given(tripCommandService).markImagesUploaded(any(User.class), eq(TEST_TRIP_KEY));
 
         //when & then
         mockMvc.perform(patch("/v1/trips/{tripKey}/images-uploaded", TEST_TRIP_KEY))
@@ -124,8 +118,8 @@ class TripCommandControllerTest {
       @DisplayName("존재하지 않는 tripKey로 요청하면 403 응답을 반환한다")
       void markImagesUploaded_givenInvalidTripKey_returns403() throws Exception {
         //given
-        given(tripKeyConverter.convertToTripId("INVALID_KEY"))
-                .willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS));
+        willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS))
+                .given(tripCommandService).markImagesUploaded(any(User.class), eq("INVALID_KEY"));
 
         //when & then
         mockMvc.perform(patch("/v1/trips/{tripKey}/images-uploaded", "INVALID_KEY"))
@@ -137,9 +131,8 @@ class TripCommandControllerTest {
       @DisplayName("접근 권한이 없는 여행에 요청하면 403 응답을 반환한다")
       void markImagesUploaded_givenUnauthorizedUser_returns403() throws Exception {
         //given
-        given(tripKeyConverter.convertToTripId(TEST_TRIP_KEY)).willReturn(TEST_TRIP_ID);
         willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS))
-                .given(tripCommandService).markImagesUploaded(any(User.class), eq(TEST_TRIP_ID));
+                .given(tripCommandService).markImagesUploaded(any(User.class), eq(TEST_TRIP_KEY));
 
         //when & then
         mockMvc.perform(patch("/v1/trips/{tripKey}/images-uploaded", TEST_TRIP_KEY))
@@ -156,8 +149,7 @@ class TripCommandControllerTest {
       @DisplayName("유효한 tripKey로 요청하면 여행 확정 성공 메시지와 200을 반환한다")
       void finalizeTrip_givenValidTripKey_returns200() throws Exception {
         //given
-        given(tripKeyConverter.convertToTripId(TEST_TRIP_KEY)).willReturn(TEST_TRIP_ID);
-        willDoNothing().given(tripCommandService).finalizeTrip(any(User.class), eq(TEST_TRIP_ID));
+        willDoNothing().given(tripCommandService).finalizeTrip(any(User.class), eq(TEST_TRIP_KEY));
 
         //when & then
         mockMvc.perform(patch("/v1/trips/{tripKey}/finalize", TEST_TRIP_KEY))
@@ -170,9 +162,8 @@ class TripCommandControllerTest {
       @DisplayName("잘못된 상태의 여행에 요청하면 400 응답을 반환한다")
       void finalizeTrip_givenInvalidTripState_returns400() throws Exception {
         //given
-        given(tripKeyConverter.convertToTripId(TEST_TRIP_KEY)).willReturn(TEST_TRIP_ID);
         willThrow(new CustomException(ResultCode.INVALID_TRIP_STATE))
-                .given(tripCommandService).finalizeTrip(any(User.class), eq(TEST_TRIP_ID));
+                .given(tripCommandService).finalizeTrip(any(User.class), eq(TEST_TRIP_KEY));
 
         //when & then
         mockMvc.perform(patch("/v1/trips/{tripKey}/finalize", TEST_TRIP_KEY))
@@ -184,9 +175,8 @@ class TripCommandControllerTest {
       @DisplayName("접근 권한이 없는 여행에 요청하면 403 응답을 반환한다")
       void finalizeTrip_givenUnauthorizedUser_returns403() throws Exception {
         //given
-        given(tripKeyConverter.convertToTripId(TEST_TRIP_KEY)).willReturn(TEST_TRIP_ID);
         willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS))
-                .given(tripCommandService).finalizeTrip(any(User.class), eq(TEST_TRIP_ID));
+                .given(tripCommandService).finalizeTrip(any(User.class), eq(TEST_TRIP_KEY));
 
         //when & then
         mockMvc.perform(patch("/v1/trips/{tripKey}/finalize", TEST_TRIP_KEY))
@@ -198,11 +188,11 @@ class TripCommandControllerTest {
     @DisplayName("PUT /v1/trips/{tripKey} — 여행 정보 등록/수정")
     class UpdateTrip {
 
-      private TripInfoRequestDTO validRequest;
+      private TripUpdateRequest validRequest;
 
       @BeforeEach
       void setUp() {
-        validRequest = new TripInfoRequestDTO(
+        validRequest = new TripUpdateRequest(
                 "도쿄 여행",
                 "일본",
                 LocalDate.of(2024, 5, 1),
@@ -216,9 +206,8 @@ class TripCommandControllerTest {
       @DisplayName("유효한 요청으로 여행 정보를 수정하면 성공 메시지와 200을 반환한다")
       void updateTrip_givenValidRequest_returns200() throws Exception {
         //given
-        given(tripKeyConverter.convertToTripId(TEST_TRIP_KEY)).willReturn(TEST_TRIP_ID);
         willDoNothing().given(tripCommandService)
-                .updateTrip(any(User.class), eq(TEST_TRIP_ID), any(TripInfoRequestDTO.class));
+                .updateTrip(any(User.class), eq(TEST_TRIP_KEY), any(TripUpdateRequest.class));
 
         //when & then
         mockMvc.perform(put("/v1/trips/{tripKey}", TEST_TRIP_KEY)
@@ -233,8 +222,9 @@ class TripCommandControllerTest {
       @DisplayName("존재하지 않는 tripKey로 요청하면 403 응답을 반환한다")
       void updateTrip_givenInvalidTripKey_returns403() throws Exception {
         //given
-        given(tripKeyConverter.convertToTripId("INVALID_KEY"))
-                .willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS));
+        willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS))
+                .given(tripCommandService)
+                .updateTrip(any(User.class), eq("INVALID_KEY"), any(TripUpdateRequest.class));
 
         //when & then
         mockMvc.perform(put("/v1/trips/{tripKey}", "INVALID_KEY")
@@ -248,10 +238,9 @@ class TripCommandControllerTest {
       @DisplayName("접근 권한이 없는 여행에 수정 요청하면 403 응답을 반환한다")
       void updateTrip_givenUnauthorizedUser_returns403() throws Exception {
         //given
-        given(tripKeyConverter.convertToTripId(TEST_TRIP_KEY)).willReturn(TEST_TRIP_ID);
         willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS))
                 .given(tripCommandService)
-                .updateTrip(any(User.class), eq(TEST_TRIP_ID), any(TripInfoRequestDTO.class));
+                .updateTrip(any(User.class), eq(TEST_TRIP_KEY), any(TripUpdateRequest.class));
 
         //when & then
         mockMvc.perform(put("/v1/trips/{tripKey}", TEST_TRIP_KEY)
@@ -270,8 +259,7 @@ class TripCommandControllerTest {
       @DisplayName("소유자가 삭제 요청하면 성공 메시지와 200을 반환한다")
       void deleteTrip_givenOwner_returns200() throws Exception {
         //given
-        given(tripKeyConverter.convertToTripId(TEST_TRIP_KEY)).willReturn(TEST_TRIP_ID);
-        willDoNothing().given(tripCommandService).deleteTrip(any(User.class), eq(TEST_TRIP_ID));
+        willDoNothing().given(tripCommandService).deleteTrip(any(User.class), eq(TEST_TRIP_KEY));
 
         //when & then
         mockMvc.perform(delete("/v1/trips/{tripKey}", TEST_TRIP_KEY))
@@ -284,9 +272,8 @@ class TripCommandControllerTest {
       @DisplayName("소유자가 아닌 사용자가 삭제 요청하면 403 응답을 반환한다")
       void deleteTrip_givenNonOwner_returns403() throws Exception {
         //given
-        given(tripKeyConverter.convertToTripId(TEST_TRIP_KEY)).willReturn(TEST_TRIP_ID);
         willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS))
-                .given(tripCommandService).deleteTrip(any(User.class), eq(TEST_TRIP_ID));
+                .given(tripCommandService).deleteTrip(any(User.class), eq(TEST_TRIP_KEY));
 
         //when & then
         mockMvc.perform(delete("/v1/trips/{tripKey}", TEST_TRIP_KEY))
@@ -298,8 +285,8 @@ class TripCommandControllerTest {
       @DisplayName("존재하지 않는 tripKey로 삭제 요청하면 403 응답을 반환한다")
       void deleteTrip_givenInvalidTripKey_returns403() throws Exception {
         //given
-        given(tripKeyConverter.convertToTripId("INVALID_KEY"))
-                .willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS));
+        willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS))
+                .given(tripCommandService).deleteTrip(any(User.class), eq("INVALID_KEY"));
 
         //when & then
         mockMvc.perform(delete("/v1/trips/{tripKey}", "INVALID_KEY"))
