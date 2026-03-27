@@ -32,35 +32,35 @@ public class ShareCreatedEventListener {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void handleShareCreatedEvent(ShareCreatedEvent event) {
     log.info("처리 중인 ShareCreatedEvent: {}", event);
-    Long tripId = event.getTripId();
+    Long tripId = event.tripId();
 
     // 1) DB에 알림 저장
     Notification notification = Notification.builder()
-            .userId(event.getRecipientId())
+            .userId(event.recipientId())
             .message(NotificationType.SHARED_REQUEST)
             .status(NotificationStatus.UNREAD)
-            .referenceId(event.getShareId())
-            .senderNickname(event.getSenderNickname())
+            .referenceId(event.shareId())
+            .senderNickname(event.senderNickname())
             .build();
     notificationRepository.save(notification);
-    log.info("💾DB 저장 완료 (SHARED_REQUEST): notificationId={}", notification.getNotificationId());
+    log.info("DB 저장 완료 (SHARED_REQUEST): notificationId={}", notification.getNotificationId());
 
     try {
       // 2) WebSocket으로 JSON 페이로드 전송
       Map<String, Object> payload = new HashMap<>();
-      payload.put("referenceId", event.getShareId());
+      payload.put("referenceId", event.shareId());
       payload.put("type", NotificationType.SHARED_REQUEST.name());
       payload.put("tripTitle", tripRepository.findTripTitleById(tripId).orElse("UNKNOWN_TRIP"));
-      payload.put("senderNickname", event.getSenderNickname());
+      payload.put("senderNickname", event.senderNickname());
 
       String jsonPayload = objectMapper.writeValueAsString(payload);
       messagingTemplate.convertAndSend(
-              "/topic/share-notifications/" + event.getRecipientId(),
+              "/topic/share-notifications/" + event.recipientId(),
               jsonPayload
       );
-      log.info("📤[SHARED_REQUEST] WebSocket 전송 완료 → {}", jsonPayload);
+      log.info("[SHARED_REQUEST] WebSocket 전송 완료 → {}", jsonPayload);
     } catch (Exception e) {
-      log.error("❌ WebSocket 전송 실패 (SHARED_REQUEST)", e);
+      log.error("WebSocket 전송 실패 (SHARED_REQUEST)", e);
     }
   }
 }
