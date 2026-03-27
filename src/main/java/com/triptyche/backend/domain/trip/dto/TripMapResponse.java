@@ -3,11 +3,11 @@ package com.triptyche.backend.domain.trip.dto;
 import com.triptyche.backend.domain.media.dto.MediaFileResponseDTO;
 import java.util.List;
 
-public record MapViewResponseDTO(
+public record TripMapResponse(
         String tripTitle,
         String startDate,
         String endDate,
-        List<PinPointResponseDTO> pinPoints,
+        List<PinPointResponse> pinPoints,
         List<MediaFileResponseDTO> mediaFiles
 ) {
 

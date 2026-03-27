@@ -2,6 +2,6 @@ package com.triptyche.backend.domain.trip.dto;
 
 import java.util.List;
 
-public record TripsResponseDTO(List<TripResponseDTO> trips) {
+public record TripListResponse(List<TripDetailResponse> trips) {
 
 }

@@ -1,7 +1,7 @@
 package com.triptyche.backend.domain.trip.repository;
 
 import com.triptyche.backend.domain.media.dto.MediaFileResponseDTO;
-import com.triptyche.backend.domain.trip.dto.PinPointResponseDTO;
+import com.triptyche.backend.domain.trip.dto.PinPointResponse;
 import com.triptyche.backend.domain.trip.model.PinPoint;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,7 +18,7 @@ public interface PinPointRepository extends JpaRepository<PinPoint, Long> {
   List<PinPoint> findAllByTripTripId(Long tripId);
 
   @Query("""
-          SELECT new com.triptyche.backend.domain.trip.dto.PinPointResponseDTO(
+          SELECT new com.triptyche.backend.domain.trip.dto.PinPointResponse(
               p.pinPointId,
               CAST(COALESCE(mf.latitude, 0.0) AS double),
               CAST(COALESCE(mf.longitude, 0.0) AS double),
@@ -47,7 +47,7 @@ public interface PinPointRepository extends JpaRepository<PinPoint, Long> {
             )
           ORDER BY mf.recordDate ASC
           """)
-  List<PinPointResponseDTO> findEarliestSingleMediaFileForEachPinPointByTripId(
+  List<PinPointResponse> findEarliestSingleMediaFileForEachPinPointByTripId(
           @Param("tripId") Long tripId,
           @Param("defaultDate") LocalDateTime defaultDate);
 

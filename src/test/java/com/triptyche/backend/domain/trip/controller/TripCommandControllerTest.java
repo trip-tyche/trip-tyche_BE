@@ -14,8 +14,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.triptyche.backend.domain.trip.dto.TripCreationResponseDTO;
-import com.triptyche.backend.domain.trip.dto.TripInfoRequestDTO;
+import com.triptyche.backend.domain.trip.dto.TripCreateResponse;
+import com.triptyche.backend.domain.trip.dto.TripUpdateRequest;
 import com.triptyche.backend.domain.trip.service.TripCommandService;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
@@ -85,7 +85,7 @@ class TripCommandControllerTest {
     @DisplayName("인증된 사용자가 요청하면 tripKey가 포함된 200 응답을 반환한다")
     void createTrip_givenAuthenticatedUser_returns200WithTripKey() throws Exception {
       //given
-      TripCreationResponseDTO response = new TripCreationResponseDTO("ABCD1234");
+      TripCreateResponse response = new TripCreateResponse("ABCD1234");
       given(tripCommandService.createTripId(any(User.class))).willReturn(response);
 
       //when & then
@@ -188,11 +188,11 @@ class TripCommandControllerTest {
     @DisplayName("PUT /v1/trips/{tripKey} — 여행 정보 등록/수정")
     class UpdateTrip {
 
-      private TripInfoRequestDTO validRequest;
+      private TripUpdateRequest validRequest;
 
       @BeforeEach
       void setUp() {
-        validRequest = new TripInfoRequestDTO(
+        validRequest = new TripUpdateRequest(
                 "도쿄 여행",
                 "일본",
                 LocalDate.of(2024, 5, 1),
@@ -207,7 +207,7 @@ class TripCommandControllerTest {
       void updateTrip_givenValidRequest_returns200() throws Exception {
         //given
         willDoNothing().given(tripCommandService)
-                .updateTrip(any(User.class), eq(TEST_TRIP_KEY), any(TripInfoRequestDTO.class));
+                .updateTrip(any(User.class), eq(TEST_TRIP_KEY), any(TripUpdateRequest.class));
 
         //when & then
         mockMvc.perform(put("/v1/trips/{tripKey}", TEST_TRIP_KEY)
@@ -224,7 +224,7 @@ class TripCommandControllerTest {
         //given
         willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS))
                 .given(tripCommandService)
-                .updateTrip(any(User.class), eq("INVALID_KEY"), any(TripInfoRequestDTO.class));
+                .updateTrip(any(User.class), eq("INVALID_KEY"), any(TripUpdateRequest.class));
 
         //when & then
         mockMvc.perform(put("/v1/trips/{tripKey}", "INVALID_KEY")
@@ -240,7 +240,7 @@ class TripCommandControllerTest {
         //given
         willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS))
                 .given(tripCommandService)
-                .updateTrip(any(User.class), eq(TEST_TRIP_KEY), any(TripInfoRequestDTO.class));
+                .updateTrip(any(User.class), eq(TEST_TRIP_KEY), any(TripUpdateRequest.class));
 
         //when & then
         mockMvc.perform(put("/v1/trips/{tripKey}", TEST_TRIP_KEY)

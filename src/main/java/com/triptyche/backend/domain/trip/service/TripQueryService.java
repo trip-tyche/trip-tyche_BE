@@ -7,16 +7,16 @@ import com.triptyche.backend.domain.media.dto.MediaFilesByDate;
 import com.triptyche.backend.domain.media.dto.MediaFilesByDateResponseDTO;
 import com.triptyche.backend.domain.media.dto.PinPointMediaFilesResponseDTO;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
-import com.triptyche.backend.domain.trip.dto.PinPointResponseDTO;
+import com.triptyche.backend.domain.trip.dto.PinPointGalleryResponse;
+import com.triptyche.backend.domain.trip.dto.PinPointResponse;
+import com.triptyche.backend.domain.trip.dto.TripDetailResponse;
+import com.triptyche.backend.domain.trip.dto.TripListResponse;
+import com.triptyche.backend.domain.trip.dto.TripMapResponse;
+import com.triptyche.backend.domain.trip.dto.TripUpdateResponse;
 import com.triptyche.backend.domain.trip.model.PinPoint;
 import com.triptyche.backend.domain.trip.repository.PinPointRepository;
 import com.triptyche.backend.domain.share.dto.ShareSummary;
 import com.triptyche.backend.domain.share.repository.ShareRepository;
-import com.triptyche.backend.domain.trip.dto.MapViewResponseDTO;
-import com.triptyche.backend.domain.trip.dto.PinPointImageGalleryResponseDTO;
-import com.triptyche.backend.domain.trip.dto.TripResponseDTO;
-import com.triptyche.backend.domain.trip.dto.TripsResponseDTO;
-import com.triptyche.backend.domain.trip.dto.UpdateTripInfoResponseDTO;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
@@ -51,11 +51,11 @@ public class TripQueryService {
   private static final LocalDateTime DEFAULT_INVALID_DATE = LocalDateTime.of(1980, 1, 1, 0, 0, 0);
 
 
-  public TripsResponseDTO getTripsByUser(User user) {
+  public TripListResponse getTripsByUser(User user) {
     List<Trip> trips = tripRepository.findAllAccessibleTripsWithOwner(user.getUserId());
 
     if (trips.isEmpty()) {
-      return new TripsResponseDTO(List.of());
+      return new TripListResponse(List.of());
     }
 
     List<Long> tripIds = trips.stream().map(Trip::getTripId).toList();
@@ -65,7 +65,7 @@ public class TripQueryService {
     Map<Long, List<ShareSummary>> shareMap = allShares.stream()
             .collect(Collectors.groupingBy(ShareSummary::tripId));
 
-    List<TripResponseDTO> tripDTOs = trips.stream()
+    List<TripDetailResponse> tripDTOs = trips.stream()
             .map(trip -> {
               List<ShareSummary> shares = shareMap.getOrDefault(trip.getTripId(), List.of());
 
@@ -79,7 +79,7 @@ public class TripQueryService {
                       .findFirst()
                       .orElse(null);
 
-              return new TripResponseDTO(
+              return new TripDetailResponse(
                       trip.getTripKey(),
                       trip.getTripTitle(),
                       trip.getCountry(),
@@ -94,10 +94,10 @@ public class TripQueryService {
             })
             .toList();
 
-    return new TripsResponseDTO(tripDTOs);
+    return new TripListResponse(tripDTOs);
   }
 
-  public UpdateTripInfoResponseDTO getTripById(User user, String tripKey) {
+  public TripUpdateResponse getTripById(User user, String tripKey) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
     List<String> mediaFilesDates = mediaFileRepository
@@ -106,7 +106,7 @@ public class TripQueryService {
             .map(DateFormatter::formatLocalDateToString)
             .toList();
 
-    return new UpdateTripInfoResponseDTO(
+    return new TripUpdateResponse(
             trip.getTripKey(),
             trip.getTripTitle(),
             trip.getCountry(),
@@ -117,20 +117,20 @@ public class TripQueryService {
     );
   }
 
-  public MapViewResponseDTO getTripInfoById(User user, String tripKey) {
+  public TripMapResponse getTripInfoById(User user, String tripKey) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
-    List<PinPointResponseDTO> pinPoints = pinPointRepository.findEarliestSingleMediaFileForEachPinPointByTripId(
+    List<PinPointResponse> pinPoints = pinPointRepository.findEarliestSingleMediaFileForEachPinPointByTripId(
             trip.getTripId(), DEFAULT_INVALID_DATE);
     List<MediaFileResponseDTO> mediaFiles = pinPointRepository.findMediaFilesByTripId(trip.getTripId(),
             DEFAULT_INVALID_DATE);
 
-    return new MapViewResponseDTO(
+    return new TripMapResponse(
             trip.getTripTitle(),
             formatLocalDateToString(trip.getStartDate()),
             formatLocalDateToString(trip.getEndDate()),
             pinPoints.stream()
-                    .map(pinPoint -> new PinPointResponseDTO(
+                    .map(pinPoint -> new PinPointResponse(
                             pinPoint.pinPointId(),
                             pinPoint.latitude(),
                             pinPoint.longitude(),
@@ -142,7 +142,7 @@ public class TripQueryService {
     );
   }
 
-  public PinPointImageGalleryResponseDTO getPointImages(User user, String tripKey, Long pinPointId) {
+  public PinPointGalleryResponse getPointImages(User user, String tripKey, Long pinPointId) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
     PinPoint pinPoint = pinPointRepository.findById(pinPointId)
@@ -154,7 +154,7 @@ public class TripQueryService {
       throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
     }
 
-    return new PinPointImageGalleryResponseDTO(
+    return new PinPointGalleryResponse(
             pinPoint.getPinPointId(),
             mediaFiles
     );

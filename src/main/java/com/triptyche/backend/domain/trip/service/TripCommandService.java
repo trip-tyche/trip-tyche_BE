@@ -1,7 +1,7 @@
 package com.triptyche.backend.domain.trip.service;
 
-import com.triptyche.backend.domain.trip.dto.TripCreationResponseDTO;
-import com.triptyche.backend.domain.trip.dto.TripInfoRequestDTO;
+import com.triptyche.backend.domain.trip.dto.TripCreateResponse;
+import com.triptyche.backend.domain.trip.dto.TripUpdateRequest;
 import com.triptyche.backend.domain.trip.event.TripDeletedEvent;
 import com.triptyche.backend.domain.trip.event.TripUpdatedEvent;
 import com.triptyche.backend.domain.trip.model.Trip;
@@ -25,7 +25,7 @@ public class TripCommandService {
 
 
   @Transactional
-  public TripCreationResponseDTO createTripId(User user) {
+  public TripCreateResponse createTripId(User user) {
     Trip trip = Trip.builder()
             .user(user)
             .tripTitle("임시 제목")
@@ -37,7 +37,7 @@ public class TripCommandService {
             .build();
 
     tripRepository.save(trip);
-    return new TripCreationResponseDTO(trip.getTripKey());
+    return new TripCreateResponse(trip.getTripKey());
   }
 
   @Transactional
@@ -56,15 +56,15 @@ public class TripCommandService {
 
   // 사용자 여행 정보 저장 및 수정
   @Transactional
-  public void updateTrip(User user, String tripKey, TripInfoRequestDTO tripInfoRequestDTO) {
+  public void updateTrip(User user, String tripKey, TripUpdateRequest request) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
     trip.updateInfo(
-        tripInfoRequestDTO.tripTitle(),
-        tripInfoRequestDTO.country(),
-        tripInfoRequestDTO.startDate(),
-        tripInfoRequestDTO.endDate(),
-        tripInfoRequestDTO.hashtags()
+        request.tripTitle(),
+        request.country(),
+        request.startDate(),
+        request.endDate(),
+        request.hashtags()
     );
 
     boolean isOwner = trip.getUser().getUserId().equals(user.getUserId());

@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.List;
 
-public record TripInfoRequestDTO(
+public record TripUpdateRequest(
         @NotBlank String tripTitle,
         @NotBlank String country,
         @NotNull LocalDate startDate,

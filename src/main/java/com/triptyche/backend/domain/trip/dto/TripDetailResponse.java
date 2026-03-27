@@ -2,14 +2,17 @@ package com.triptyche.backend.domain.trip.dto;
 
 import java.util.List;
 
-public record UpdateTripInfoResponseDTO(
+public record TripDetailResponse(
         String tripKey,
         String tripTitle,
         String country,
         String startDate,
         String endDate,
         List<String> hashtags,
-        List<String> mediaFilesDates
+        String ownerNickname,
+        List<String> sharedUsersNicknames,
+        Long shareId,
+        Boolean confirmed
 ) {
 
 }

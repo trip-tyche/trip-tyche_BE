@@ -8,8 +8,8 @@ import static org.mockito.Mockito.verify;
 
 import org.mockito.ArgumentCaptor;
 
-import com.triptyche.backend.domain.trip.dto.TripCreationResponseDTO;
-import com.triptyche.backend.domain.trip.dto.TripInfoRequestDTO;
+import com.triptyche.backend.domain.trip.dto.TripCreateResponse;
+import com.triptyche.backend.domain.trip.dto.TripUpdateRequest;
 import com.triptyche.backend.domain.trip.event.TripDeletedEvent;
 import com.triptyche.backend.domain.trip.event.TripUpdatedEvent;
 import com.triptyche.backend.domain.trip.model.Trip;
@@ -94,7 +94,7 @@ class TripCommandServiceTest {
       given(tripRepository.save(any(Trip.class))).willAnswer(invocation -> invocation.getArgument(0));
 
       // when
-      TripCreationResponseDTO result = tripCommandService.createTripId(owner);
+      TripCreateResponse result = tripCommandService.createTripId(owner);
 
       // then
       // tripKey는 @PrePersist에서 생성되므로 실제 DB 없이는 null — 저장 호출 여부만 검증
@@ -216,11 +216,11 @@ class TripCommandServiceTest {
   @DisplayName("updateTrip()")
   class UpdateTrip {
 
-    private TripInfoRequestDTO updateRequest;
+    private TripUpdateRequest updateRequest;
 
     @BeforeEach
     void setUp() {
-      updateRequest = new TripInfoRequestDTO(
+      updateRequest = new TripUpdateRequest(
               "수정된 제목",
               "프랑스",
               LocalDate.of(2024, 6, 1),

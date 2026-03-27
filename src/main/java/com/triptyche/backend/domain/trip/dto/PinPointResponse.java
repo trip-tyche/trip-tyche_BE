@@ -2,7 +2,7 @@ package com.triptyche.backend.domain.trip.dto;
 
 import java.time.LocalDateTime;
 
-public record PinPointResponseDTO(
+public record PinPointResponse(
     Long pinPointId,
     Double latitude,
     Double longitude,

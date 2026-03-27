@@ -1,10 +1,10 @@
 package com.triptyche.backend.domain.trip.controller;
 
 import com.triptyche.backend.domain.media.dto.MediaFilesByDateResponseDTO;
-import com.triptyche.backend.domain.trip.dto.MapViewResponseDTO;
-import com.triptyche.backend.domain.trip.dto.PinPointImageGalleryResponseDTO;
-import com.triptyche.backend.domain.trip.dto.TripsResponseDTO;
-import com.triptyche.backend.domain.trip.dto.UpdateTripInfoResponseDTO;
+import com.triptyche.backend.domain.trip.dto.PinPointGalleryResponse;
+import com.triptyche.backend.domain.trip.dto.TripListResponse;
+import com.triptyche.backend.domain.trip.dto.TripMapResponse;
+import com.triptyche.backend.domain.trip.dto.TripUpdateResponse;
 import com.triptyche.backend.domain.trip.service.TripQueryService;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.auth.CurrentUser;
@@ -29,10 +29,10 @@ public class TripQueryController {
   @Operation(summary = "여행관리페이지 사용자의 여행 정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/680d29996d0941b9aa742a280e2b3b27?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping
-  public RestResponse<TripsResponseDTO> getUserTrips(
+  public RestResponse<TripListResponse> getUserTrips(
           @CurrentUser User user) {
 
-    TripsResponseDTO tripsResponse = tripQueryService.getTripsByUser(user);
+    TripListResponse tripsResponse = tripQueryService.getTripsByUser(user);
     return RestResponse.success(tripsResponse);
   }
 
@@ -40,10 +40,10 @@ public class TripQueryController {
   @Operation(summary = "여행정보 수정을 위한 {tripKey} 여행정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/10d66958e5b3803f8dddf7b02d4e83f5?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/{tripKey}")
-  public RestResponse<UpdateTripInfoResponseDTO> getTripById(
+  public RestResponse<TripUpdateResponse> getTripById(
           @CurrentUser User user,
           @PathVariable String tripKey) {
-    UpdateTripInfoResponseDTO tripInfo = tripQueryService.getTripById(user, tripKey);
+    TripUpdateResponse tripInfo = tripQueryService.getTripById(user, tripKey);
 
     return RestResponse.success(tripInfo);
   }
@@ -52,10 +52,10 @@ public class TripQueryController {
   @Operation(summary = "지도위 페이지 여행 정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/fc14909a1ec5481ca37b58924637be20?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/{tripKey}/info")
-  public RestResponse<MapViewResponseDTO> getTripInfo(
+  public RestResponse<TripMapResponse> getTripInfo(
           @CurrentUser User user,
           @PathVariable String tripKey) {
-    MapViewResponseDTO tripInfo = tripQueryService.getTripInfoById(user, tripKey);
+    TripMapResponse tripInfo = tripQueryService.getTripInfoById(user, tripKey);
     return RestResponse.success(tripInfo);
   }
 
@@ -63,11 +63,11 @@ public class TripQueryController {
   @Operation(summary = "핀포인트별 슬라이드 쇼를 위한 이미지 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/d172149814414943866df2f04f409970?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/{tripKey}/pinpoints/{pinPointId}/images")
-  public RestResponse<PinPointImageGalleryResponseDTO> getPointImages(
+  public RestResponse<PinPointGalleryResponse> getPointImages(
           @CurrentUser User user,
           @PathVariable String tripKey,
           @PathVariable Long pinPointId) {
-    PinPointImageGalleryResponseDTO pinPointImageGalleryResponse = tripQueryService.getPointImages(user, tripKey,
+    PinPointGalleryResponse pinPointImageGalleryResponse = tripQueryService.getPointImages(user, tripKey,
             pinPointId);
 
     return RestResponse.success(pinPointImageGalleryResponse);

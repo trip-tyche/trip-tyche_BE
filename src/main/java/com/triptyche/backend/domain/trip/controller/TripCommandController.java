@@ -1,7 +1,7 @@
 package com.triptyche.backend.domain.trip.controller;
 
-import com.triptyche.backend.domain.trip.dto.TripCreationResponseDTO;
-import com.triptyche.backend.domain.trip.dto.TripInfoRequestDTO;
+import com.triptyche.backend.domain.trip.dto.TripCreateResponse;
+import com.triptyche.backend.domain.trip.dto.TripUpdateRequest;
 import com.triptyche.backend.domain.trip.service.TripCommandService;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.auth.CurrentUser;
@@ -30,9 +30,9 @@ public class TripCommandController {
   @Operation(summary = "tripId 임시생성", description = "<a href='https://www.notion"
           + ".so/maristadev/12d66958e5b380c8b6c2ca99cbc2f752?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping
-  public RestResponse<TripCreationResponseDTO> createTrip(
+  public RestResponse<TripCreateResponse> createTrip(
           @CurrentUser User user) {
-    TripCreationResponseDTO tripIdResponse = tripCommandService.createTripId(user);
+    TripCreateResponse tripIdResponse = tripCommandService.createTripId(user);
     return RestResponse.success(tripIdResponse);
   }
 
@@ -65,8 +65,8 @@ public class TripCommandController {
   public RestResponse<String> updateTrip(
           @CurrentUser User user,
           @PathVariable String tripKey,
-          @Valid @RequestBody TripInfoRequestDTO tripInfoRequestDTO) {
-    tripCommandService.updateTrip(user, tripKey, tripInfoRequestDTO);
+          @Valid @RequestBody TripUpdateRequest request) {
+    tripCommandService.updateTrip(user, tripKey, request);
 
     return RestResponse.success("성공적으로 여행 정보가 등록되었습니다.");
   }
