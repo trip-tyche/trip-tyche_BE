@@ -8,7 +8,6 @@ import com.triptyche.backend.domain.media.dto.UpdateMediaFileInfoRequestDTO;
 import com.triptyche.backend.domain.media.dto.UpdateMediaFileLocationRequestDTO;
 import com.triptyche.backend.domain.media.service.MediaMetadataService;
 import com.triptyche.backend.domain.media.service.TripImagesService;
-import com.triptyche.backend.domain.trip.converter.TripKeyConverter;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.auth.CurrentUser;
 import com.triptyche.backend.global.common.RestResponse;
@@ -32,7 +31,6 @@ public class MediaMetadataController {
 
   private final MediaMetadataService mediaMetadataService;
   private final TripImagesService tripImagesService;
-  private final TripKeyConverter tripKeyConverter;
 
   @Tag(name = "3. 여행등록 페이지 API")
   @Operation(summary = "미디어 메타데이터 등록", description = "<a href='https://www.notion"
@@ -43,8 +41,7 @@ public class MediaMetadataController {
           @PathVariable("tripKey") String tripKey,
           @RequestBody List<UpdateMediaFileInfoRequestDTO> files
   ) {
-    Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    mediaMetadataService.processAndSaveMetadataBatch(user, tripId, files);
+    mediaMetadataService.processAndSaveMetadataBatch(user, tripKey, files);
 
     return RestResponse.success("등록에 성공했습니다.");
   }
@@ -56,8 +53,7 @@ public class MediaMetadataController {
   public RestResponse<EditableMediaFilesResponseDTO> getTripImages(
           @CurrentUser User user,
           @PathVariable String tripKey) {
-    Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    EditableMediaFilesResponseDTO responseDTO = tripImagesService.getTripImagesByTripId(user, tripId);
+    EditableMediaFilesResponseDTO responseDTO = tripImagesService.getTripImages(user, tripKey);
     return RestResponse.success(responseDTO);
   }
 
@@ -70,8 +66,7 @@ public class MediaMetadataController {
           @PathVariable String tripKey,
           @RequestBody MediaFileBatchUpdateRequestDTO requestDTO
   ) {
-    Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    int updatedCount = mediaMetadataService.updateMultipleMediaFiles(user, tripId, requestDTO);
+    int updatedCount = mediaMetadataService.updateMultipleMediaFiles(user, tripKey, requestDTO);
     return RestResponse.success(updatedCount + "개의 이미지 정보가 성공적으로 수정되었습니다.");
   }
 
@@ -84,8 +79,7 @@ public class MediaMetadataController {
           @PathVariable String tripKey,
           @RequestBody MediaFileBatchDeleteRequestDTO requestDTO
   ) {
-    Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    int deleteCount = mediaMetadataService.deleteMultipleMediaFiles(user, tripId, requestDTO);
+    int deleteCount = mediaMetadataService.deleteMultipleMediaFiles(user, tripKey, requestDTO);
     return RestResponse.success(deleteCount + "개의 이미지가 성공적으로 삭제되었습니다.");
   }
 
@@ -96,8 +90,7 @@ public class MediaMetadataController {
   public RestResponse<List<UnlocatedImageResponseDTO>> getUnlocatedImages(
           @CurrentUser User user,
           @PathVariable String tripKey) {
-    Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    List<UnlocatedImageResponseDTO> response = mediaMetadataService.getUnlocatedImages(user, tripId);
+    List<UnlocatedImageResponseDTO> response = mediaMetadataService.getUnlocatedImages(user, tripKey);
     return RestResponse.success(response);
   }
 
@@ -110,8 +103,7 @@ public class MediaMetadataController {
           @PathVariable String tripKey,
           @PathVariable Long mediaFileId,
           @RequestBody UpdateMediaFileLocationRequestDTO updateMediaFileLocation) {
-    Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    mediaMetadataService.updateImageLocation(user, tripId, mediaFileId, updateMediaFileLocation);
+    mediaMetadataService.updateImageLocation(user, tripKey, mediaFileId, updateMediaFileLocation);
     return RestResponse.success("이미지 위치 정보가 업데이트 되었습니다.");
   }
 }

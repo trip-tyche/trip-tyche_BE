@@ -1,7 +1,6 @@
 package com.triptyche.backend.domain.trip.controller;
 
 import com.triptyche.backend.domain.media.dto.MediaFilesByDateResponseDTO;
-import com.triptyche.backend.domain.trip.converter.TripKeyConverter;
 import com.triptyche.backend.domain.trip.dto.MapViewResponseDTO;
 import com.triptyche.backend.domain.trip.dto.PinPointImageGalleryResponseDTO;
 import com.triptyche.backend.domain.trip.dto.TripsResponseDTO;
@@ -25,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class TripQueryController {
 
   private final TripQueryService tripQueryService;
-  private final TripKeyConverter tripKeyConverter;
 
   @Tag(name = "2. 여행관리 페이지 API")
   @Operation(summary = "여행관리페이지 사용자의 여행 정보 조회", description = "<a href='https://www.notion"
@@ -45,8 +43,7 @@ public class TripQueryController {
   public RestResponse<UpdateTripInfoResponseDTO> getTripById(
           @CurrentUser User user,
           @PathVariable String tripKey) {
-    Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    UpdateTripInfoResponseDTO tripInfo = tripQueryService.getTripById(user, tripId);
+    UpdateTripInfoResponseDTO tripInfo = tripQueryService.getTripById(user, tripKey);
 
     return RestResponse.success(tripInfo);
   }
@@ -58,8 +55,7 @@ public class TripQueryController {
   public RestResponse<MapViewResponseDTO> getTripInfo(
           @CurrentUser User user,
           @PathVariable String tripKey) {
-    Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    MapViewResponseDTO tripInfo = tripQueryService.getTripInfoById(user, tripId);
+    MapViewResponseDTO tripInfo = tripQueryService.getTripInfoById(user, tripKey);
     return RestResponse.success(tripInfo);
   }
 
@@ -71,8 +67,7 @@ public class TripQueryController {
           @CurrentUser User user,
           @PathVariable String tripKey,
           @PathVariable Long pinPointId) {
-    Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    PinPointImageGalleryResponseDTO pinPointImageGalleryResponse = tripQueryService.getPointImages(user, tripId,
+    PinPointImageGalleryResponseDTO pinPointImageGalleryResponse = tripQueryService.getPointImages(user, tripKey,
             pinPointId);
 
     return RestResponse.success(pinPointImageGalleryResponse);
@@ -86,8 +81,7 @@ public class TripQueryController {
           @CurrentUser User user,
           @PathVariable String tripKey,
           @RequestParam String date) {
-    Long tripId = tripKeyConverter.convertToTripId(tripKey);
-    MediaFilesByDateResponseDTO dateImageDTO = tripQueryService.getImagesByDate(user, tripId, date);
+    MediaFilesByDateResponseDTO dateImageDTO = tripQueryService.getImagesByDate(user, tripKey, date);
 
     return RestResponse.success(dateImageDTO);
   }

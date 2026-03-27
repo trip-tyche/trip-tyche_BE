@@ -41,23 +41,23 @@ public class TripCommandService {
   }
 
   @Transactional
-  public void markImagesUploaded(User user, Long tripId) {
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
+  public void markImagesUploaded(User user, String tripKey) {
+    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
     trip.markImagesUploaded();
   }
 
   @Transactional
-  public void finalizeTrip(User user, Long tripId) {
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
+  public void finalizeTrip(User user, String tripKey) {
+    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
     trip.confirmTrip();
   }
 
   // 사용자 여행 정보 저장 및 수정
   @Transactional
-  public void updateTrip(User user, Long tripId, TripInfoRequestDTO tripInfoRequestDTO) {
-    Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
+  public void updateTrip(User user, String tripKey, TripInfoRequestDTO tripInfoRequestDTO) {
+    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
     trip.updateInfo(
         tripInfoRequestDTO.tripTitle(),
@@ -81,8 +81,8 @@ public class TripCommandService {
 
   // 사용자 여행 정보 삭제
   @Transactional
-  public void deleteTrip(User user, Long tripId) {
-    Trip trip = tripAccessValidator.validateOwner(tripId, user);
+  public void deleteTrip(User user, String tripKey) {
+    Trip trip = tripAccessValidator.validateOwnerByKey(tripKey, user);
 
     trip.softDelete();
 

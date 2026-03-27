@@ -17,26 +17,6 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
   @Query("SELECT t.tripTitle FROM Trip t WHERE t.tripId = :tripId")
   Optional<String> findTripTitleById(@Param("tripId") Long tripId);
 
-  // 접근 권한이 있는 여행(소유하거나 공유 승인된 사용자)만 반환하는 메서드
-  @Query("""
-          SELECT t
-          FROM Trip t
-          WHERE t.tripId = :tripId
-            AND (
-              t.user.userId = :userId
-              OR EXISTS (
-                  SELECT s FROM Share s
-                  WHERE s.trip = t
-                    AND s.recipientId = :userId
-                    AND s.shareStatus = 'APPROVED'
-              )
-            )
-          """)
-  Optional<Trip> findAccessibleTrip(@Param("tripId") Long tripId,
-                                    @Param("userId") Long userId);
-
-  Optional<Trip> findByTripKey(String tripKey);
-
   @Query("""
           SELECT DISTINCT t
           FROM Trip t
@@ -56,14 +36,29 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
 
   long countByUserAndStatus(User user, TripStatus status);
 
-
-  List<Trip> findByStatus(TripStatus status);
-
   @Query("SELECT t FROM Trip t WHERE t.status IN ('DRAFT', 'IMAGES_UPLOADED') AND t.createdAt < :threshold")
   List<Trip> findAbandonedTripsBefore(@Param("threshold") LocalDateTime threshold);
 
-  @Query("SELECT t FROM Trip t WHERE t.tripId = :tripId AND t.user.userId = :userId")
-  Optional<Trip> findByTripIdAndOwner(@Param("tripId") Long tripId, @Param("userId") Long userId);
+  @Query("""
+          SELECT t
+          FROM Trip t
+          WHERE t.tripKey = :tripKey
+            AND (
+              t.user.userId = :userId
+              OR EXISTS (
+                  SELECT s FROM Share s
+                  WHERE s.trip = t
+                    AND s.recipientId = :userId
+                    AND s.shareStatus = 'APPROVED'
+              )
+            )
+          """)
+  Optional<Trip> findAccessibleTripByKey(@Param("tripKey") String tripKey,
+                                         @Param("userId") Long userId);
+
+  @Query("SELECT t FROM Trip t WHERE t.tripKey = :tripKey AND t.user.userId = :userId")
+  Optional<Trip> findOwnerTripByKey(@Param("tripKey") String tripKey,
+                                    @Param("userId") Long userId);
 
   @Query("SELECT t FROM Trip t WHERE t.deletedAt IS NOT NULL AND t.deletedAt < :threshold")
   List<Trip> findSoftDeletedBefore(@Param("threshold") LocalDateTime threshold);
