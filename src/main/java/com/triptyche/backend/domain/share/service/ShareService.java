@@ -33,24 +33,24 @@ public class ShareService {
   private final TripAccessValidator tripAccessValidator;
 
   @Transactional
-  public ShareCreateResponse createShare(ShareCreateRequest requestDTO, User user) {
+  public ShareCreateResponse createShare(ShareCreateRequest request, User user) {
 
-    Long tripId = tripKeyConverter.convertToTripId(requestDTO.tripKey());
+    Long tripId = tripKeyConverter.convertToTripId(request.tripKey());
 
     Trip trip = tripAccessValidator.validateAccessibleTrip(tripId, user);
 
-    if (trip.getUser().getUserId().equals(requestDTO.recipientId())) {
+    if (trip.getUser().getUserId().equals(request.recipientId())) {
       throw new CustomException(ResultCode.CANNOT_SHARE_TO_SELF);
     }
 
-    boolean alreadyRequested = shareRepository.existsByTripAndRecipientId(trip, requestDTO.recipientId());
+    boolean alreadyRequested = shareRepository.existsByTripAndRecipientId(trip, request.recipientId());
     if (alreadyRequested) {
       throw new CustomException(ResultCode.SHARE_ALREADY_EXIST);
     }
 
     Share share = Share.builder()
             .trip(trip)
-            .recipientId(requestDTO.recipientId())
+            .recipientId(request.recipientId())
             .build();
 
     Share savedShare;
