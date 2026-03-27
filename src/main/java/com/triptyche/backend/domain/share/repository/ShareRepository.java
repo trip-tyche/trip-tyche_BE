@@ -5,6 +5,7 @@ import com.triptyche.backend.domain.share.model.Share;
 import com.triptyche.backend.domain.share.model.ShareStatus;
 import com.triptyche.backend.domain.trip.model.Trip;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -27,6 +28,14 @@ public interface ShareRepository extends JpaRepository<Share, Long> {
   List<Share> findAllByTripTripId(Long tripId);
 
   void deleteAllByTripIn(List<Trip> trips);
+
+  @Query("""
+      SELECT s FROM Share s
+      JOIN FETCH s.trip t
+      JOIN FETCH t.user
+      WHERE s.shareId = :shareId
+      """)
+  Optional<Share> findByIdWithTripAndOwner(@Param("shareId") Long shareId);
 
   @Query("""
           SELECT new com.triptyche.backend.domain.share.dto.ShareSummary(

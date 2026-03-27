@@ -192,7 +192,7 @@ class ShareServiceTest {
     void updateShareStatus_givenPendingShare_approvesAndPublishesEvent() {
       // given
       Share share = buildShare(ShareStatus.PENDING);
-      given(shareRepository.findById(SHARE_ID)).willReturn(Optional.of(share));
+      given(shareRepository.findByIdWithTripAndOwner(SHARE_ID)).willReturn(Optional.of(share));
       given(userRepository.findById(RECIPIENT_ID)).willReturn(Optional.of(recipient));
 
       // when
@@ -208,7 +208,7 @@ class ShareServiceTest {
     void updateShareStatus_givenPendingShare_rejectsAndPublishesEvent() {
       // given
       Share share = buildShare(ShareStatus.PENDING);
-      given(shareRepository.findById(SHARE_ID)).willReturn(Optional.of(share));
+      given(shareRepository.findByIdWithTripAndOwner(SHARE_ID)).willReturn(Optional.of(share));
       given(userRepository.findById(RECIPIENT_ID)).willReturn(Optional.of(recipient));
 
       // when
@@ -224,7 +224,7 @@ class ShareServiceTest {
     void updateShareStatus_givenNonPendingShare_throwsInvalidShareStatusTransition() {
       // given
       Share share = buildShare(ShareStatus.APPROVED);
-      given(shareRepository.findById(SHARE_ID)).willReturn(Optional.of(share));
+      given(shareRepository.findByIdWithTripAndOwner(SHARE_ID)).willReturn(Optional.of(share));
 
       // when & then
       assertThatThrownBy(() -> shareService.updateShareStatus(SHARE_ID, ShareStatus.REJECTED))
