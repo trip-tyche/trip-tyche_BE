@@ -24,7 +24,7 @@ public class ShareRejectedEventListener {
 
   private final NotificationRepository notificationRepository;
   private final SimpMessagingTemplate messagingTemplate;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper;
 
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   @Transactional(propagation = Propagation.REQUIRES_NEW)

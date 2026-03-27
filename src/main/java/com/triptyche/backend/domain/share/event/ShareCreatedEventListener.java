@@ -24,7 +24,7 @@ public class ShareCreatedEventListener {
 
   private final NotificationRepository notificationRepository;
   private final SimpMessagingTemplate messagingTemplate;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper;
   private final TripRepository tripRepository;
 
 
