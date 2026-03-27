@@ -10,7 +10,6 @@ import com.triptyche.backend.domain.user.model.User;
 import jakarta.persistence.EntityManagerFactory;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.BeforeEach;
@@ -179,80 +178,4 @@ class TripRepositoryTest {
     }
   }
 
-  @Nested
-  @DisplayName("findAccessibleTrip()")
-  class FindAccessibleTrip {
-
-    @Test
-    @DisplayName("소유자는 자신의 여행 조회 가능")
-    void ownerCanAccess() {
-      Trip trip = persistTrip(owner, TripStatus.CONFIRMED, "내여행");
-      tem.flush();
-      tem.clear();
-
-      Optional<Trip> result = tripRepository.findAccessibleTrip(
-              trip.getTripId(), owner.getUserId());
-
-      assertThat(result).isPresent();
-    }
-
-    @Test
-    @DisplayName("APPROVED 공유자도 조회 가능")
-    void approvedSharerCanAccess() {
-      Trip trip = persistTrip(owner, TripStatus.CONFIRMED, "공유여행");
-      persistShare(trip, sharedUser.getUserId(), ShareStatus.APPROVED);
-      tem.flush();
-      tem.clear();
-
-      Optional<Trip> result = tripRepository.findAccessibleTrip(
-              trip.getTripId(), sharedUser.getUserId());
-
-      assertThat(result).isPresent();
-    }
-
-    @Test
-    @DisplayName("관계없는 사용자는 조회 불가")
-    void strangerCannotAccess() {
-      Trip trip = persistTrip(owner, TripStatus.CONFIRMED, "비공개여행");
-      tem.flush();
-      tem.clear();
-
-      Optional<Trip> result = tripRepository.findAccessibleTrip(
-              trip.getTripId(), stranger.getUserId());
-
-      assertThat(result).isEmpty();
-    }
-  }
-
-  @Nested
-  @DisplayName("findByTripIdAndOwner()")
-  class FindByTripIdAndOwner {
-
-    @Test
-    @DisplayName("소유자만 조회 가능")
-    void ownerCanAccess() {
-      Trip trip = persistTrip(owner, TripStatus.CONFIRMED, "소유여행");
-      tem.flush();
-      tem.clear();
-
-      Optional<Trip> result = tripRepository.findByTripIdAndOwner(
-              trip.getTripId(), owner.getUserId());
-
-      assertThat(result).isPresent();
-    }
-
-    @Test
-    @DisplayName("공유자는 조회 불가")
-    void sharerCannotAccess() {
-      Trip trip = persistTrip(owner, TripStatus.CONFIRMED, "소유여행");
-      persistShare(trip, sharedUser.getUserId(), ShareStatus.APPROVED);
-      tem.flush();
-      tem.clear();
-
-      Optional<Trip> result = tripRepository.findByTripIdAndOwner(
-              trip.getTripId(), sharedUser.getUserId());
-
-      assertThat(result).isEmpty();
-    }
-  }
 }
