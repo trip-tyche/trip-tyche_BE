@@ -118,7 +118,6 @@ public class ShareService {
               senderNickname
       ));
     } else if (status == ShareStatus.REJECTED) {
-      // REJECTED인 경우: 수신자 정보를 조회한 후 이벤트 발행 (공유 요청 거절)
       Trip trip = share.getTrip();
       Long ownerId = trip.getUser().getUserId();
       String senderNickname = recipient.getUserNickName();
