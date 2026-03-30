@@ -9,6 +9,9 @@ import com.triptyche.backend.domain.notification.model.Notification;
 import com.triptyche.backend.domain.notification.model.NotificationStatus;
 import com.triptyche.backend.domain.notification.model.NotificationType;
 import com.triptyche.backend.domain.notification.repository.NotificationRepository;
+import com.triptyche.backend.domain.share.event.ShareApprovedEvent;
+import com.triptyche.backend.domain.share.event.ShareCreatedEvent;
+import com.triptyche.backend.domain.share.event.ShareRejectedEvent;
 import com.triptyche.backend.domain.share.model.Share;
 import com.triptyche.backend.domain.share.model.ShareStatus;
 import com.triptyche.backend.domain.share.repository.ShareRepository;
@@ -132,6 +135,55 @@ public class NotificationEventListener {
             event.isOwner(),
             event.count(),
             NotificationType.MEDIA_FILE_DELETED
+    );
+  }
+
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void handleShareCreated(ShareCreatedEvent event) {
+    Map<String, Object> payload = Map.of(
+            "referenceId", event.shareId(),
+            "type", NotificationType.SHARED_REQUEST.name(),
+            "senderNickname", event.senderNickname() != null ? event.senderNickname() : ""
+    );
+    sendNotification(
+            event.recipientId(),
+            NotificationType.SHARED_REQUEST,
+            payload,
+            event.shareId(),
+            event.senderNickname()
+    );
+  }
+
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void handleShareApproved(ShareApprovedEvent event) {
+    Map<String, Object> payload = Map.of(
+            "recipientId", event.ownerId(),
+            "type", NotificationType.SHARED_APPROVE.name()
+    );
+    sendNotification(
+            event.ownerId(),
+            NotificationType.SHARED_APPROVE,
+            payload,
+            event.shareId(),
+            event.senderNickname()
+    );
+  }
+
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void handleShareRejected(ShareRejectedEvent event) {
+    Map<String, Object> payload = Map.of(
+            "recipientId", event.ownerId(),
+            "type", NotificationType.SHARED_REJECTED.name()
+    );
+    sendNotification(
+            event.ownerId(),
+            NotificationType.SHARED_REJECTED,
+            payload,
+            event.shareId(),
+            event.senderNickname()
     );
   }
 
