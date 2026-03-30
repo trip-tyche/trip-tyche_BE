@@ -60,7 +60,8 @@ public class ShareService {
             savedShare.getShareId(),
             savedShare.getTrip().getTripId(),
             savedShare.getRecipientId(),
-            savedShare.getTrip().getUser().getUserNickName()
+            savedShare.getTrip().getUser().getUserNickName(),
+            savedShare.getTrip().getTripTitle()
     ));
 
     return new ShareCreateResponse(

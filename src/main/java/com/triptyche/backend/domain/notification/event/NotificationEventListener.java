@@ -9,15 +9,16 @@ import com.triptyche.backend.domain.notification.model.Notification;
 import com.triptyche.backend.domain.notification.model.NotificationStatus;
 import com.triptyche.backend.domain.notification.model.NotificationType;
 import com.triptyche.backend.domain.notification.repository.NotificationRepository;
+import com.triptyche.backend.domain.share.event.ShareApprovedEvent;
+import com.triptyche.backend.domain.share.event.ShareCreatedEvent;
+import com.triptyche.backend.domain.share.event.ShareRejectedEvent;
 import com.triptyche.backend.domain.share.model.Share;
 import com.triptyche.backend.domain.share.model.ShareStatus;
 import com.triptyche.backend.domain.share.repository.ShareRepository;
 import com.triptyche.backend.domain.trip.event.TripDeletedEvent;
 import com.triptyche.backend.domain.trip.event.TripUpdatedEvent;
 import com.triptyche.backend.domain.trip.model.Trip;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -39,7 +40,7 @@ public class NotificationEventListener {
   private final NotificationRepository notificationRepository;
   private final ShareRepository shareRepository;
   private final SimpMessagingTemplate messagingTemplate;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper;
 
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -87,39 +88,14 @@ public class NotificationEventListener {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void handleMediaFileLocationUpdated(MediaFileLocationUpdatedEvent event) {
-    Trip trip = event.trip();
-    List<Share> shares = shareRepository.findAllByTrip(trip).stream()
-            .filter(share -> share.getShareStatus() == ShareStatus.APPROVED)
-            .toList();
-
-    shares.forEach(share -> {
-      Long recipientId = share.getRecipientId();
-      Notification notification = Notification.builder()
-              .userId(recipientId)
-              .message(NotificationType.MEDIA_FILE_UPDATED)
-              .status(NotificationStatus.UNREAD)
-              .referenceId(trip.getTripId())
-              .senderNickname(trip.getUser().getUserNickName())
-              .build();
-      notificationRepository.save(notification);
-
-      try {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("recipientId", recipientId);
-        payload.put("type", NotificationType.MEDIA_FILE_UPDATED.name());
-        payload.put("tripKey", trip.getTripKey());
-        payload.put("senderNickname", trip.getUser().getUserNickName());
-
-        String json = objectMapper.writeValueAsString(payload);
-        messagingTemplate.convertAndSend(
-                "/topic/share-notifications/" + recipientId,
-                json
-        );
-        log.info("📤 [MEDIA_FILE_LOCATION_UPDATED] 알림 전송: {}", json);
-      } catch (Exception e) {
-        log.error("❌ [MEDIA_FILE_LOCATION_UPDATED] 알림 전송 실패 {}", recipientId, e);
-      }
-    });
+    processMediaEvent(
+            event.trip(),
+            event.actorId(),
+            event.actorNickname(),
+            event.isOwner(),
+            0,
+            NotificationType.MEDIA_FILE_UPDATED
+    );
   }
 
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -132,6 +108,56 @@ public class NotificationEventListener {
             event.isOwner(),
             event.count(),
             NotificationType.MEDIA_FILE_DELETED
+    );
+  }
+
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void handleShareCreated(ShareCreatedEvent event) {
+    Map<String, Object> payload = Map.of(
+            "referenceId", event.shareId(),
+            "type", NotificationType.SHARED_REQUEST.name(),
+            "senderNickname", event.senderNickname() != null ? event.senderNickname() : "",
+            "tripTitle", event.tripTitle() != null ? event.tripTitle() : ""
+    );
+    sendNotification(
+            event.recipientId(),
+            NotificationType.SHARED_REQUEST,
+            payload,
+            event.shareId(),
+            event.senderNickname()
+    );
+  }
+
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void handleShareApproved(ShareApprovedEvent event) {
+    Map<String, Object> payload = Map.of(
+            "recipientId", event.ownerId(),
+            "type", NotificationType.SHARED_APPROVE.name()
+    );
+    sendNotification(
+            event.ownerId(),
+            NotificationType.SHARED_APPROVE,
+            payload,
+            event.shareId(),
+            event.senderNickname()
+    );
+  }
+
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void handleShareRejected(ShareRejectedEvent event) {
+    Map<String, Object> payload = Map.of(
+            "recipientId", event.ownerId(),
+            "type", NotificationType.SHARED_REJECTED.name()
+    );
+    sendNotification(
+            event.ownerId(),
+            NotificationType.SHARED_REJECTED,
+            payload,
+            event.shareId(),
+            event.senderNickname()
     );
   }
 
