@@ -230,7 +230,10 @@ public class MediaMetadataService {
     imageQueueService.deleteFromImageQueue(redisKey, String.valueOf(mediaFileId));
 
     // 이벤트 발행: 위치 갱신
-    eventPublisher.publishEvent(new MediaFileLocationUpdatedEvent(trip, mediaFileId));
+    Long actorId = user.getUserId();
+    String actorNickname = user.getUserNickName();
+    boolean isOwner = trip.getUser().getUserId().equals(actorId);
+    eventPublisher.publishEvent(new MediaFileLocationUpdatedEvent(trip, mediaFileId, actorId, actorNickname, isOwner));
   }
 
   private String extractMediaKey(String mediaLink) {

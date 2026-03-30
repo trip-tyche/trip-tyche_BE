@@ -18,9 +18,7 @@ import com.triptyche.backend.domain.share.repository.ShareRepository;
 import com.triptyche.backend.domain.trip.event.TripDeletedEvent;
 import com.triptyche.backend.domain.trip.event.TripUpdatedEvent;
 import com.triptyche.backend.domain.trip.model.Trip;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -42,7 +40,7 @@ public class NotificationEventListener {
   private final NotificationRepository notificationRepository;
   private final ShareRepository shareRepository;
   private final SimpMessagingTemplate messagingTemplate;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper;
 
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -90,39 +88,14 @@ public class NotificationEventListener {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void handleMediaFileLocationUpdated(MediaFileLocationUpdatedEvent event) {
-    Trip trip = event.trip();
-    List<Share> shares = shareRepository.findAllByTrip(trip).stream()
-            .filter(share -> share.getShareStatus() == ShareStatus.APPROVED)
-            .toList();
-
-    shares.forEach(share -> {
-      Long recipientId = share.getRecipientId();
-      Notification notification = Notification.builder()
-              .userId(recipientId)
-              .message(NotificationType.MEDIA_FILE_UPDATED)
-              .status(NotificationStatus.UNREAD)
-              .referenceId(trip.getTripId())
-              .senderNickname(trip.getUser().getUserNickName())
-              .build();
-      notificationRepository.save(notification);
-
-      try {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("recipientId", recipientId);
-        payload.put("type", NotificationType.MEDIA_FILE_UPDATED.name());
-        payload.put("tripKey", trip.getTripKey());
-        payload.put("senderNickname", trip.getUser().getUserNickName());
-
-        String json = objectMapper.writeValueAsString(payload);
-        messagingTemplate.convertAndSend(
-                "/topic/share-notifications/" + recipientId,
-                json
-        );
-        log.info("📤 [MEDIA_FILE_LOCATION_UPDATED] 알림 전송: {}", json);
-      } catch (Exception e) {
-        log.error("❌ [MEDIA_FILE_LOCATION_UPDATED] 알림 전송 실패 {}", recipientId, e);
-      }
-    });
+    processMediaEvent(
+            event.trip(),
+            event.actorId(),
+            event.actorNickname(),
+            event.isOwner(),
+            0,
+            NotificationType.MEDIA_FILE_UPDATED
+    );
   }
 
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
