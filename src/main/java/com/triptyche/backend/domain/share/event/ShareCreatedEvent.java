@@ -7,5 +7,6 @@ public record ShareCreatedEvent(
     Long shareId,
     Long tripId,
     Long recipientId,
-    String senderNickname
+    String senderNickname,
+    String tripTitle
 ) {}

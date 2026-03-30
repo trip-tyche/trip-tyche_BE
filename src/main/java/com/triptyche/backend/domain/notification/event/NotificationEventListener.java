@@ -117,7 +117,8 @@ public class NotificationEventListener {
     Map<String, Object> payload = Map.of(
             "referenceId", event.shareId(),
             "type", NotificationType.SHARED_REQUEST.name(),
-            "senderNickname", event.senderNickname() != null ? event.senderNickname() : ""
+            "senderNickname", event.senderNickname() != null ? event.senderNickname() : "",
+            "tripTitle", event.tripTitle() != null ? event.tripTitle() : ""
     );
     sendNotification(
             event.recipientId(),
