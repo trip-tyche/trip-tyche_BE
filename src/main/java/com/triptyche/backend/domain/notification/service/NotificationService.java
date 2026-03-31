@@ -11,7 +11,6 @@ import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,7 +37,7 @@ public class NotificationService {
                     notification.getSenderNickname(),
                     notification.getCreatedAt().toString()
             ))
-            .collect(Collectors.toList());
+            .toList();
   }
 
   @Transactional
