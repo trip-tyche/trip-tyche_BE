@@ -17,10 +17,6 @@ public interface ShareRepository extends JpaRepository<Share, Long> {
 
   List<Share> findAllByRecipientId(Long recipientId);
 
-  List<Share> findAllByTrip(Trip trip);
-
-  List<Share> findAllByTripTripId(Long tripId);
-
   void deleteAllByTripIn(List<Trip> trips);
 
   @Query("""
