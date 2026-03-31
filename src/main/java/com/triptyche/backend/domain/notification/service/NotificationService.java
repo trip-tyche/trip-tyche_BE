@@ -30,10 +30,8 @@ public class NotificationService {
 
 
   public List<NotificationResponseDTO> getUnreadNotifications(Long userId) {
-    List<Notification> notifications = notificationRepository.findByUserId(userId);
-
-    return notifications.stream()
-            .filter(notification -> notification.getStatus() != NotificationStatus.DELETE)
+    return notificationRepository.findByUserIdAndStatusNot(userId, NotificationStatus.DELETE)
+            .stream()
             .map(notification -> new NotificationResponseDTO(
                     notification.getNotificationId(),
                     notification.getReferenceId(),
