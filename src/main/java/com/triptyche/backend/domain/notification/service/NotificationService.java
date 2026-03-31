@@ -46,19 +46,14 @@ public class NotificationService {
   }
 
   public void markAsRead(Long notificationId) {
-    Optional<Notification> notificationOpt = notificationRepository.findById(notificationId);
-    if (notificationOpt.isEmpty()) {
-      throw new CustomException(ResultCode.NOTIFICATION_NOT_FOUND);
-    }
-
-    Notification notification = notificationOpt.get();
+    Notification notification = notificationRepository.findById(notificationId)
+            .orElseThrow(() -> new CustomException(ResultCode.NOTIFICATION_NOT_FOUND));
 
     if (notification.getStatus() == NotificationStatus.READ) {
-      toDTO(notification);
       return;
     }
+
     notification.markAsRead();
-    Notification saved = notificationRepository.save(notification);
   }
 
   public NotificationDetailDTO getNotificationDetail(Long notificationId) {
@@ -88,14 +83,4 @@ public class NotificationService {
             });
   }
 
-  private NotificationResponseDTO toDTO(Notification notification) {
-    return new NotificationResponseDTO(
-            notification.getNotificationId(),
-            notification.getReferenceId(),
-            notification.getMessage().toString(),
-            notification.getStatus().toString(),
-            notification.getSenderNickname(),
-            notification.getCreatedAt().toString()
-    );
-  }
 }
