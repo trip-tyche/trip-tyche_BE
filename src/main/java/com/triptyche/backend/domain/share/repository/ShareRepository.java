@@ -30,14 +30,14 @@ public interface ShareRepository extends JpaRepository<Share, Long> {
   @Query("""
       SELECT s.recipientId FROM Share s
       WHERE s.trip.tripId = :tripId
-        AND s.shareStatus = com.triptyche.backend.domain.share.model.ShareStatus.APPROVED
+        AND s.shareStatus = 'APPROVED'
       """)
   List<Long> findApprovedRecipientIdsByTripId(@Param("tripId") Long tripId);
 
   @Query("""
       SELECT s.recipientId FROM Share s
       WHERE s.trip = :trip
-        AND s.shareStatus = com.triptyche.backend.domain.share.model.ShareStatus.APPROVED
+        AND s.shareStatus = 'APPROVED'
       """)
   List<Long> findApprovedRecipientIdsByTrip(@Param("trip") Trip trip);
 
