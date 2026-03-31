@@ -27,7 +27,7 @@ public class NotificationService {
 
 
   @Transactional(readOnly = true)
-  public List<NotificationResponse> getUnreadNotifications(Long userId) {
+  public List<NotificationResponse> getActiveNotifications(Long userId) {
     return notificationRepository.findByUserIdAndStatusNot(userId, NotificationStatus.DELETE)
             .stream()
             .map(notification -> new NotificationResponse(
@@ -70,7 +70,7 @@ public class NotificationService {
 
   @Transactional
   public void markAsDeleted(List<Long> notificationIds) {
-    log.debug("▶▶▶ markAsDeleted 호출, ids = {}", notificationIds);
+    log.debug("markAsDeleted 호출, ids = {}", notificationIds);
 
     List<Notification> notifications = notificationRepository.findAllById(notificationIds);
 

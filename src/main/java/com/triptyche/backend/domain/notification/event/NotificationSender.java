@@ -50,9 +50,9 @@ public class NotificationSender {
               "/topic/share-notifications/" + recipientId,
               json
       );
-      log.info("📤[{}] 알림 전송 → recipient: {}", type, recipientId);
+      log.info("[{}] 알림 전송 → recipient: {}", type, recipientId);
     } catch (Exception e) {
-      log.error("❌[{}] 알림 전송 실패 → recipient: {}", type, recipientId, e);
+      log.error("[{}] 알림 전송 실패 → recipient: {}", type, recipientId, e);
     }
   }
 }

@@ -39,9 +39,6 @@ public class Notification {
   @Enumerated(EnumType.STRING)
   private NotificationStatus status;
 
-  @Column(name = "stream_message_id")
-  private String streamMessageId;
-
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
@@ -54,10 +51,6 @@ public class Notification {
   @PrePersist
   protected void onPersist() {
     this.createdAt = LocalDateTime.now();
-  }
-
-  public void updateStreamMessageId(String streamMessageId) {
-    this.streamMessageId = streamMessageId;
   }
 
   public void markAsRead() {

@@ -26,10 +26,10 @@ public class NotificationController {
   @Operation(summary = "알림 목록 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/17766958e5b3803690defb16a09d8c88?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("users/{userId}/notifications")
-  public RestResponse<List<NotificationResponse>> getUnreadNotifications(
+  public RestResponse<List<NotificationResponse>> getActiveNotifications(
           @PathVariable Long userId
   ) {
-    return RestResponse.success(notificationService.getUnreadNotifications(userId));
+    return RestResponse.success(notificationService.getActiveNotifications(userId));
   }
 
   @Operation(summary = "알림 상태 변경(UNREAD -> READ)", description = "<a href='https://www.notion"
