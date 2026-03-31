@@ -10,17 +10,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Getter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "notification")
 public class Notification {
 
@@ -38,10 +38,6 @@ public class Notification {
   @Column(name = "status", nullable = false)
   @Enumerated(EnumType.STRING)
   private NotificationStatus status;
-
-  @Setter
-  @Column(name = "stream_message_id")
-  private String streamMessageId;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;

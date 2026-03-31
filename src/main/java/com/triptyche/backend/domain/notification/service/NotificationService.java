@@ -1,7 +1,7 @@
 package com.triptyche.backend.domain.notification.service;
 
-import com.triptyche.backend.domain.notification.dto.NotificationDetailDTO;
-import com.triptyche.backend.domain.notification.dto.NotificationResponseDTO;
+import com.triptyche.backend.domain.notification.dto.NotificationDetailResponse;
+import com.triptyche.backend.domain.notification.dto.NotificationResponse;
 import com.triptyche.backend.domain.notification.model.Notification;
 import com.triptyche.backend.domain.notification.model.NotificationStatus;
 import com.triptyche.backend.domain.notification.repository.NotificationRepository;
@@ -11,7 +11,6 @@ import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,10 +26,10 @@ public class NotificationService {
 
 
   @Transactional(readOnly = true)
-  public List<NotificationResponseDTO> getUnreadNotifications(Long userId) {
+  public List<NotificationResponse> getActiveNotifications(Long userId) {
     return notificationRepository.findByUserIdAndStatusNot(userId, NotificationStatus.DELETE)
             .stream()
-            .map(notification -> new NotificationResponseDTO(
+            .map(notification -> new NotificationResponse(
                     notification.getNotificationId(),
                     notification.getReferenceId(),
                     notification.getMessage().name(),
@@ -38,7 +37,7 @@ public class NotificationService {
                     notification.getSenderNickname(),
                     notification.getCreatedAt().toString()
             ))
-            .collect(Collectors.toList());
+            .toList();
   }
 
   @Transactional
@@ -54,13 +53,13 @@ public class NotificationService {
   }
 
   @Transactional(readOnly = true)
-  public NotificationDetailDTO getNotificationDetail(Long notificationId) {
+  public NotificationDetailResponse getNotificationDetail(Long notificationId) {
     Notification notification = notificationRepository.findById(notificationId)
             .orElseThrow(() -> new CustomException(ResultCode.NOTIFICATION_NOT_FOUND));
     Optional<Trip> trip = tripRepository.findById(notification.getReferenceId());
     String tripTitle = trip.map(Trip::getTripTitle).orElse("UNKNOWN_TRIP");
 
-    return new NotificationDetailDTO(
+    return new NotificationDetailResponse(
             tripTitle,
             notification.getMessage(),
             notification.getSenderNickname()
@@ -70,7 +69,7 @@ public class NotificationService {
 
   @Transactional
   public void markAsDeleted(List<Long> notificationIds) {
-    log.debug("▶▶▶ markAsDeleted 호출, ids = {}", notificationIds);
+    log.debug("markAsDeleted 호출, ids = {}", notificationIds);
 
     List<Notification> notifications = notificationRepository.findAllById(notificationIds);
 

@@ -1,7 +1,7 @@
 package com.triptyche.backend.domain.notification.controller;
 
-import com.triptyche.backend.domain.notification.dto.NotificationDetailDTO;
-import com.triptyche.backend.domain.notification.dto.NotificationResponseDTO;
+import com.triptyche.backend.domain.notification.dto.NotificationDetailResponse;
+import com.triptyche.backend.domain.notification.dto.NotificationResponse;
 import com.triptyche.backend.domain.notification.service.NotificationService;
 import com.triptyche.backend.global.common.RestResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,10 +26,10 @@ public class NotificationController {
   @Operation(summary = "알림 목록 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/17766958e5b3803690defb16a09d8c88?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("users/{userId}/notifications")
-  public RestResponse<List<NotificationResponseDTO>> getUnreadNotifications(
+  public RestResponse<List<NotificationResponse>> getActiveNotifications(
           @PathVariable Long userId
   ) {
-    return RestResponse.success(notificationService.getUnreadNotifications(userId));
+    return RestResponse.success(notificationService.getActiveNotifications(userId));
   }
 
   @Operation(summary = "알림 상태 변경(UNREAD -> READ)", description = "<a href='https://www.notion"
@@ -45,7 +45,7 @@ public class NotificationController {
 
   @Operation(summary = "알림 상세 조회", description = "<a href='' target='_blank'>API 명세서</a>")
   @GetMapping("/notifications/{notificationId}")
-  public RestResponse<NotificationDetailDTO> getNotificationDetail(
+  public RestResponse<NotificationDetailResponse> getNotificationDetail(
           @PathVariable Long notificationId
   ) {
     return RestResponse.success(notificationService.getNotificationDetail(notificationId));
