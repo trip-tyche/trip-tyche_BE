@@ -32,6 +32,20 @@ public interface ShareRepository extends JpaRepository<Share, Long> {
   Optional<Share> findByIdWithTripAndOwner(@Param("shareId") Long shareId);
 
   @Query("""
+      SELECT s.recipientId FROM Share s
+      WHERE s.trip.tripId = :tripId
+        AND s.shareStatus = com.triptyche.backend.domain.share.model.ShareStatus.APPROVED
+      """)
+  List<Long> findApprovedRecipientIdsByTripId(@Param("tripId") Long tripId);
+
+  @Query("""
+      SELECT s.recipientId FROM Share s
+      WHERE s.trip = :trip
+        AND s.shareStatus = com.triptyche.backend.domain.share.model.ShareStatus.APPROVED
+      """)
+  List<Long> findApprovedRecipientIdsByTrip(@Param("trip") Trip trip);
+
+  @Query("""
           SELECT new com.triptyche.backend.domain.share.dto.ShareSummary(
               s.trip.tripId, s.recipientId, s.shareId, u.userNickName
           )

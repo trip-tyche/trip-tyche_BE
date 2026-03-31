@@ -12,17 +12,13 @@ import com.triptyche.backend.domain.notification.repository.NotificationReposito
 import com.triptyche.backend.domain.share.event.ShareApprovedEvent;
 import com.triptyche.backend.domain.share.event.ShareCreatedEvent;
 import com.triptyche.backend.domain.share.event.ShareRejectedEvent;
-import com.triptyche.backend.domain.share.model.Share;
-import com.triptyche.backend.domain.share.model.ShareStatus;
 import com.triptyche.backend.domain.share.repository.ShareRepository;
 import com.triptyche.backend.domain.trip.event.TripDeletedEvent;
 import com.triptyche.backend.domain.trip.event.TripUpdatedEvent;
 import com.triptyche.backend.domain.trip.model.Trip;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -245,22 +241,14 @@ public class NotificationEventListener {
   }
 
   private Set<Long> getApprovedShareRecipientsByTripId(Long tripId) {
-    return shareRepository.findAllByTripTripId(tripId).stream()
-            .filter(s -> s.getShareStatus() == ShareStatus.APPROVED)
-            .map(Share::getRecipientId)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toSet());
+    return new HashSet<>(shareRepository.findApprovedRecipientIdsByTripId(tripId));
   }
 
   /**
    * 승인된 공유자 ID 목록 조회
    */
   private Set<Long> getApprovedShareRecipientIds(Trip trip) {
-    return shareRepository.findAllByTrip(trip).stream()
-            .filter(s -> s.getShareStatus() == ShareStatus.APPROVED)
-            .map(Share::getRecipientId)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toSet());
+    return new HashSet<>(shareRepository.findApprovedRecipientIdsByTrip(trip));
   }
 
   private Map<String, Object> buildDeletedTripPayload(
