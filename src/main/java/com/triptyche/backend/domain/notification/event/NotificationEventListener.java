@@ -319,7 +319,12 @@ public class NotificationEventListener {
   private void sendNotification(Long recipientId, NotificationType type,
                                 Map<String, Object> payload, Long referenceId,
                                 String senderNickname) {
-    // DB 저장
+    saveNotification(recipientId, type, referenceId, senderNickname);
+    sendWebSocketMessage(recipientId, type, payload);
+  }
+
+  private void saveNotification(Long recipientId, NotificationType type,
+                                Long referenceId, String senderNickname) {
     Notification notification = Notification.builder()
             .userId(recipientId)
             .message(type)
@@ -328,8 +333,10 @@ public class NotificationEventListener {
             .senderNickname(senderNickname)
             .build();
     notificationRepository.save(notification);
+  }
 
-    // 웹소켓 전송
+  private void sendWebSocketMessage(Long recipientId, NotificationType type,
+                                    Map<String, Object> payload) {
     try {
       String json = objectMapper.writeValueAsString(payload);
       messagingTemplate.convertAndSend(
