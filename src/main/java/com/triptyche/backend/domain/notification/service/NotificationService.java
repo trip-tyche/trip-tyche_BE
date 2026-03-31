@@ -1,7 +1,7 @@
 package com.triptyche.backend.domain.notification.service;
 
-import com.triptyche.backend.domain.notification.dto.NotificationDetailDTO;
-import com.triptyche.backend.domain.notification.dto.NotificationResponseDTO;
+import com.triptyche.backend.domain.notification.dto.NotificationDetailResponse;
+import com.triptyche.backend.domain.notification.dto.NotificationResponse;
 import com.triptyche.backend.domain.notification.model.Notification;
 import com.triptyche.backend.domain.notification.model.NotificationStatus;
 import com.triptyche.backend.domain.notification.repository.NotificationRepository;
@@ -27,10 +27,10 @@ public class NotificationService {
 
 
   @Transactional(readOnly = true)
-  public List<NotificationResponseDTO> getUnreadNotifications(Long userId) {
+  public List<NotificationResponse> getUnreadNotifications(Long userId) {
     return notificationRepository.findByUserIdAndStatusNot(userId, NotificationStatus.DELETE)
             .stream()
-            .map(notification -> new NotificationResponseDTO(
+            .map(notification -> new NotificationResponse(
                     notification.getNotificationId(),
                     notification.getReferenceId(),
                     notification.getMessage().name(),
@@ -54,13 +54,13 @@ public class NotificationService {
   }
 
   @Transactional(readOnly = true)
-  public NotificationDetailDTO getNotificationDetail(Long notificationId) {
+  public NotificationDetailResponse getNotificationDetail(Long notificationId) {
     Notification notification = notificationRepository.findById(notificationId)
             .orElseThrow(() -> new CustomException(ResultCode.NOTIFICATION_NOT_FOUND));
     Optional<Trip> trip = tripRepository.findById(notification.getReferenceId());
     String tripTitle = trip.map(Trip::getTripTitle).orElse("UNKNOWN_TRIP");
 
-    return new NotificationDetailDTO(
+    return new NotificationDetailResponse(
             tripTitle,
             notification.getMessage(),
             notification.getSenderNickname()

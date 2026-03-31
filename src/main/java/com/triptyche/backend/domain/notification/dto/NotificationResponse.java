@@ -1,6 +1,6 @@
 package com.triptyche.backend.domain.notification.dto;
 
-public record NotificationResponseDTO(
+public record NotificationResponse(
         Long notificationId,
         Long referenceId,
         String message,
