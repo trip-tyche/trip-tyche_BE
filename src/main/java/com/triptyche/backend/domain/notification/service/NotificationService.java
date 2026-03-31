@@ -14,26 +14,22 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-@Transactional
 public class NotificationService {
 
   private final NotificationRepository notificationRepository;
   private final TripRepository tripRepository;
-  private final RedisTemplate<String, Object> redisTemplate;
 
 
+  @Transactional(readOnly = true)
   public List<NotificationResponseDTO> getUnreadNotifications(Long userId) {
-    List<Notification> notifications = notificationRepository.findByUserId(userId);
-
-    return notifications.stream()
-            .filter(notification -> notification.getStatus() != NotificationStatus.DELETE)
+    return notificationRepository.findByUserIdAndStatusNot(userId, NotificationStatus.DELETE)
+            .stream()
             .map(notification -> new NotificationResponseDTO(
                     notification.getNotificationId(),
                     notification.getReferenceId(),
@@ -45,6 +41,7 @@ public class NotificationService {
             .collect(Collectors.toList());
   }
 
+  @Transactional
   public void markAsRead(Long notificationId) {
     Notification notification = notificationRepository.findById(notificationId)
             .orElseThrow(() -> new CustomException(ResultCode.NOTIFICATION_NOT_FOUND));
@@ -56,6 +53,7 @@ public class NotificationService {
     notification.markAsRead();
   }
 
+  @Transactional(readOnly = true)
   public NotificationDetailDTO getNotificationDetail(Long notificationId) {
     Notification notification = notificationRepository.findById(notificationId)
             .orElseThrow(() -> new CustomException(ResultCode.NOTIFICATION_NOT_FOUND));
@@ -70,6 +68,7 @@ public class NotificationService {
   }
 
 
+  @Transactional
   public void markAsDeleted(List<Long> notificationIds) {
     log.debug("▶▶▶ markAsDeleted 호출, ids = {}", notificationIds);
 

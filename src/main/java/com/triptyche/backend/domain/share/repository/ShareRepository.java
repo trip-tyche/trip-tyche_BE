@@ -17,10 +17,6 @@ public interface ShareRepository extends JpaRepository<Share, Long> {
 
   List<Share> findAllByRecipientId(Long recipientId);
 
-  List<Share> findAllByTrip(Trip trip);
-
-  List<Share> findAllByTripTripId(Long tripId);
-
   void deleteAllByTripIn(List<Trip> trips);
 
   @Query("""
@@ -30,6 +26,20 @@ public interface ShareRepository extends JpaRepository<Share, Long> {
       WHERE s.shareId = :shareId
       """)
   Optional<Share> findByIdWithTripAndOwner(@Param("shareId") Long shareId);
+
+  @Query("""
+      SELECT s.recipientId FROM Share s
+      WHERE s.trip.tripId = :tripId
+        AND s.shareStatus = 'APPROVED'
+      """)
+  List<Long> findApprovedRecipientIdsByTripId(@Param("tripId") Long tripId);
+
+  @Query("""
+      SELECT s.recipientId FROM Share s
+      WHERE s.trip = :trip
+        AND s.shareStatus = 'APPROVED'
+      """)
+  List<Long> findApprovedRecipientIdsByTrip(@Param("trip") Trip trip);
 
   @Query("""
           SELECT new com.triptyche.backend.domain.share.dto.ShareSummary(
