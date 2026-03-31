@@ -77,18 +77,15 @@ public class NotificationService {
 
   public void markAsDeleted(List<Long> notificationIds) {
     log.debug("▶▶▶ markAsDeleted 호출, ids = {}", notificationIds);
-    notificationIds.forEach(id -> {
-      Notification notification = notificationRepository.findById(id)
-              .orElseThrow(() -> new CustomException(ResultCode.NOTIFICATION_NOT_FOUND));
 
-      // 이미 DELETE 상태면 건너뜁니다.
-      if (notification.getStatus() == NotificationStatus.DELETE) {
-        return;
-      }
-      // 엔티티 상태를 DELETE로 변경하고 저장
-      notification.markAsDeleted();
-      log.debug("[{}] 알림 상태 변화 = {}", id, notification.getStatus());
-    });
+    List<Notification> notifications = notificationRepository.findAllById(notificationIds);
+
+    notifications.stream()
+            .filter(n -> n.getStatus() != NotificationStatus.DELETE)
+            .forEach(n -> {
+              n.markAsDeleted();
+              log.debug("[{}] 알림 상태 변화 = {}", n.getNotificationId(), n.getStatus());
+            });
   }
 
   private NotificationResponseDTO toDTO(Notification notification) {
