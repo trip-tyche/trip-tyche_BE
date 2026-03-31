@@ -46,19 +46,14 @@ public class NotificationService {
   }
 
   public void markAsRead(Long notificationId) {
-    Optional<Notification> notificationOpt = notificationRepository.findById(notificationId);
-    if (notificationOpt.isEmpty()) {
-      throw new CustomException(ResultCode.NOTIFICATION_NOT_FOUND);
-    }
-
-    Notification notification = notificationOpt.get();
+    Notification notification = notificationRepository.findById(notificationId)
+            .orElseThrow(() -> new CustomException(ResultCode.NOTIFICATION_NOT_FOUND));
 
     if (notification.getStatus() == NotificationStatus.READ) {
-      toDTO(notification);
       return;
     }
+
     notification.markAsRead();
-    Notification saved = notificationRepository.save(notification);
   }
 
   public NotificationDetailDTO getNotificationDetail(Long notificationId) {
@@ -77,28 +72,15 @@ public class NotificationService {
 
   public void markAsDeleted(List<Long> notificationIds) {
     log.debug("▶▶▶ markAsDeleted 호출, ids = {}", notificationIds);
-    notificationIds.forEach(id -> {
-      Notification notification = notificationRepository.findById(id)
-              .orElseThrow(() -> new CustomException(ResultCode.NOTIFICATION_NOT_FOUND));
 
-      // 이미 DELETE 상태면 건너뜁니다.
-      if (notification.getStatus() == NotificationStatus.DELETE) {
-        return;
-      }
-      // 엔티티 상태를 DELETE로 변경하고 저장
-      notification.markAsDeleted();
-      log.debug("[{}] 알림 상태 변화 = {}", id, notification.getStatus());
-    });
+    List<Notification> notifications = notificationRepository.findAllById(notificationIds);
+
+    notifications.stream()
+            .filter(n -> n.getStatus() != NotificationStatus.DELETE)
+            .forEach(n -> {
+              n.markAsDeleted();
+              log.debug("[{}] 알림 상태 변화 = {}", n.getNotificationId(), n.getStatus());
+            });
   }
 
-  private NotificationResponseDTO toDTO(Notification notification) {
-    return new NotificationResponseDTO(
-            notification.getNotificationId(),
-            notification.getReferenceId(),
-            notification.getMessage().toString(),
-            notification.getStatus().toString(),
-            notification.getSenderNickname(),
-            notification.getCreatedAt().toString()
-    );
-  }
 }
