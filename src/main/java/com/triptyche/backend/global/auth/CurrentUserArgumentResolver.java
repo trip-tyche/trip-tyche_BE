@@ -32,6 +32,11 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
                                    NativeWebRequest webRequest,
                                    WebDataBinderFactory binderFactory) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new CustomException(ResultCode.UNAUTHORIZED);
+        }
+
         String userEmail = authentication.getName();
 
         return userRepository.findByUserEmail(userEmail)
