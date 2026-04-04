@@ -1,6 +1,7 @@
 package com.triptyche.backend.global.oauth.service;
 
 import com.triptyche.backend.global.common.ResultCode;
+import com.triptyche.backend.global.config.JwtProperties;
 import com.triptyche.backend.global.exception.CustomException;
 import com.triptyche.backend.global.oauth.repository.RefreshTokenRepository;
 import com.triptyche.backend.global.util.JwtTokenProvider;
@@ -17,10 +18,7 @@ public class TokenRefreshService {
 
   private final JwtTokenProvider jwtTokenProvider;
   private final RefreshTokenRepository refreshTokenRepository;
-
-  // 토큰 만료 시간 (초 단위)
-  private static final long ACCESS_TOKEN_EXPIRATION_SECONDS = 60 * 60;          // 1시간
-  private static final long REFRESH_TOKEN_EXPIRATION_SECONDS = 30L * 24 * 60 * 60;  // 30일
+  private final JwtProperties jwtProperties;
 
   public Map<String, String> refreshToken(String refreshToken) {
     if (refreshToken == null || refreshToken.isEmpty()) {
@@ -70,7 +68,7 @@ public class TokenRefreshService {
 
       // 7. Redis에 새 Refresh Token 저장 (기존 토큰을 대체)
       boolean saveSuccess = refreshTokenRepository.save(
-              userEmail, newRefreshToken, REFRESH_TOKEN_EXPIRATION_SECONDS);
+              userEmail, newRefreshToken, jwtProperties.refreshTokenExpirySeconds());
 
       if (!saveSuccess) {
         log.error("새 Refresh Token Redis 저장 실패 - 기존 토큰 유지");

@@ -4,6 +4,10 @@ spring:
       local: local
       prod: prod
 
+jwt:
+  access-token-expiry-seconds: 3600       # 1시간
+  refresh-token-expiry-seconds: 2592000   # 30일
+
 ---
 spring:
   config:
