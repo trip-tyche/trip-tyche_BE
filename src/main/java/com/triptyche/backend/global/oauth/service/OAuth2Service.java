@@ -4,6 +4,7 @@ import com.triptyche.backend.domain.user.dto.UserDTO;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
 import com.triptyche.backend.global.common.ResultCode;
+import com.triptyche.backend.global.config.JwtProperties;
 import com.triptyche.backend.global.exception.CustomException;
 import com.triptyche.backend.global.oauth.OAuthAttributes;
 import com.triptyche.backend.global.oauth.repository.RefreshTokenRepository;
@@ -12,7 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -34,6 +35,7 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
   private final UserRepository userRepository;
   private final JwtTokenProvider jwtTokenProvider;
   private final RefreshTokenRepository refreshTokenRepository;
+  private final JwtProperties jwtProperties;
 
   @Override
   public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -60,7 +62,7 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
       // Refresh Token 생성
       String refreshToken = jwtTokenProvider.createRefreshToken(userProfile.userEmail(), registrationId);
       // Redis에 Refresh Token 저장
-      refreshTokenRepository.save(userProfile.userEmail(), refreshToken, 2592000); // 30일
+      refreshTokenRepository.save(userProfile.userEmail(), refreshToken, jwtProperties.refreshTokenExpirySeconds());
 
       // 사용자 정보 및 토큰을 customAttribute에 추가하여 SuccessHandler에서 활용 가능하도록 함
       Map<String, Object> customAttribute = getCustomAttribute(registrationId, userNameAttributeName, attributes,
@@ -89,7 +91,7 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
           String userNameAttributeName,
           Map<String, Object> attributes,
           UserDTO userProfile) {
-    Map<String, Object> customAttribute = new ConcurrentHashMap<>();
+    Map<String, Object> customAttribute = new HashMap<>();
     customAttribute.put(userNameAttributeName, attributes.get(userNameAttributeName));
     customAttribute.put("provider", registrationId);
     customAttribute.put("name", userProfile.userName());

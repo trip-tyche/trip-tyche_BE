@@ -2,6 +2,7 @@ package com.triptyche.backend.global.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptyche.backend.global.common.ResultCode;
+import com.triptyche.backend.global.config.JwtProperties;
 import com.triptyche.backend.global.exception.CustomException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -32,6 +33,8 @@ import org.springframework.stereotype.Component;
 public class JwtTokenProvider {
 
   private final JwtSecretKeyManager jwtSecretKeyManager;
+  private final JwtProperties jwtProperties;
+  private final ObjectMapper objectMapper;
 
   /**
    * JWT 토큰 생성
@@ -50,7 +53,7 @@ public class JwtTokenProvider {
     claims.put("provider", provider);
 
     Date now = new Date();
-    Date validity = new Date(now.getTime() + 3600000); // 1시간
+    Date validity = new Date(now.getTime() + jwtProperties.accessTokenExpirySeconds() * 1000);
 
     return Jwts.builder()
             .setClaims(claims)
@@ -74,7 +77,7 @@ public class JwtTokenProvider {
     claims.put("provider", provider);
 
     Date now = new Date();
-    Date validity = new Date(now.getTime() + 2592000000L); // 30일
+    Date validity = new Date(now.getTime() + jwtProperties.refreshTokenExpirySeconds() * 1000);
 
     return Jwts.builder()
             .setClaims(claims)
@@ -182,7 +185,7 @@ public class JwtTokenProvider {
       }
 
       String payload = new String(Base64.getDecoder().decode(chunks[1]), StandardCharsets.UTF_8);
-      String provider = new ObjectMapper().readTree(payload).get("provider").asText();
+      String provider = objectMapper.readTree(payload).get("provider").asText();
       log.debug("디코딩된 페이로드에서 추출된 provider: {}", provider);
       return provider;
     } catch (Exception e) {

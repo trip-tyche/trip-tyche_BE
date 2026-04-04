@@ -40,7 +40,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
   @Override
   public void registerStompEndpoints(StompEndpointRegistry registry) {
     registry.addEndpoint("/ws")
-            .setAllowedOrigins("*");
+            .setAllowedOrigins(
+                    "https://triptyche.world",
+                    "https://triptychetest.shop",
+                    "https://www.triptychetest.shop",
+                    "https://local.triptyche.world:3000",
+                    "https://triptychetest.shop:3000",
+                    "https://local.triptychetest.shop:3000"
+            );
   }
 
   @Override
