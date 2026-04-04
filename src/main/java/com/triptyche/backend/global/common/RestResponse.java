@@ -1,5 +1,6 @@
 package com.triptyche.backend.global.common;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -7,7 +8,7 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 @Builder
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class RestResponse<T> {
 
   private int status;
