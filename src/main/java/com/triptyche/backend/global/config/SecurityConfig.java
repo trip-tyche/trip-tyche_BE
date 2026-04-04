@@ -57,9 +57,6 @@ public class SecurityConfig {
                             "/oauth2/success",
                             "/oauth2/authorization/**",
                             "/actuator/**",
-                            "/ws/**",
-                            "/app/**",
-                            "/topic/**",
                             "/v1/auth/refresh",
                             "/v1/auth/logout",
                             "/v1/auth/test-token"
