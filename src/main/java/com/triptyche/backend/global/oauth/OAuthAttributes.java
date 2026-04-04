@@ -1,6 +1,8 @@
 package com.triptyche.backend.global.oauth;
 
 import com.triptyche.backend.domain.user.dto.UserDTO;
+import com.triptyche.backend.global.common.ResultCode;
+import com.triptyche.backend.global.exception.CustomException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -16,11 +18,23 @@ public enum OAuthAttributes {
 
   KAKAO("kakao", (attribute) -> {
     Map<String, Object> account = (Map) attribute.get("kakao_account");
+    if (account == null) {
+      throw new CustomException(ResultCode.OAUTH_SERVICE_FAILURE);
+    }
+
     Map<String, String> profile = (Map) account.get("profile");
+    if (profile == null) {
+      throw new CustomException(ResultCode.OAUTH_SERVICE_FAILURE);
+    }
+
+    String email = (String) account.get("email");
+    if (email == null) {
+      throw new CustomException(ResultCode.OAUTH_SERVICE_FAILURE);
+    }
 
     return new UserDTO(
             profile.get("nickname"),
-            (String) account.get("email"),
+            email,
             "kakao",
             List.of("ROLE_USER") // 기본 권한 설정
     );
