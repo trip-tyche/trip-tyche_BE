@@ -14,6 +14,7 @@ import com.triptyche.backend.global.common.RestResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,7 +40,7 @@ public class MediaMetadataController {
   public RestResponse<String> processMetadata(
           @CurrentUser User user,
           @PathVariable("tripKey") String tripKey,
-          @RequestBody List<UpdateMediaFileInfoRequestDTO> files
+          @RequestBody @Valid List<UpdateMediaFileInfoRequestDTO> files
   ) {
     mediaMetadataService.processAndSaveMetadataBatch(user, tripKey, files);
 
@@ -64,7 +65,7 @@ public class MediaMetadataController {
   public RestResponse<String> updateMultipleMediaFiles(
           @CurrentUser User user,
           @PathVariable String tripKey,
-          @RequestBody MediaFileBatchUpdateRequestDTO requestDTO
+          @Valid @RequestBody MediaFileBatchUpdateRequestDTO requestDTO
   ) {
     int updatedCount = mediaMetadataService.updateMultipleMediaFiles(user, tripKey, requestDTO);
     return RestResponse.success(updatedCount + "개의 이미지 정보가 성공적으로 수정되었습니다.");
@@ -77,7 +78,7 @@ public class MediaMetadataController {
   public RestResponse<String> deleteMultipleMediaFiles(
           @CurrentUser User user,
           @PathVariable String tripKey,
-          @RequestBody MediaFileBatchDeleteRequestDTO requestDTO
+          @Valid @RequestBody MediaFileBatchDeleteRequestDTO requestDTO
   ) {
     int deleteCount = mediaMetadataService.deleteMultipleMediaFiles(user, tripKey, requestDTO);
     return RestResponse.success(deleteCount + "개의 이미지가 성공적으로 삭제되었습니다.");
@@ -102,7 +103,7 @@ public class MediaMetadataController {
           @CurrentUser User user,
           @PathVariable String tripKey,
           @PathVariable Long mediaFileId,
-          @RequestBody UpdateMediaFileLocationRequestDTO updateMediaFileLocation) {
+          @Valid @RequestBody UpdateMediaFileLocationRequestDTO updateMediaFileLocation) {
     mediaMetadataService.updateImageLocation(user, tripKey, mediaFileId, updateMediaFileLocation);
     return RestResponse.success("이미지 위치 정보가 업데이트 되었습니다.");
   }

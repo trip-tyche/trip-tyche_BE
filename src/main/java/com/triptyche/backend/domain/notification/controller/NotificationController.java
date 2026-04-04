@@ -6,8 +6,10 @@ import com.triptyche.backend.domain.notification.service.NotificationService;
 import com.triptyche.backend.global.common.RestResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Validated
 @RestController
 @RequestMapping("/v1")
 @RequiredArgsConstructor
@@ -55,6 +58,7 @@ public class NotificationController {
           + ".so/maristadev/READ-DELETE-19f66958e5b380b4ab36dd53d3b4f26e?pvs=4' target='_blank'>API 명세서</a>")
   @PatchMapping("/notifications/delete")
   public RestResponse<String> markAsDeleted(
+          @NotEmpty(message = "알림 ID 목록은 비어있을 수 없습니다.")
           @RequestBody List<Long> notificationIds
   ) {
     notificationService.markAsDeleted(notificationIds);
