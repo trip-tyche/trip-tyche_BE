@@ -18,20 +18,16 @@ public class OpenAPIConfig {
   public OpenAPI customOpenAPI() {
     return new OpenAPI()
             .info(new Info()
-                    .title("🗺️Trip Tyche API")
+                    .title("Trip Tyche API")
                     .version("1.0"))
-            .addSecurityItem(new SecurityRequirement().addList("AccessTokenCookie"))
+            .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
             .components(new Components()
-                    .addSecuritySchemes("AccessTokenCookie",
+                    .addSecuritySchemes("BearerAuth",
                             new SecurityScheme()
-                                    .type(SecurityScheme.Type.APIKEY)
-                                    .in(SecurityScheme.In.COOKIE)
-                                    .name("access_token"))
-                    .addSecuritySchemes("RefreshTokenCookie",
-                            new SecurityScheme()
-                                    .type(SecurityScheme.Type.APIKEY)
-                                    .in(SecurityScheme.In.COOKIE)
-                                    .name("refresh_token"))
+                                    .type(SecurityScheme.Type.HTTP)
+                                    .scheme("bearer")
+                                    .bearerFormat("JWT")
+                                    .description("test-token API로 발급받은 Access Token을 입력하세요"))
             )
             .tags(List.of(
                     new Tag().name("0. 로그인&인증관련 API"),
