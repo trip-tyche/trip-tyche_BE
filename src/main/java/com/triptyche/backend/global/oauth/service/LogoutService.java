@@ -18,7 +18,9 @@ public class LogoutService {
   private final CookieUtil cookieUtil;
 
 
-  // Refresh Token 삭제만 수행한다.
+  // [Trade-off] Access Token 블랙리스트 미적용
+  // Access Token 만료 시간(1시간) 동안 탈취된 토큰으로 API 접근이 가능하나,
+  // Redis 블랙리스트 관리 비용 대비 현재 서비스 규모에서 감수 가능한 수준으로 판단.
   public void logout(HttpServletResponse response, String refreshToken) {
     try {
       String userEmail = jwtTokenProvider.getUserEmailFromToken(refreshToken);
