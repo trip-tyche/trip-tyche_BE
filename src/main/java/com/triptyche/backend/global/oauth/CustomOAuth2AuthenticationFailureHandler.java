@@ -6,6 +6,7 @@ import com.triptyche.backend.global.common.ResultCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -13,10 +14,11 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class CustomOAuth2AuthenticationFailureHandler implements AuthenticationFailureHandler {
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper;
 
   @Override
   public void onAuthenticationFailure(
@@ -28,10 +30,8 @@ public class CustomOAuth2AuthenticationFailureHandler implements AuthenticationF
 
     RestResponse<Void> errorResponse;
 
-    if (exception instanceof OAuth2AuthenticationException) {
-      OAuth2AuthenticationException oAuth2Exception = (OAuth2AuthenticationException) exception;
+    if (exception instanceof OAuth2AuthenticationException oAuth2Exception) {
       String errorCode = oAuth2Exception.getError().getErrorCode();
-
       log.error("OAuth2 인증 실패 코드: {}", errorCode);
 
       if ("email_already_registered".equals(errorCode)) {
@@ -43,7 +43,6 @@ public class CustomOAuth2AuthenticationFailureHandler implements AuthenticationF
       errorResponse = RestResponse.error(ResultCode.OAUTH_SERVICE_FAILURE);
     }
 
-    // ResultCode의 HttpStatus 값을 직접 사용하여 응답 설정
     response.setStatus(errorResponse.getHttpStatus().value());
     response.setContentType("application/json;charset=UTF-8");
     response.getWriter().write(objectMapper.writeValueAsString(errorResponse));

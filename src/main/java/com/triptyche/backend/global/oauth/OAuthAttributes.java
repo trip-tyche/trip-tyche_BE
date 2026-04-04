@@ -52,7 +52,7 @@ public enum OAuthAttributes {
     return Arrays.stream(values())
             .filter(value -> registrationId.equals(value.registrationId))
             .findFirst()
-            .orElseThrow(IllegalArgumentException::new)
+            .orElseThrow(() -> new CustomException(ResultCode.INVALID_PROVIDER))
             .of.apply(attributes);
   }
 

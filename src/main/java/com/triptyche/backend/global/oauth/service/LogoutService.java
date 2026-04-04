@@ -18,6 +18,7 @@ public class LogoutService {
   private final CookieUtil cookieUtil;
 
 
+  // Refresh Token 삭제만 수행한다.
   public void logout(HttpServletResponse response, String refreshToken) {
     try {
       String userEmail = jwtTokenProvider.getUserEmailFromToken(refreshToken);
