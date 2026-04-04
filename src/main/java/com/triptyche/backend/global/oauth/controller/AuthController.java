@@ -3,6 +3,7 @@ package com.triptyche.backend.global.oauth.controller;
 
 import com.triptyche.backend.global.common.RestResponse;
 import com.triptyche.backend.global.common.ResultCode;
+import com.triptyche.backend.global.config.JwtProperties;
 import com.triptyche.backend.global.exception.CustomException;
 import com.triptyche.backend.global.oauth.service.LogoutService;
 import com.triptyche.backend.global.oauth.service.TokenRefreshService;
@@ -26,6 +27,7 @@ public class AuthController {
   private final TokenRefreshService tokenRefreshService;
   private final CookieUtil cookieUtil;
   private final LogoutService logoutService;
+  private final JwtProperties jwtProperties;
 
   @Tag(name = "0. 로그인&인증관련 API")
   @Operation(summary = "토큰 갱신 API", description = "<a href='https://www.notion"
@@ -37,21 +39,14 @@ public class AuthController {
       log.warn("refresh_token 쿠키가 존재하지 않거나 비어 있음.");
       throw new CustomException(ResultCode.REFRESH_TOKEN_EXPIRED);
     }
-    try {
-      var tokenMap = tokenRefreshService.refreshToken(refreshToken);
 
-      cookieUtil.setCookie(response, "access_token", tokenMap.get("accessToken"), 60 * 60);             // 1시간
-      cookieUtil.setCookie(response, "refresh_token", tokenMap.get("refreshToken"), 30 * 24 * 60 * 60); // 30일
+    var tokenMap = tokenRefreshService.refreshToken(refreshToken);
 
-      log.debug("발급된 access_token: {}", tokenMap.get("accessToken")); 
-      return RestResponse.success("성공적으로 토큰을 갱신했습니다.");
-    } catch (CustomException e) {
-      log.warn("토큰 갱신 실패: {}", e.getResultCode().getMessage());
-      throw e; 
-    } catch (Exception e) {
-      log.error("예기치 않은 오류 발생", e);
-      throw new CustomException(ResultCode.INTERNAL_SERVER_ERROR);
-    }
+    cookieUtil.setCookie(response, "access_token", tokenMap.get("accessToken"), (int) jwtProperties.accessTokenExpirySeconds());
+    cookieUtil.setCookie(response, "refresh_token", tokenMap.get("refreshToken"), (int) jwtProperties.refreshTokenExpirySeconds());
+
+    log.debug("발급된 access_token: {}", tokenMap.get("accessToken"));
+    return RestResponse.success("성공적으로 토큰을 갱신했습니다.");
   }
 
   @Tag(name = "0. 로그인&인증관련 API")
