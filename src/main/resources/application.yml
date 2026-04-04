@@ -86,6 +86,7 @@ spring:
 
   redirect:
     url: http://localhost:8080/swagger-ui/index.html
+    failure-url: http://localhost:8080/swagger-ui/index.html
 
 management:
   endpoints:
@@ -192,6 +193,7 @@ spring:
 
   redirect:
     url: https://triptyche.world
+    failure-url: https://triptyche.world
 
 management:
   endpoints:

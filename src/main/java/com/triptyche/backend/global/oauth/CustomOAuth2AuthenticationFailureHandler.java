@@ -1,24 +1,23 @@
 package com.triptyche.backend.global.oauth;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.triptyche.backend.global.common.RestResponse;
-import com.triptyche.backend.global.common.ResultCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import lombok.RequiredArgsConstructor;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class CustomOAuth2AuthenticationFailureHandler implements AuthenticationFailureHandler {
 
-  private final ObjectMapper objectMapper;
+  @Value("${spring.redirect.failure-url}")
+  private String failureRedirectUrl;
 
   @Override
   public void onAuthenticationFailure(
@@ -26,25 +25,23 @@ public class CustomOAuth2AuthenticationFailureHandler implements AuthenticationF
       HttpServletResponse response,
       AuthenticationException exception) throws IOException {
 
-    log.error("OAuth2 인증 실패: {}", exception.getMessage());
-
-    RestResponse<Void> errorResponse;
+    String errorCode;
 
     if (exception instanceof OAuth2AuthenticationException oAuth2Exception) {
-      String errorCode = oAuth2Exception.getError().getErrorCode();
-      log.error("OAuth2 인증 실패 코드: {}", errorCode);
-
+      errorCode = oAuth2Exception.getError().getErrorCode();
       if ("email_already_registered".equals(errorCode)) {
-        errorResponse = RestResponse.error(ResultCode.EMAIL_ALREADY_REGISTERED);
+        log.warn("OAuth2 인증 실패 - 이미 등록된 이메일: {}", exception.getMessage());
       } else {
-        errorResponse = RestResponse.error(ResultCode.OAUTH_SERVICE_FAILURE);
+        log.error("OAuth2 인증 실패: {} (코드: {})", exception.getMessage(), errorCode);
+        errorCode = "server_error";
       }
     } else {
-      errorResponse = RestResponse.error(ResultCode.OAUTH_SERVICE_FAILURE);
+      log.error("OAuth2 인증 실패: {}", exception.getMessage());
+      errorCode = "server_error";
     }
 
-    response.setStatus(errorResponse.getHttpStatus().value());
-    response.setContentType("application/json;charset=UTF-8");
-    response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+    String redirectTarget = failureRedirectUrl + "?error="
+        + URLEncoder.encode(errorCode, StandardCharsets.UTF_8);
+    response.sendRedirect(redirectTarget);
   }
 }
