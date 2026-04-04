@@ -58,7 +58,7 @@ public class RefreshTokenRepository {
       log.debug("Redis에서 RefreshToken 삭제 시도: user={}", userEmail);
       Boolean result = redisTemplate.delete(key);
 
-      if (Boolean.TRUE.equals(result)) {
+      if (result) {
         log.debug("Redis에서 RefreshToken 삭제 성공: user={}", userEmail);
         return true;
       } else {
