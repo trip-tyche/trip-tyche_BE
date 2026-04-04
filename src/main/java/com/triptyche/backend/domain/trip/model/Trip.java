@@ -79,11 +79,6 @@ public class Trip {
   @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<PinPoint> pinPoints = new ArrayList<>();
 
-  // 해시태그 리스트로 처리
-  public void setHashtagsFromList(List<String> hashtags) {
-    this.hashtags = String.join(",", hashtags);
-  }
-
   public List<String> getHashtagsAsList() {
     return List.of(this.hashtags.split(","));
   }
@@ -112,20 +107,12 @@ public class Trip {
     this.status = TripStatus.CONFIRMED;
   }
 
-  public boolean isOwnedBy(Long userId) {
-    return this.user.getUserId().equals(userId);
-  }
-
   public boolean isConfirmed() {
     return this.status == TripStatus.CONFIRMED;
   }
 
   public void softDelete() {
     this.deletedAt = LocalDateTime.now();
-  }
-
-  public boolean isDeleted() {
-    return this.deletedAt != null;
   }
 
   @PrePersist

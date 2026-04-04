@@ -15,7 +15,7 @@ import com.triptyche.backend.domain.trip.dto.TripMapResponse;
 import com.triptyche.backend.domain.trip.dto.TripUpdateResponse;
 import com.triptyche.backend.domain.trip.model.PinPoint;
 import com.triptyche.backend.domain.trip.repository.PinPointRepository;
-import com.triptyche.backend.domain.share.dto.ShareSummary;
+import com.triptyche.backend.domain.share.dto.ShareSummaryResponse;
 import com.triptyche.backend.domain.share.repository.ShareRepository;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
@@ -60,22 +60,22 @@ public class TripQueryService {
 
     List<Long> tripIds = trips.stream().map(Trip::getTripId).toList();
 
-    List<ShareSummary> allShares = shareRepository.findApprovedShareSummariesByTripIds(tripIds);
+    List<ShareSummaryResponse> allShares = shareRepository.findApprovedShareSummariesByTripIds(tripIds);
 
-    Map<Long, List<ShareSummary>> shareMap = allShares.stream()
-            .collect(Collectors.groupingBy(ShareSummary::tripId));
+    Map<Long, List<ShareSummaryResponse>> shareMap = allShares.stream()
+            .collect(Collectors.groupingBy(ShareSummaryResponse::tripId));
 
     List<TripDetailResponse> tripDTOs = trips.stream()
             .map(trip -> {
-              List<ShareSummary> shares = shareMap.getOrDefault(trip.getTripId(), List.of());
+              List<ShareSummaryResponse> shares = shareMap.getOrDefault(trip.getTripId(), List.of());
 
               List<String> sharedUserNicknames = shares.stream()
-                      .map(ShareSummary::recipientNickname)
+                      .map(ShareSummaryResponse::recipientNickname)
                       .toList();
 
               Long shareId = shares.stream()
                       .filter(s -> s.recipientId().equals(user.getUserId()))
-                      .map(ShareSummary::shareId)
+                      .map(ShareSummaryResponse::shareId)
                       .findFirst()
                       .orElse(null);
 

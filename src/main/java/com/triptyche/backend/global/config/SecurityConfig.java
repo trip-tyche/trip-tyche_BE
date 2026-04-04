@@ -6,15 +6,8 @@ import com.triptyche.backend.global.oauth.OAuth2LoginSuccessHandler;
 import com.triptyche.backend.global.oauth.service.OAuth2Service;
 import com.triptyche.backend.global.util.JWTAuthenticationFilter;
 import com.triptyche.backend.global.util.JwtTokenProvider;
-import io.jsonwebtoken.io.IOException;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -25,7 +18,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.OncePerRequestFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -80,8 +72,7 @@ public class SecurityConfig {
                     exceptionHandling
                             .authenticationEntryPoint(customAuthenticationEntryPoint))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(new JWTAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(new IPLoggingFilter(), JWTAuthenticationFilter.class);
+            .addFilterBefore(new JWTAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }
@@ -109,18 +100,5 @@ public class SecurityConfig {
     return source;
   }
 
-  // IPLoggingFilter 클래스 추가
-  public static class IPLoggingFilter extends OncePerRequestFilter {
-
-    private static final Logger logger = LoggerFactory.getLogger(IPLoggingFilter.class);
-
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException, java.io.IOException {
-      String clientIp = request.getRemoteAddr();
-      logger.info("요청 IP: {}", clientIp);
-      filterChain.doFilter(request, response);
-    }
-  }
 }
 

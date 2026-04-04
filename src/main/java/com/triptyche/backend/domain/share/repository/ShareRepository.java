@@ -1,6 +1,6 @@
 package com.triptyche.backend.domain.share.repository;
 
-import com.triptyche.backend.domain.share.dto.ShareSummary;
+import com.triptyche.backend.domain.share.dto.ShareSummaryResponse;
 import com.triptyche.backend.domain.share.model.Share;
 import com.triptyche.backend.domain.trip.model.Trip;
 import java.util.List;
@@ -42,7 +42,7 @@ public interface ShareRepository extends JpaRepository<Share, Long> {
   List<Long> findApprovedRecipientIdsByTrip(@Param("trip") Trip trip);
 
   @Query("""
-          SELECT new com.triptyche.backend.domain.share.dto.ShareSummary(
+          SELECT new com.triptyche.backend.domain.share.dto.ShareSummaryResponse(
               s.trip.tripId, s.recipientId, s.shareId, u.userNickName
           )
           FROM Share s
@@ -50,5 +50,5 @@ public interface ShareRepository extends JpaRepository<Share, Long> {
           WHERE s.trip.tripId IN :tripIds
             AND s.shareStatus = 'APPROVED'
           """)
-  List<ShareSummary> findApprovedShareSummariesByTripIds(@Param("tripIds") List<Long> tripIds);
+  List<ShareSummaryResponse> findApprovedShareSummariesByTripIds(@Param("tripIds") List<Long> tripIds);
 }
