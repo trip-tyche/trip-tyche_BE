@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -91,7 +91,7 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
           String userNameAttributeName,
           Map<String, Object> attributes,
           UserDTO userProfile) {
-    Map<String, Object> customAttribute = new ConcurrentHashMap<>();
+    Map<String, Object> customAttribute = new HashMap<>();
     customAttribute.put(userNameAttributeName, attributes.get(userNameAttributeName));
     customAttribute.put("provider", registrationId);
     customAttribute.put("name", userProfile.userName());
