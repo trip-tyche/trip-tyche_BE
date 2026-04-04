@@ -10,6 +10,7 @@ import com.triptyche.backend.global.auth.CurrentUser;
 import com.triptyche.backend.global.common.RestResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,7 +33,7 @@ public class ShareController {
   @PostMapping("/v1/trips/share")
   public RestResponse<ShareCreateResponse> createShare(
           @CurrentUser User user,
-          @RequestBody ShareCreateRequest request) {
+          @Valid @RequestBody ShareCreateRequest request) {
     return RestResponse.success(shareService.createShare(request, user));
   }
 

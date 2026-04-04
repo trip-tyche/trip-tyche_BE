@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,7 +31,7 @@ public class PresignedURLController {
   @PostMapping("{tripKey}/presigned-url")
   public RestResponse<FilePresignedResponse> generatePresignedUrl(
           @PathVariable String tripKey,
-          @RequestBody FilePresignedRequest request) {
+          @Valid @RequestBody FilePresignedRequest request) {
 
     List<PresignedUrlDetail> presignedUrls = request.files().stream()
             .map(file -> {
