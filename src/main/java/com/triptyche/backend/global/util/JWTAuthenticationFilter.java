@@ -29,10 +29,14 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     log.debug("JWTAuthenticationFilter 실행: URI = {}", request.getRequestURI());
 
     try {
-      // Authorization 헤더 → 쿠키 순으로 토큰 추출
+      // Authorization 헤더 → 쿠키 → 쿼리 파라미터 순으로 토큰 추출
+      // 쿼리 파라미터(?token=)는 WebSocket Handshake 시 헤더 전달이 불가한 경우를 위해 지원
       String token = getTokenFromHeader(request);
       if (!StringUtils.hasText(token)) {
         token = getTokenFromCookies(request);
+      }
+      if (!StringUtils.hasText(token)) {
+        token = getTokenFromQueryParam(request);
       }
       if (StringUtils.hasText(token)) {
         // 토큰 검증 시 만료되거나 유효하지 않으면 CustomException이 발생합니다.
@@ -79,5 +83,13 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
       }
     }
     return null;
+  }
+
+  /**
+   * 쿼리 파라미터에서 토큰 추출 (?token=...)
+   * WebSocket Handshake 시 Authorization 헤더 전달이 불가한 경우를 위해 지원
+   */
+  private String getTokenFromQueryParam(HttpServletRequest request) {
+    return request.getParameter("token");
   }
 }
