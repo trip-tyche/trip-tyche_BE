@@ -151,17 +151,17 @@ class TripCommandServiceTest {
     }
 
     @Test
-    @DisplayName("접근 권한이 없는 사용자가 요청하면 UNAUTHORIZED_ACCESS 예외가 발생한다")
-    void markImagesUploaded_givenUnauthorizedUser_throwsUnauthorizedAccess() {
+    @DisplayName("접근 권한이 없는 사용자가 요청하면 ACCESS_DENIED 예외가 발생한다")
+    void markImagesUploaded_givenUnauthorizedUser_throwsAccessDenied() {
       // given
       given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, otherUser))
-              .willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS));
+              .willThrow(new CustomException(ResultCode.ACCESS_DENIED));
 
       // when & then
       assertThatThrownBy(() -> tripCommandService.markImagesUploaded(otherUser, TEST_TRIP_KEY))
               .isInstanceOf(CustomException.class)
               .extracting(e -> ((CustomException) e).getResultCode())
-              .isEqualTo(ResultCode.UNAUTHORIZED_ACCESS);
+              .isEqualTo(ResultCode.ACCESS_DENIED);
     }
   }
 
@@ -198,17 +198,17 @@ class TripCommandServiceTest {
     }
 
     @Test
-    @DisplayName("접근 권한이 없는 사용자가 요청하면 UNAUTHORIZED_ACCESS 예외가 발생한다")
-    void finalizeTrip_givenUnauthorizedUser_throwsUnauthorizedAccess() {
+    @DisplayName("접근 권한이 없는 사용자가 요청하면 ACCESS_DENIED 예외가 발생한다")
+    void finalizeTrip_givenUnauthorizedUser_throwsAccessDenied() {
       // given
       given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, otherUser))
-              .willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS));
+              .willThrow(new CustomException(ResultCode.ACCESS_DENIED));
 
       // when & then
       assertThatThrownBy(() -> tripCommandService.finalizeTrip(otherUser, TEST_TRIP_KEY))
               .isInstanceOf(CustomException.class)
               .extracting(e -> ((CustomException) e).getResultCode())
-              .isEqualTo(ResultCode.UNAUTHORIZED_ACCESS);
+              .isEqualTo(ResultCode.ACCESS_DENIED);
     }
   }
 
@@ -264,17 +264,17 @@ class TripCommandServiceTest {
     }
 
     @Test
-    @DisplayName("접근 권한이 없는 사용자가 수정 요청하면 UNAUTHORIZED_ACCESS 예외가 발생한다")
-    void updateTrip_givenUnauthorizedUser_throwsUnauthorizedAccess() {
+    @DisplayName("접근 권한이 없는 사용자가 수정 요청하면 ACCESS_DENIED 예외가 발생한다")
+    void updateTrip_givenUnauthorizedUser_throwsAccessDenied() {
       // given
       given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, otherUser))
-              .willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS));
+              .willThrow(new CustomException(ResultCode.ACCESS_DENIED));
 
       // when & then
       assertThatThrownBy(() -> tripCommandService.updateTrip(otherUser, TEST_TRIP_KEY, updateRequest))
               .isInstanceOf(CustomException.class)
               .extracting(e -> ((CustomException) e).getResultCode())
-              .isEqualTo(ResultCode.UNAUTHORIZED_ACCESS);
+              .isEqualTo(ResultCode.ACCESS_DENIED);
     }
   }
 
@@ -298,17 +298,17 @@ class TripCommandServiceTest {
     }
 
     @Test
-    @DisplayName("소유자가 아닌 사용자가 삭제 요청하면 UNAUTHORIZED_ACCESS 예외가 발생한다")
-    void deleteTrip_givenNonOwner_throwsUnauthorizedAccess() {
+    @DisplayName("소유자가 아닌 사용자가 삭제 요청하면 ACCESS_DENIED 예외가 발생한다")
+    void deleteTrip_givenNonOwner_throwsAccessDenied() {
       // given
       given(tripAccessValidator.validateOwnerByKey(TEST_TRIP_KEY, otherUser))
-              .willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS));
+              .willThrow(new CustomException(ResultCode.ACCESS_DENIED));
 
       // when & then
       assertThatThrownBy(() -> tripCommandService.deleteTrip(otherUser, TEST_TRIP_KEY))
               .isInstanceOf(CustomException.class)
               .extracting(e -> ((CustomException) e).getResultCode())
-              .isEqualTo(ResultCode.UNAUTHORIZED_ACCESS);
+              .isEqualTo(ResultCode.ACCESS_DENIED);
     }
 
     @Test

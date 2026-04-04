@@ -118,7 +118,7 @@ class TripCommandControllerTest {
       @DisplayName("존재하지 않는 tripKey로 요청하면 403 응답을 반환한다")
       void markImagesUploaded_givenInvalidTripKey_returns403() throws Exception {
         //given
-        willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS))
+        willThrow(new CustomException(ResultCode.ACCESS_DENIED))
                 .given(tripCommandService).markImagesUploaded(any(User.class), eq("INVALID_KEY"));
 
         //when & then
@@ -131,7 +131,7 @@ class TripCommandControllerTest {
       @DisplayName("접근 권한이 없는 여행에 요청하면 403 응답을 반환한다")
       void markImagesUploaded_givenUnauthorizedUser_returns403() throws Exception {
         //given
-        willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS))
+        willThrow(new CustomException(ResultCode.ACCESS_DENIED))
                 .given(tripCommandService).markImagesUploaded(any(User.class), eq(TEST_TRIP_KEY));
 
         //when & then
@@ -175,7 +175,7 @@ class TripCommandControllerTest {
       @DisplayName("접근 권한이 없는 여행에 요청하면 403 응답을 반환한다")
       void finalizeTrip_givenUnauthorizedUser_returns403() throws Exception {
         //given
-        willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS))
+        willThrow(new CustomException(ResultCode.ACCESS_DENIED))
                 .given(tripCommandService).finalizeTrip(any(User.class), eq(TEST_TRIP_KEY));
 
         //when & then
@@ -222,7 +222,7 @@ class TripCommandControllerTest {
       @DisplayName("존재하지 않는 tripKey로 요청하면 403 응답을 반환한다")
       void updateTrip_givenInvalidTripKey_returns403() throws Exception {
         //given
-        willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS))
+        willThrow(new CustomException(ResultCode.ACCESS_DENIED))
                 .given(tripCommandService)
                 .updateTrip(any(User.class), eq("INVALID_KEY"), any(TripUpdateRequest.class));
 
@@ -238,7 +238,7 @@ class TripCommandControllerTest {
       @DisplayName("접근 권한이 없는 여행에 수정 요청하면 403 응답을 반환한다")
       void updateTrip_givenUnauthorizedUser_returns403() throws Exception {
         //given
-        willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS))
+        willThrow(new CustomException(ResultCode.ACCESS_DENIED))
                 .given(tripCommandService)
                 .updateTrip(any(User.class), eq(TEST_TRIP_KEY), any(TripUpdateRequest.class));
 
@@ -272,7 +272,7 @@ class TripCommandControllerTest {
       @DisplayName("소유자가 아닌 사용자가 삭제 요청하면 403 응답을 반환한다")
       void deleteTrip_givenNonOwner_returns403() throws Exception {
         //given
-        willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS))
+        willThrow(new CustomException(ResultCode.ACCESS_DENIED))
                 .given(tripCommandService).deleteTrip(any(User.class), eq(TEST_TRIP_KEY));
 
         //when & then
@@ -285,7 +285,7 @@ class TripCommandControllerTest {
       @DisplayName("존재하지 않는 tripKey로 삭제 요청하면 403 응답을 반환한다")
       void deleteTrip_givenInvalidTripKey_returns403() throws Exception {
         //given
-        willThrow(new CustomException(ResultCode.UNAUTHORIZED_ACCESS))
+        willThrow(new CustomException(ResultCode.ACCESS_DENIED))
                 .given(tripCommandService).deleteTrip(any(User.class), eq("INVALID_KEY"));
 
         //when & then
