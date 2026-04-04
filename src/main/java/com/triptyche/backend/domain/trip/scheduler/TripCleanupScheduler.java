@@ -34,7 +34,7 @@ public class TripCleanupScheduler {
     List<Trip> abandonedTrips = tripRepository.findAbandonedTripsBefore(threshold);
 
     if (abandonedTrips.isEmpty()) {
-      log.info("삭제할 방치된 여행이 없습니다.");
+      log.debug("삭제할 방치된 여행이 없습니다.");
       return;
     }
 
@@ -52,7 +52,7 @@ public class TripCleanupScheduler {
     List<Trip> deletedTrips = tripRepository.findSoftDeletedBefore(threshold);
 
     if (deletedTrips.isEmpty()) {
-      log.info("정리할 여행 없음");
+      log.debug("만료된 여행 없음 — 정리 생략");
       return;
     }
 

@@ -69,15 +69,13 @@ public class NotificationService {
 
   @Transactional
   public void markAsDeleted(List<Long> notificationIds) {
-    log.debug("markAsDeleted 호출, ids = {}", notificationIds);
-
     List<Notification> notifications = notificationRepository.findAllById(notificationIds);
 
     notifications.stream()
             .filter(n -> n.getStatus() != NotificationStatus.DELETE)
             .forEach(n -> {
               n.markAsDeleted();
-              log.debug("[{}] 알림 상태 변화 = {}", n.getNotificationId(), n.getStatus());
+              log.debug("[{}] 알림 상태 변화 → {}", n.getNotificationId(), n.getStatus());
             });
   }
 
