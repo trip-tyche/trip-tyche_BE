@@ -2,6 +2,7 @@ package com.triptyche.backend.global.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.converter.DefaultContentTypeResolver;
@@ -18,7 +19,10 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 
 @Configuration
 @EnableWebSocketMessageBroker
+@RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+  private final ObjectMapper objectMapper;
 
   @Override
   public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -52,7 +56,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   @Override
   public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
-    registration.setSendTimeLimit(15 * 1000);       // 메시지 전송 시간 제한 (15초)
+    registration.setSendTimeLimit(15 * 1000)        // 메시지 전송 시간 제한 (15초)
+                .setSendBufferSizeLimit(512 * 1024) // 전송 버퍼 크기 제한 (512KB)
+                .setMessageSizeLimit(64 * 1024);    // 단일 메시지 크기 제한 (64KB)
   }
 
   @Override
@@ -61,7 +67,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     resolver.setDefaultMimeType(MimeTypeUtils.APPLICATION_JSON);
 
     MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
-    converter.setObjectMapper(new ObjectMapper());
+    converter.setObjectMapper(objectMapper);
     converter.setContentTypeResolver(resolver);
 
     messageConverters.add(converter);
