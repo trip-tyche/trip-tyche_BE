@@ -32,8 +32,13 @@ public enum OAuthAttributes {
       throw new CustomException(ResultCode.OAUTH_SERVICE_FAILURE);
     }
 
+    String nickname = profile.get("nickname");
+    if (nickname == null) {
+      nickname = "사용자";
+    }
+
     return new UserDTO(
-            profile.get("nickname"),
+            nickname,
             email,
             "kakao",
             List.of("ROLE_USER") // 기본 권한 설정

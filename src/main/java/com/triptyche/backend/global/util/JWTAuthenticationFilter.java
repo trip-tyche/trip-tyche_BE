@@ -26,7 +26,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
           throws ServletException, IOException {
-    log.info("✅JWTAuthenticationFilter 실행: URI = {}", request.getRequestURI());
+    log.debug("JWTAuthenticationFilter 실행: URI = {}", request.getRequestURI());
 
     try {
       // Authorization 헤더 → 쿠키 순으로 토큰 추출

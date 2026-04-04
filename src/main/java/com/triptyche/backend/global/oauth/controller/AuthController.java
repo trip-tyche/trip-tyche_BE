@@ -50,7 +50,7 @@ public class AuthController {
   }
 
   @Tag(name = "0. 로그인&인증관련 API")
-  @Operation(summary = "토큰 갱신 API", description = "<a href='https://www.notion"
+  @Operation(summary = "로그아웃 API", description = "<a href='https://www.notion"
           + ".so/maristadev/1d066958e5b380df964ed370a7d39636?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping("/logout")
   public RestResponse<String> logout(HttpServletRequest request, HttpServletResponse response) {

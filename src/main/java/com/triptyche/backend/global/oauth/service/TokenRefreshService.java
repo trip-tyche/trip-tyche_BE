@@ -55,9 +55,7 @@ public class TokenRefreshService {
 
       // 저장된 토큰과 전달된 토큰이 일치하지 않는 경우
       if (!storedRefreshToken.equals(refreshToken)) {
-        log.warn("Refresh token 불일치 전달: {}, 저장된: {}",
-                refreshToken.substring(0, 20) + "...",
-                storedRefreshToken.substring(0, 20) + "...");
+        log.warn("Refresh token 불일치 감지: 사용자={}", userEmail);
         throw new CustomException(ResultCode.INVALID_JWT);
       }
 
