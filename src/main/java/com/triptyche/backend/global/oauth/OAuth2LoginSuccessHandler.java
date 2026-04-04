@@ -40,7 +40,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             attributes.get("accessToken") instanceof String ? (String) attributes.get("accessToken") : null;
     String refreshToken =
             attributes.get("refreshToken") instanceof String ? (String) attributes.get("refreshToken") : null;
-    log.debug("🔑userId: {}, accessToken: {}, refreshToken: {}", userId, accessToken, refreshToken);
+    log.debug("userId: {}", userId);
 
     if (userId == null || accessToken == null || refreshToken == null) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, "유효하지 않은 사용자 ID 또는 토큰입니다.");
