@@ -16,11 +16,11 @@ public class TripAccessValidator {
 
   public Trip validateAccessibleTripByKey(String tripKey, User user) {
     return tripRepository.findAccessibleTripByKey(tripKey, user.getUserId())
-            .orElseThrow(() -> new CustomException(ResultCode.UNAUTHORIZED_ACCESS));
+            .orElseThrow(() -> new CustomException(ResultCode.ACCESS_DENIED));
   }
 
   public Trip validateOwnerByKey(String tripKey, User user) {
     return tripRepository.findOwnerTripByKey(tripKey, user.getUserId())
-            .orElseThrow(() -> new CustomException(ResultCode.UNAUTHORIZED_ACCESS));
+            .orElseThrow(() -> new CustomException(ResultCode.ACCESS_DENIED));
   }
 }
