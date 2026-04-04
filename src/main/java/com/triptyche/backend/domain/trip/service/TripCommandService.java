@@ -54,7 +54,6 @@ public class TripCommandService {
     trip.confirmTrip();
   }
 
-  // 사용자 여행 정보 저장 및 수정
   @Transactional
   public void updateTrip(User user, String tripKey, TripUpdateRequest request) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
@@ -79,7 +78,6 @@ public class TripCommandService {
     ));
   }
 
-  // 사용자 여행 정보 삭제
   @Transactional
   public void deleteTrip(User user, String tripKey) {
     Trip trip = tripAccessValidator.validateOwnerByKey(tripKey, user);

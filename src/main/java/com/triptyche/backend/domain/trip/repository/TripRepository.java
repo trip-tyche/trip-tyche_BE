@@ -14,9 +14,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TripRepository extends JpaRepository<Trip, Long> {
 
-  @Query("SELECT t.tripTitle FROM Trip t WHERE t.tripId = :tripId")
-  Optional<String> findTripTitleById(@Param("tripId") Long tripId);
-
   @Query("""
           SELECT DISTINCT t
           FROM Trip t

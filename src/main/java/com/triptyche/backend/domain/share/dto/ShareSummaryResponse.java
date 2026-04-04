@@ -1,6 +1,6 @@
 package com.triptyche.backend.domain.share.dto;
 
-public record ShareSummary(
+public record ShareSummaryResponse(
         Long tripId,
         Long recipientId,
         Long shareId,
