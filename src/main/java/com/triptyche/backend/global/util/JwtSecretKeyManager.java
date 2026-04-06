@@ -27,6 +27,9 @@ public class JwtSecretKeyManager {
   @Value("${GOOGLE_OAUTH_CLIENT_SECRET}")
   private String googleSecretKey;
 
+  @Value("${GUEST_JWT_SECRET}")
+  private String guestSecretKey;
+
   private Map<String, Key> secretKeyMap;
 
   /**
@@ -35,7 +38,11 @@ public class JwtSecretKeyManager {
    */
   @PostConstruct
   private void init() {
-    secretKeyMap = Map.of("kakao", Keys.hmacShaKeyFor(kakaoSecretKey.getBytes()), "google", Keys.hmacShaKeyFor(googleSecretKey.getBytes()));
+    secretKeyMap = Map.of(
+        "kakao", Keys.hmacShaKeyFor(kakaoSecretKey.getBytes()),
+        "google", Keys.hmacShaKeyFor(googleSecretKey.getBytes()),
+        "guest", Keys.hmacShaKeyFor(guestSecretKey.getBytes())
+    );
   }
 
   /**

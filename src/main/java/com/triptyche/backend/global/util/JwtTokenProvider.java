@@ -64,6 +64,29 @@ public class JwtTokenProvider {
   }
 
   /**
+   * Guest Access Token 생성 (Refresh Token 없음, 4시간 만료)
+   *
+   * @param userEmail 게스트 사용자 이메일
+   * @param provider  "guest"
+   * @return 생성된 JWT 토큰
+   */
+  public String createGuestToken(String userEmail, String provider) {
+    Claims claims = Jwts.claims().setSubject(userEmail);
+    claims.put("roles", List.of("ROLE_USER"));
+    claims.put("provider", provider);
+
+    Date now = new Date();
+    Date validity = new Date(now.getTime() + jwtProperties.guestTokenExpirySeconds() * 1000);
+
+    return Jwts.builder()
+            .setClaims(claims)
+            .setIssuedAt(now)
+            .setExpiration(validity)
+            .signWith(jwtSecretKeyManager.getSecretKey(provider), SignatureAlgorithm.HS256)
+            .compact();
+  }
+
+  /**
    * Refresh Token 생성
    *
    * @param userEmail

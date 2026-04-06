@@ -7,6 +7,7 @@ spring:
 jwt:
   access-token-expiry-seconds: 3600       # 1시간
   refresh-token-expiry-seconds: 2592000   # 30일
+  guest-token-expiry-seconds: 14400       # 4시간
 
 ---
 spring:
