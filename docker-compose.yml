@@ -21,6 +21,7 @@ services:
       OCI_ACCESS_KEY: ${OCI_ACCESS_KEY}
       OCI_SECRET_KEY: ${OCI_SECRET_KEY}
       OCI_S3_ENDPOINT: ${OCI_S3_ENDPOINT}
+      GUEST_JWT_SECRET: ${GUEST_JWT_SECRET}
     ports:
       - "8080:8080"
     deploy:
