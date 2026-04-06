@@ -27,7 +27,7 @@ public class GuestAuthService {
     private final CookieUtil cookieUtil;
 
     @Transactional
-    public void issueGuestToken(HttpServletResponse response) {
+    public String issueGuestToken(HttpServletResponse response) {
         String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         String guestEmail = "guest_" + uuid + "@triptyche.com";
 
@@ -47,5 +47,6 @@ public class GuestAuthService {
                 (int) jwtProperties.guestTokenExpirySeconds());
 
         log.info("게스트 계정 생성: {}", guestEmail);
+        return accessToken;
     }
 }

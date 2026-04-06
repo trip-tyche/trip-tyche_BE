@@ -21,7 +21,7 @@ public class GuestAuthController {
     @Operation(summary = "게스트 토큰 발급 (포트폴리오 체험용)")
     @PostMapping("/guest")
     public RestResponse<String> issueGuestToken(HttpServletResponse response) {
-        guestAuthService.issueGuestToken(response);
-        return RestResponse.success("게스트 로그인 성공. 4시간 동안 모든 기능을 체험하실 수 있습니다.");
+        String accessToken = guestAuthService.issueGuestToken(response);
+        return RestResponse.success(accessToken);
     }
 }
