@@ -38,10 +38,12 @@ public class GuestCleanupScheduler {
             return;
         }
 
-        for (User guest : expiredGuests) {
-            List<Trip> trips = tripRepository.findAllByUser(guest);
+        // 전체 게스트의 Trip을 한 번에 조회 (N+1 방지)
+        List<Trip> allTrips = tripRepository.findAllByUserIn(expiredGuests);
 
-            List<String> deletableKeys = mediaFileRepository.findAllByTripIn(trips).stream()
+        // 전체 Trip의 MediaFile을 한 번에 조회 후 S3 삭제 (demo/ 경로 제외)
+        if (!allTrips.isEmpty()) {
+            List<String> deletableKeys = mediaFileRepository.findAllByTripIn(allTrips).stream()
                     .map(mf -> mf.getMediaKey())
                     .filter(key -> !key.startsWith("demo/"))
                     .toList();
@@ -50,11 +52,11 @@ public class GuestCleanupScheduler {
                 try {
                     s3UploadService.deleteFiles(deletableKeys);
                 } catch (Exception e) {
-                    log.error("게스트 S3 파일 삭제 실패: user={}", guest.getUserEmail(), e);
+                    log.error("게스트 S3 파일 삭제 실패: {}건", deletableKeys.size(), e);
                 }
             }
 
-            tripRepository.deleteAll(trips);
+            tripRepository.deleteAll(allTrips);
         }
 
         userRepository.deleteAll(expiredGuests);

@@ -61,4 +61,6 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
 
   @Query("SELECT t FROM Trip t WHERE t.deletedAt IS NOT NULL AND t.deletedAt < :threshold")
   List<Trip> findSoftDeletedBefore(@Param("threshold") LocalDateTime threshold);
+
+  List<Trip> findAllByUserIn(List<User> users);
 }
