@@ -66,15 +66,19 @@ public class TripCleanupScheduler {
   }
 
   private void deleteFromStorage(List<String> mediaKeys) {
-    if (mediaKeys.isEmpty()) {
-      return;
-    }
+    if (mediaKeys.isEmpty()) return;
+
+    List<String> deletableKeys = mediaKeys.stream()
+            .filter(key -> !key.startsWith("demo/"))
+            .toList();
+
+    if (deletableKeys.isEmpty()) return;
 
     try {
-      s3UploadService.deleteFiles(mediaKeys);
-      log.info("S3 파일 정리 완료 — {}건", mediaKeys.size());
+      s3UploadService.deleteFiles(deletableKeys);
+      log.info("S3 파일 정리 완료 — {}건", deletableKeys.size());
     } catch (Exception e) {
-      log.error("S3 파일 정리 실패 — {}건, 수동 확인 필요", mediaKeys.size(), e);
+      log.error("S3 파일 정리 실패 — {}건, 수동 확인 필요", deletableKeys.size(), e);
     }
   }
 }

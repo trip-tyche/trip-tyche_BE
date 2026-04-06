@@ -1,6 +1,8 @@
 package com.triptyche.backend.domain.user.repository;
 
 import com.triptyche.backend.domain.user.model.User;
+import com.triptyche.backend.domain.user.model.UserRole;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,4 +18,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
   Optional<User> findByUserNickName(String userNickName);
 
   List<User> findByUserId(Long userId);
+
+  List<User> findByRoleAndCreatedAtBefore(UserRole role, LocalDateTime threshold);
 }

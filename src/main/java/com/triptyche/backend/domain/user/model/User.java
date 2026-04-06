@@ -4,11 +4,15 @@ import com.triptyche.backend.domain.trip.model.Trip;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -43,8 +47,23 @@ public class User {
   @Column(name = "provider", nullable = false)
   private String provider;
 
+  @Enumerated(EnumType.STRING)
+  @Column(name = "role", nullable = false)
+  @Builder.Default
+  private UserRole role = UserRole.USER;
+
+  @Column(name = "created_at", updatable = false)
+  private LocalDateTime createdAt;
+
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Trip> trips;
+
+  @PrePersist
+  public void prePersist() {
+    if (this.createdAt == null) {
+      this.createdAt = LocalDateTime.now();
+    }
+  }
 
   public void updateUser(String userName, String userEmail) {
     this.userName = userName;
