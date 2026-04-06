@@ -33,8 +33,10 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
 
   long countByUserAndStatus(User user, TripStatus status);
 
-  @Query("SELECT t FROM Trip t WHERE t.status IN ('DRAFT', 'IMAGES_UPLOADED') AND t.createdAt < :threshold")
+  @Query("SELECT t FROM Trip t WHERE t.status IN ('DRAFT', 'IMAGES_UPLOADED') AND t.createdAt < :threshold AND t.user.role != com.triptyche.backend.domain.user.model.UserRole.GUEST")
   List<Trip> findAbandonedTripsBefore(@Param("threshold") LocalDateTime threshold);
+
+  List<Trip> findAllByUser(User user);
 
   @Query("""
           SELECT t
