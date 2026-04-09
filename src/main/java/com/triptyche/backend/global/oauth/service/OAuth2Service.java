@@ -2,21 +2,15 @@ package com.triptyche.backend.global.oauth.service;
 
 import com.triptyche.backend.domain.user.dto.OAuthUserInfo;
 import com.triptyche.backend.domain.user.model.User;
-import com.triptyche.backend.domain.user.repository.UserRepository;
+import com.triptyche.backend.domain.user.service.UserService;
 import com.triptyche.backend.global.common.ResultCode;
-import com.triptyche.backend.global.config.JwtProperties;
 import com.triptyche.backend.global.exception.CustomException;
 import com.triptyche.backend.global.oauth.OAuthAttributes;
-import com.triptyche.backend.global.oauth.repository.RefreshTokenRepository;
-import com.triptyche.backend.global.util.JwtTokenProvider;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -32,10 +26,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
-  private final UserRepository userRepository;
-  private final JwtTokenProvider jwtTokenProvider;
-  private final RefreshTokenRepository refreshTokenRepository;
-  private final JwtProperties jwtProperties;
+  private final UserService userService;
 
   @Override
   public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -52,23 +43,11 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
       Map<String, Object> attributes = oAuth2User.getAttributes();
       OAuthUserInfo userProfile = OAuthAttributes.extract(registrationId, attributes);
 
-      User user = updateOrSaveUser(userProfile);
+      User user = userService.getOrCreateFromOAuth(userProfile);
       Long userId = user.getUserId();
 
-      // 기본 권한 설정
-      List<String> roles = List.of("ROLE_USER");
-      // Access Token 생성
-      String accessToken = jwtTokenProvider.createAccessToken(userProfile.userEmail(), roles, registrationId);
-      // Refresh Token 생성
-      String refreshToken = jwtTokenProvider.createRefreshToken(userProfile.userEmail(), registrationId);
-      // Redis에 Refresh Token 저장
-      refreshTokenRepository.save(userProfile.userEmail(), refreshToken, jwtProperties.refreshTokenExpirySeconds());
-
-      // 사용자 정보 및 토큰을 customAttribute에 추가하여 SuccessHandler에서 활용 가능하도록 함
       Map<String, Object> customAttribute = getCustomAttribute(registrationId, userNameAttributeName, attributes,
               userProfile);
-      customAttribute.put("accessToken", accessToken);
-      customAttribute.put("refreshToken", refreshToken);
       customAttribute.put("userId", userId);
 
       return new DefaultOAuth2User(
@@ -79,12 +58,14 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
     } catch (OAuth2AuthenticationException e) {
       log.error("OAuth2 인증 중 오류 발생: {}", e.getMessage());
       throw e;
+    } catch (CustomException e) {
+      log.error("사용자 저장 실패: {}", e.getMessage());
+      throw new OAuth2AuthenticationException(new OAuth2Error("user_save_failure", e.getMessage(), null), e.getMessage());
     } catch (Exception e) {
       log.error("OAuth2 서비스 처리 중 알 수 없는 오류 발생: {}", e.getMessage());
       throw new CustomException(ResultCode.INTERNAL_SERVER_ERROR, e);
     }
   }
-
 
   private Map<String, Object> getCustomAttribute(
           String registrationId,
@@ -97,30 +78,5 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
     customAttribute.put("name", userProfile.userName());
     customAttribute.put("email", userProfile.userEmail());
     return customAttribute;
-  }
-
-  private User updateOrSaveUser(OAuthUserInfo userProfile) {
-    try {
-      // 이메일과 제공자 정보를 기준으로 사용자 검색
-      Optional<User> existingUser = userRepository.findUserByUserEmailAndProvider(userProfile.userEmail(),
-              userProfile.provider());
-
-      if (existingUser.isPresent()) {
-        // 기존 사용자 업데이트
-        User user = existingUser.get();
-        user.updateUser(userProfile.userName(), userProfile.userEmail());
-        return userRepository.save(user);
-      } else {
-        // 새로운 사용자 저장
-        return userRepository.save(userProfile.toEntity());
-      }
-    } catch (DataIntegrityViolationException e) {
-      log.error("이메일 중복으로 사용자 저장 실패: {}", e.getMessage());
-      throw new OAuth2AuthenticationException(new OAuth2Error("email_already_registered", "이메일이 이미 등록되어 있습니다.", null),
-              e.getMessage());
-    } catch (Exception e) {
-      log.error("사용자 정보 저장 또는 업데이트 중 오류 발생: {}", e.getMessage());
-      throw new CustomException(ResultCode.USER_SAVE_FAILURE, e);
-    }
   }
 }

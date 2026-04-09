@@ -55,10 +55,13 @@ public class AuthController {
   @PostMapping("/logout")
   public RestResponse<String> logout(HttpServletRequest request, HttpServletResponse response) {
     String refreshToken = cookieUtil.getCookieValue(request, "refresh_token");
-    if (refreshToken != null) {
-      logoutService.logout(response, refreshToken);
-    } else {
-      log.warn("로그아웃 시, refresh_token 쿠키가 존재하지 않음");
+    try {
+      if (refreshToken != null) {
+        logoutService.logout(refreshToken);
+      } else {
+        log.warn("로그아웃 시, refresh_token 쿠키가 존재하지 않음");
+      }
+    } finally {
       cookieUtil.deleteCookie(response, "access_token");
       cookieUtil.deleteCookie(response, "refresh_token");
     }

@@ -115,6 +115,10 @@ public class Trip {
     this.deletedAt = LocalDateTime.now();
   }
 
+  public boolean isDeleted() {
+    return this.deletedAt != null;
+  }
+
   @PrePersist
   public void prePersist() {
     if (this.tripKey == null || this.tripKey.isEmpty()) {
