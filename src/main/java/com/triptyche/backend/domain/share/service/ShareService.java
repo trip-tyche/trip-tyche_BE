@@ -11,8 +11,10 @@ import com.triptyche.backend.domain.share.model.ShareStatus;
 import com.triptyche.backend.domain.share.repository.ShareRepository;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
+import com.triptyche.backend.domain.user.dto.UserSearchResponse;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
+import com.triptyche.backend.domain.user.service.UserService;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +29,13 @@ public class ShareService {
 
   private final ShareRepository shareRepository;
   private final UserRepository userRepository;
+  private final UserService userService;
   private final ApplicationEventPublisher eventPublisher;
   private final TripAccessValidator tripAccessValidator;
+
+  public UserSearchResponse findShareableUser(String nickname) {
+    return userService.getUserByNickName(nickname);
+  }
 
   @Transactional
   public ShareCreateResponse createShare(ShareCreateRequest request, User user) {

@@ -1,7 +1,7 @@
 package com.triptyche.backend.domain.share.controller;
 
+import com.triptyche.backend.domain.share.service.ShareService;
 import com.triptyche.backend.domain.user.dto.UserSearchResponse;
-import com.triptyche.backend.domain.user.service.UserService;
 import com.triptyche.backend.global.common.RestResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ShareUserController {
 
-  private final UserService userService;
+  private final ShareService shareService;
 
   @Operation(summary = "사용자 검색", description = "<a href='https://www.notion"
           + ".so/maristadev/17766958e5b380e9b22bff0ed697db9d?pvs=4' target='_blank'>API 명세서</a>")
@@ -25,7 +25,6 @@ public class ShareUserController {
   public RestResponse<UserSearchResponse> findUserByNickName(
           @RequestParam String nickname) {
 
-    UserSearchResponse responseDTO = userService.getUserByNickName(nickname);
-    return RestResponse.success(responseDTO);
+    return RestResponse.success(shareService.findShareableUser(nickname));
   }
 }
