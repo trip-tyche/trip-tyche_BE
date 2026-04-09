@@ -1,4 +1,4 @@
-package com.triptyche.backend.domain.user.controller;
+package com.triptyche.backend.domain.share.controller;
 
 import com.triptyche.backend.domain.user.dto.UserSearchResponse;
 import com.triptyche.backend.domain.user.service.UserService;
