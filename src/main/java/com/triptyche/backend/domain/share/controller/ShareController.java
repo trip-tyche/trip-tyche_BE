@@ -3,8 +3,9 @@ package com.triptyche.backend.domain.share.controller;
 import com.triptyche.backend.domain.share.dto.ShareCreateRequest;
 import com.triptyche.backend.domain.share.dto.ShareCreateResponse;
 import com.triptyche.backend.domain.share.dto.ShareDetailResponse;
-import com.triptyche.backend.domain.share.model.ShareStatus;
 import com.triptyche.backend.domain.share.service.ShareService;
+import com.triptyche.backend.domain.share.model.ShareStatus;
+import com.triptyche.backend.domain.user.dto.UserSearchResponse;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.auth.CurrentUser;
 import com.triptyche.backend.global.common.RestResponse;
@@ -64,5 +65,13 @@ public class ShareController {
           @PathVariable Long shareId) {
     shareService.deleteShare(shareId, user);
     return RestResponse.success("공유 관계 해제 완료");
+  }
+
+  @Operation(summary = "사용자 검색", description = "<a href='https://www.notion"
+          + ".so/maristadev/17766958e5b380e9b22bff0ed697db9d?pvs=4' target='_blank'>API 명세서</a>")
+  @GetMapping("/v1/share/users")
+  public RestResponse<UserSearchResponse> findUserByNickName(
+          @RequestParam String nickname) {
+    return RestResponse.success(shareService.findShareableUser(nickname));
   }
 }
