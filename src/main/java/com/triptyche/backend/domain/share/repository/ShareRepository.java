@@ -6,9 +6,11 @@ import com.triptyche.backend.domain.trip.model.Trip;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface ShareRepository extends JpaRepository<Share, Long> {
@@ -17,7 +19,10 @@ public interface ShareRepository extends JpaRepository<Share, Long> {
 
   List<Share> findAllByRecipientId(Long recipientId);
 
-  void deleteAllByTripIn(List<Trip> trips);
+  @Transactional
+  @Modifying(clearAutomatically = true)
+  @Query("DELETE FROM Share s WHERE s.trip IN :trips")
+  void deleteAllByTripIn(@Param("trips") List<Trip> trips);
 
   @Query("""
       SELECT s FROM Share s

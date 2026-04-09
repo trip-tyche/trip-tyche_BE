@@ -3,12 +3,15 @@ package com.triptyche.backend.domain.trip.repository;
 import com.triptyche.backend.domain.media.dto.MediaFileResponseDTO;
 import com.triptyche.backend.domain.trip.dto.PinPointResponse;
 import com.triptyche.backend.domain.trip.model.PinPoint;
+import com.triptyche.backend.domain.trip.model.Trip;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface PinPointRepository extends JpaRepository<PinPoint, Long> {
 
@@ -50,6 +53,11 @@ public interface PinPointRepository extends JpaRepository<PinPoint, Long> {
   List<PinPointResponse> findEarliestSingleMediaFileForEachPinPointByTripId(
           @Param("tripId") Long tripId,
           @Param("defaultDate") LocalDateTime defaultDate);
+
+  @Transactional
+  @Modifying(clearAutomatically = true)
+  @Query("DELETE FROM PinPoint p WHERE p.trip IN :trips")
+  void deleteAllByTripIn(@Param("trips") List<Trip> trips);
 
   @Query("""
               SELECT new com.triptyche.backend.domain.media.dto.MediaFileResponseDTO(
