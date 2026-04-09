@@ -24,6 +24,14 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(DataIntegrityViolationException.class)
   public ResponseEntity<RestResponse<Void>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+    String message = ex.getMostSpecificCause().getMessage();
+
+    if (message != null &&
+        (message.contains("user_nick_name") || message.contains("uq_user_nick_name"))) {
+      RestResponse<Void> response = RestResponse.error(ResultCode.USER_NICKNAME_DUPLICATED);
+      return new ResponseEntity<>(response, ResultCode.USER_NICKNAME_DUPLICATED.getHttpStatus());
+    }
+
     RestResponse<Void> response = RestResponse.error(ResultCode.DUPLICATE_DATA_CONFLICT);
     return new ResponseEntity<>(response, ResultCode.DUPLICATE_DATA_CONFLICT.getHttpStatus());
   }
