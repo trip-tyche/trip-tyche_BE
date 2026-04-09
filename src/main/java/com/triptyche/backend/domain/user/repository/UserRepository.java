@@ -21,8 +21,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   Optional<User> findByUserNickName(String userNickName);
 
-  List<User> findByUserId(Long userId);
-
   List<User> findByRoleAndCreatedAtBefore(UserRole role, LocalDateTime threshold);
 
   @Transactional
