@@ -7,9 +7,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface TripRepository extends JpaRepository<Trip, Long> {
@@ -63,4 +65,14 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
   List<Trip> findSoftDeletedBefore(@Param("threshold") LocalDateTime threshold);
 
   List<Trip> findAllByUserIn(List<User> users);
+
+  @Transactional
+  @Modifying(clearAutomatically = true)
+  @Query("DELETE FROM Trip t WHERE t.user IN :users")
+  void deleteAllByUserIn(@Param("users") List<User> users);
+
+  @Transactional
+  @Modifying(clearAutomatically = true)
+  @Query("DELETE FROM Trip t WHERE t IN :trips")
+  void deleteAllIn(@Param("trips") List<Trip> trips);
 }

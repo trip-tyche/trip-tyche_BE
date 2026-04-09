@@ -8,9 +8,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
@@ -87,4 +89,9 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
   );
 
   List<MediaFile> findAllByTripIn(List<Trip> trips);
+
+  @Transactional
+  @Modifying(clearAutomatically = true)
+  @Query("DELETE FROM MediaFile m WHERE m.trip IN :trips")
+  void deleteAllByTripIn(@Param("trips") List<Trip> trips);
 }

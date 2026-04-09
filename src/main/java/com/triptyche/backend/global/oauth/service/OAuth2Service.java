@@ -1,6 +1,6 @@
 package com.triptyche.backend.global.oauth.service;
 
-import com.triptyche.backend.domain.user.dto.UserDTO;
+import com.triptyche.backend.domain.user.dto.OAuthUserInfo;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
 import com.triptyche.backend.global.common.ResultCode;
@@ -50,7 +50,7 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
               .getUserNameAttributeName();
 
       Map<String, Object> attributes = oAuth2User.getAttributes();
-      UserDTO userProfile = OAuthAttributes.extract(registrationId, attributes);
+      OAuthUserInfo userProfile = OAuthAttributes.extract(registrationId, attributes);
 
       User user = updateOrSaveUser(userProfile);
       Long userId = user.getUserId();
@@ -90,7 +90,7 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
           String registrationId,
           String userNameAttributeName,
           Map<String, Object> attributes,
-          UserDTO userProfile) {
+          OAuthUserInfo userProfile) {
     Map<String, Object> customAttribute = new HashMap<>();
     customAttribute.put(userNameAttributeName, attributes.get(userNameAttributeName));
     customAttribute.put("provider", registrationId);
@@ -99,7 +99,7 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
     return customAttribute;
   }
 
-  private User updateOrSaveUser(UserDTO userProfile) {
+  private User updateOrSaveUser(OAuthUserInfo userProfile) {
     try {
       // 이메일과 제공자 정보를 기준으로 사용자 검색
       Optional<User> existingUser = userRepository.findUserByUserEmailAndProvider(userProfile.userEmail(),

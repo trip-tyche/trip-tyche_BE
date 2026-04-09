@@ -3,14 +3,13 @@ package com.triptyche.backend.domain.user.dto;
 import com.triptyche.backend.domain.user.model.User;
 import java.util.List;
 
-public record UserDTO(
+public record OAuthUserInfo(
         String userName,
         String userEmail,
         String provider,
-        List<String> roles // 권한 정보 추가
+        List<String> roles
 ) {
 
-  // User 엔티티로 변환하는 메서드
   public User toEntity() {
     return User.builder()
             .userName(this.userName())

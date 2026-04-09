@@ -1,8 +1,5 @@
 package com.triptyche.backend.domain.user.scheduler;
 
-import com.triptyche.backend.domain.media.repository.MediaFileRepository;
-import com.triptyche.backend.domain.trip.model.Trip;
-import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.model.UserRole;
 import com.triptyche.backend.domain.user.repository.UserRepository;
@@ -13,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
@@ -21,14 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class GuestCleanupScheduler {
 
     private final UserRepository userRepository;
-    private final TripRepository tripRepository;
-    private final MediaFileRepository mediaFileRepository;
+    private final GuestCleanupExecutor guestCleanupExecutor;
     private final S3UploadService s3UploadService;
 
     private static final int GUEST_SESSION_HOURS = 4;
 
-    @Scheduled(cron = "0 0 * * * *") // 매 정시 실행
-    @Transactional
+    @Scheduled(cron = "0 0 * * * *")
     public void cleanupExpiredGuests() {
         LocalDateTime threshold = LocalDateTime.now().minusHours(GUEST_SESSION_HOURS);
         List<User> expiredGuests = userRepository.findByRoleAndCreatedAtBefore(UserRole.GUEST, threshold);
@@ -38,28 +32,17 @@ public class GuestCleanupScheduler {
             return;
         }
 
-        // 전체 게스트의 Trip을 한 번에 조회 (N+1 방지)
-        List<Trip> allTrips = tripRepository.findAllByUserIn(expiredGuests);
+        List<String> s3Keys = guestCleanupExecutor.deleteExpiredGuests(expiredGuests);
+        deleteFromStorage(s3Keys);
+    }
 
-        // 전체 Trip의 MediaFile을 한 번에 조회 후 S3 삭제 (demo/ 경로 제외)
-        if (!allTrips.isEmpty()) {
-            List<String> deletableKeys = mediaFileRepository.findAllByTripIn(allTrips).stream()
-                    .map(mf -> mf.getMediaKey())
-                    .filter(key -> !key.startsWith("demo/"))
-                    .toList();
-
-            if (!deletableKeys.isEmpty()) {
-                try {
-                    s3UploadService.deleteFiles(deletableKeys);
-                } catch (Exception e) {
-                    log.error("게스트 S3 파일 삭제 실패: {}건", deletableKeys.size(), e);
-                }
-            }
-
-            tripRepository.deleteAll(allTrips);
+    private void deleteFromStorage(List<String> s3Keys) {
+        if (s3Keys.isEmpty()) return;
+        try {
+            s3UploadService.deleteFiles(s3Keys);
+            log.info("게스트 S3 파일 정리 완료 — {}건", s3Keys.size());
+        } catch (Exception e) {
+            log.error("게스트 S3 파일 정리 실패 — {}건, 수동 확인 필요", s3Keys.size(), e);
         }
-
-        userRepository.deleteAll(expiredGuests);
-        log.info("만료된 게스트 계정 정리 완료 — {}건", expiredGuests.size());
     }
 }

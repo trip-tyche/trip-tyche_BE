@@ -56,12 +56,11 @@ public class TripCleanupScheduler {
       return;
     }
 
-    List<MediaFile> mediaFiles = mediaFileRepository.findAllByTripIn(deletedTrips);
-    List<String> mediaKeys = mediaFiles.stream()
+    List<String> mediaKeys = mediaFileRepository.findAllByTripIn(deletedTrips).stream()
             .map(MediaFile::getMediaKey)
             .toList();
 
-    cleanupExecutor.deleteSoftDeletedTrips(deletedTrips, mediaFiles);
+    cleanupExecutor.deleteSoftDeletedTrips(deletedTrips);
     deleteFromStorage(mediaKeys);
   }
 
