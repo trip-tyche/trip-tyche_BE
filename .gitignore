@@ -255,4 +255,7 @@ k6-test
 CLAUDE.md
 .claude/
 
-/doc
+# oh-my-claudecode (OMC)
+.omc/
+
+/doc/**

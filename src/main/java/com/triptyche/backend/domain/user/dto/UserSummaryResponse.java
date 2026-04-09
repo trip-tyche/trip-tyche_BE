@@ -1,6 +1,6 @@
 package com.triptyche.backend.domain.user.dto;
 
-public record UserSummaryResponseDTO(
+public record UserSummaryResponse(
         Long userId,
         String nickname,
         long tripsCount,
@@ -8,4 +8,3 @@ public record UserSummaryResponseDTO(
 ) {
 
 }
-

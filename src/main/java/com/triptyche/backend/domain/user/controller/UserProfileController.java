@@ -1,7 +1,7 @@
 package com.triptyche.backend.domain.user.controller;
 
 import com.triptyche.backend.domain.user.dto.UpdateNickNameRequest;
-import com.triptyche.backend.domain.user.dto.UserSummaryResponseDTO;
+import com.triptyche.backend.domain.user.dto.UserSummaryResponse;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.service.UserService;
 import com.triptyche.backend.global.auth.CurrentUser;
@@ -30,8 +30,8 @@ public class UserProfileController {
           + ".so/maristadev/1ca66958e5b380478db5da52e40aa8d8?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/users/me/summary")
   @PreAuthorize("isAuthenticated()")
-  public RestResponse<UserSummaryResponseDTO> getUserSummary(@CurrentUser User user) {
-    UserSummaryResponseDTO summary = userService.getUserSummary(user);
+  public RestResponse<UserSummaryResponse> getUserSummary(@CurrentUser User user) {
+    UserSummaryResponse summary = userService.getUserSummary(user);
     return RestResponse.success(summary);
   }
 
