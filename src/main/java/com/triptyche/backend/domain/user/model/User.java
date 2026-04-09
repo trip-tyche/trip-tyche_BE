@@ -25,7 +25,7 @@ import org.hibernate.annotations.DynamicUpdate;
 @Table(name = "\"user\"")
 @Getter
 @DynamicUpdate
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 public class User {

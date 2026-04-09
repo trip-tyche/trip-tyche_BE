@@ -1,6 +1,6 @@
 package com.triptyche.backend.domain.user.controller;
 
-import com.triptyche.backend.domain.user.dto.UserSearchResponseDTO;
+import com.triptyche.backend.domain.user.dto.UserSearchResponse;
 import com.triptyche.backend.domain.user.service.UserService;
 import com.triptyche.backend.global.common.RestResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,10 +22,10 @@ public class ShareUserController {
   @Operation(summary = "사용자 검색", description = "<a href='https://www.notion"
           + ".so/maristadev/17766958e5b380e9b22bff0ed697db9d?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/users")
-  public RestResponse<UserSearchResponseDTO> findUserByNickName(
+  public RestResponse<UserSearchResponse> findUserByNickName(
           @RequestParam String nickname) {
 
-    UserSearchResponseDTO responseDTO = userService.getUserByNickName(nickname);
+    UserSearchResponse responseDTO = userService.getUserByNickName(nickname);
     return RestResponse.success(responseDTO);
   }
 }

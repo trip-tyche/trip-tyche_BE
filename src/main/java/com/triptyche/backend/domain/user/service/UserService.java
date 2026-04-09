@@ -4,8 +4,8 @@ import com.triptyche.backend.domain.notification.model.NotificationStatus;
 import com.triptyche.backend.domain.notification.repository.NotificationRepository;
 import com.triptyche.backend.domain.trip.model.TripStatus;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
-import com.triptyche.backend.domain.user.dto.UserSearchResponseDTO;
-import com.triptyche.backend.domain.user.dto.UserSummaryResponseDTO;
+import com.triptyche.backend.domain.user.dto.UserSearchResponse;
+import com.triptyche.backend.domain.user.dto.UserSummaryResponse;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
 import com.triptyche.backend.global.common.ResultCode;
@@ -53,20 +53,20 @@ public class UserService {
    * @return User 사용자 객체
    */
 
-  public UserSearchResponseDTO getUserByNickName(String nickname) {
+  public UserSearchResponse getUserByNickName(String nickname) {
     User user = userRepository.findByUserNickName(nickname.trim())
             .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
-    return UserSearchResponseDTO.fromEntity(user);
+    return UserSearchResponse.fromEntity(user);
   }
 
 
-  public UserSummaryResponseDTO getUserSummary(User user) {
+  public UserSummaryResponse getUserSummary(User user) {
     long tripsCount = tripRepository.countByUserAndStatus(user, TripStatus.CONFIRMED);
 
     long unreadNotificationCount = notificationRepository.countByUserIdAndStatus(user.getUserId(),
             NotificationStatus.UNREAD);
 
-    return new UserSummaryResponseDTO(
+    return new UserSummaryResponse(
             user.getUserId(),
             user.getUserNickName(),
             tripsCount,
