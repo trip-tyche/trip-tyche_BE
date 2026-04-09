@@ -4,7 +4,6 @@ import com.triptyche.backend.domain.user.dto.OAuthUserInfo;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -12,8 +11,7 @@ public enum OAuthAttributes {
   GOOGLE("google", (attribute) -> new OAuthUserInfo(
           (String) attribute.get("name"),
           (String) attribute.get("email"),
-          "google",
-          List.of("ROLE_USER") // 기본 권한 설정
+          "google"
   )),
 
   KAKAO("kakao", (attribute) -> {
@@ -40,8 +38,7 @@ public enum OAuthAttributes {
     return new OAuthUserInfo(
             nickname,
             email,
-            "kakao",
-            List.of("ROLE_USER") // 기본 권한 설정
+            "kakao"
     );
   });
 
