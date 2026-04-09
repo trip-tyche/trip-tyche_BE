@@ -13,6 +13,7 @@ import com.triptyche.backend.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -23,6 +24,7 @@ public class UserService {
   private final TripRepository tripRepository;
   private final NotificationRepository notificationRepository;
 
+  @Transactional
   public void updateUserNickName(User user, String userNickName) {
     user.updateUserNickName(userNickName);
     userRepository.save(user);
@@ -60,6 +62,7 @@ public class UserService {
   }
 
 
+  @Transactional(readOnly = true)
   public UserSummaryResponse getUserSummary(User user) {
     long tripsCount = tripRepository.countByUserAndStatus(user, TripStatus.CONFIRMED);
 
