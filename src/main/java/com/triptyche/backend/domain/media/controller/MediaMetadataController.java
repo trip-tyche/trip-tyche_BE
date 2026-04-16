@@ -13,8 +13,8 @@ import com.triptyche.backend.global.auth.CurrentUser;
 import com.triptyche.backend.global.common.RestResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.List;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,7 +39,7 @@ public class MediaMetadataController {
   @PostMapping
   public RestResponse<String> processMetadata(
           @CurrentUser User user,
-          @PathVariable("tripKey") String tripKey,
+          @PathVariable String tripKey,
           @RequestBody @Valid List<MediaRegisterRequest> files
   ) {
     mediaMetadataService.processAndSaveMetadataBatch(user, tripKey, files);
