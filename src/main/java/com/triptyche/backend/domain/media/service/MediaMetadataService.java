@@ -97,7 +97,10 @@ public class MediaMetadataService {
             });
 
     eventPublisher.publishEvent(new MediaFileAddedEvent(
-            trip,
+            trip.getTripId(),
+            trip.getTripTitle(),
+            trip.getTripKey(),
+            trip.getUser().getUserId(),
             user.getUserId(),
             user.getUserNickName(),
             isOwner,
@@ -129,7 +132,10 @@ public class MediaMetadataService {
             .toList();
 
     eventPublisher.publishEvent(new MediaFileUpdatedEvent(
-            trip,
+            trip.getTripId(),
+            trip.getTripTitle(),
+            trip.getTripKey(),
+            trip.getUser().getUserId(),
             actorId,
             actorNickname,
             isOwner,
@@ -155,7 +161,10 @@ public class MediaMetadataService {
     mediaFileRepository.deleteAll(mediaFiles);
 
     eventPublisher.publishEvent(new MediaFileDeletedEvent(
-            trip,
+            trip.getTripId(),
+            trip.getTripTitle(),
+            trip.getTripKey(),
+            trip.getUser().getUserId(),
             actorId,
             actorNickname,
             isOwner,
@@ -229,7 +238,15 @@ public class MediaMetadataService {
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
     boolean isOwner = trip.getUser().getUserId().equals(actorId);
-    eventPublisher.publishEvent(new MediaFileLocationUpdatedEvent(trip, mediaFileId, actorId, actorNickname, isOwner));
+    eventPublisher.publishEvent(new MediaFileLocationUpdatedEvent(
+            trip.getTripId(),
+            trip.getTripTitle(),
+            trip.getTripKey(),
+            trip.getUser().getUserId(),
+            mediaFileId,
+            actorId,
+            actorNickname,
+            isOwner));
   }
 
   private String extractMediaKey(String mediaLink) {
