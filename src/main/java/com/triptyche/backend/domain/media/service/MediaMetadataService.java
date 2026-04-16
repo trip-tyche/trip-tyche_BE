@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,9 +52,7 @@ public class MediaMetadataService {
   private final ObjectMapper objectMapper;
 
 
-  @Value("${spring.cloud.aws.s3.bucketName}")
-  private String bucketName;
-
+  @Transactional
   public void processAndSaveMetadataBatch(User user, String tripKey, List<MediaRegisterRequest> files) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
@@ -81,7 +78,7 @@ public class MediaMetadataService {
                       .longitude(file.longitude())
                       .build();
             })
-            .collect(Collectors.toList());
+            .toList();
     List<MediaFile> savedMediaFiles = mediaFileRepository.saveAll(mediaFiles);
 
     // Redis 처리 (위치 0.0인 파일들만)
@@ -207,7 +204,7 @@ public class MediaMetadataService {
     return groupedByDate.entrySet().stream()
             .sorted(Entry.comparingByKey())
             .map(entry -> new UnlocatedImageResponse(entry.getKey(), entry.getValue()))
-            .collect(Collectors.toList());
+            .toList();
   }
 
   @Transactional

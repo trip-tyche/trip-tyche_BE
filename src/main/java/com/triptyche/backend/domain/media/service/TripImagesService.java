@@ -4,6 +4,7 @@ import static com.triptyche.backend.global.util.DateFormatter.formatLocalDateToS
 
 import com.triptyche.backend.domain.media.dto.MediaFileResponse;
 import com.triptyche.backend.domain.media.dto.TripMediaListResponse;
+import org.springframework.transaction.annotation.Transactional;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.trip.model.Trip;
@@ -20,6 +21,7 @@ public class TripImagesService {
   private final MediaFileRepository mediaFileRepository;
   private final TripAccessValidator tripAccessValidator;
 
+  @Transactional(readOnly = true)
   public TripMediaListResponse getTripImages(User user, String tripKey) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripId(trip.getTripId());
