@@ -84,12 +84,9 @@ public class SecurityConfig {
     CorsConfiguration configuration = new CorsConfiguration();
 //    configuration.setAllowedOriginPatterns(List.of("*")); // ⭐ 여기 변경
     configuration.setAllowedOrigins(List.of(
-            "https://triptyche.world",
-            "https://triptychetest.shop",
-            "https://www.triptychetest.shop",
-            "https://local.triptyche.world:3000",
-            "https://triptychetest.shop:3000",
-            "https://local.triptychetest.shop:3000"
+            "https://triptyche.cloud",
+            "https://www.triptyche.cloud",
+            "http://localhost:3000"
     ));
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     configuration.setAllowedHeaders(List.of("*"));

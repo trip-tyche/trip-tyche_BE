@@ -22,8 +22,8 @@ services:
       OCI_SECRET_KEY: ${OCI_SECRET_KEY}
       OCI_S3_ENDPOINT: ${OCI_S3_ENDPOINT}
       GUEST_JWT_SECRET: ${GUEST_JWT_SECRET}
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     deploy:
       resources:
         limits:
@@ -74,9 +74,9 @@ services:
       - --appendonly
       - "yes"
       - --maxmemory
-      - 200mb
+      - 256mb
       - --maxmemory-policy
-      - allkeys-lru
+      - volatile-lru
     volumes:
       - redis_data:/data
     ports:
@@ -91,6 +91,65 @@ services:
       timeout: 5s
       retries: 3
     restart: unless-stopped
+    networks:
+      - app-network
+
+  image-worker:
+    image: triptyche-image-worker
+    build: ./image-worker
+    container_name: triptyche-image-worker
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE}
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      OCI_ACCESS_KEY: ${OCI_ACCESS_KEY}
+      OCI_SECRET_KEY: ${OCI_SECRET_KEY}
+      OCI_S3_ENDPOINT: ${OCI_S3_ENDPOINT}
+      OCI_BUCKET_NAME: ${OCI_BUCKET_NAME}
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: triptyche-nginx
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - app-network
 
