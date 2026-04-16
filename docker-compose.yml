@@ -74,9 +74,9 @@ services:
       - --appendonly
       - "yes"
       - --maxmemory
-      - 200mb
+      - 256mb
       - --maxmemory-policy
-      - allkeys-lru
+      - volatile-lru
     volumes:
       - redis_data:/data
     ports:
