@@ -193,8 +193,8 @@ spring:
       max-request-size: 100MB
 
   redirect:
-    url: https://triptyche.world
-    failure-url: https://triptyche.world
+    url: https://triptyche.cloud
+    failure-url: https://triptyche.cloud
 
 management:
   endpoints:
