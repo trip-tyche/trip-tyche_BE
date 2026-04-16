@@ -2,10 +2,10 @@ package com.triptyche.backend.domain.trip.service;
 
 import static com.triptyche.backend.global.util.DateFormatter.formatLocalDateToString;
 
-import com.triptyche.backend.domain.media.dto.MediaFileResponseDTO;
+import com.triptyche.backend.domain.media.dto.MediaFileResponse;
 import com.triptyche.backend.domain.media.dto.MediaFilesByDate;
-import com.triptyche.backend.domain.media.dto.MediaFilesByDateResponseDTO;
-import com.triptyche.backend.domain.media.dto.PinPointMediaFilesResponseDTO;
+import com.triptyche.backend.domain.media.dto.MediaFilesByDateResponse;
+import com.triptyche.backend.domain.media.dto.PinPointMediaResponse;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.trip.dto.PinPointGalleryResponse;
 import com.triptyche.backend.domain.trip.dto.PinPointResponse;
@@ -122,7 +122,7 @@ public class TripQueryService {
 
     List<PinPointResponse> pinPoints = pinPointRepository.findEarliestSingleMediaFileForEachPinPointByTripId(
             trip.getTripId(), DEFAULT_INVALID_DATE);
-    List<MediaFileResponseDTO> mediaFiles = pinPointRepository.findMediaFilesByTripId(trip.getTripId(),
+    List<MediaFileResponse> mediaFiles = pinPointRepository.findMediaFilesByTripId(trip.getTripId(),
             DEFAULT_INVALID_DATE);
 
     return new TripMapResponse(
@@ -148,7 +148,7 @@ public class TripQueryService {
     PinPoint pinPoint = pinPointRepository.findById(pinPointId)
             .orElseThrow(() -> new CustomException(ResultCode.PINPOINT_NOT_FOUND));
 
-    List<PinPointMediaFilesResponseDTO> mediaFiles = mediaFileRepository.findByTripTripIdAndPinPointPinPointId(
+    List<PinPointMediaResponse> mediaFiles = mediaFileRepository.findByTripTripIdAndPinPointPinPointId(
             trip.getTripId(), pinPointId, DEFAULT_INVALID_DATE);
     if (mediaFiles.isEmpty()) {
       throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
@@ -160,7 +160,7 @@ public class TripQueryService {
     );
   }
 
-  public MediaFilesByDateResponseDTO getImagesByDate(User user, String tripKey, String date) {
+  public MediaFilesByDateResponse getImagesByDate(User user, String tripKey, String date) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
     LocalDate parsedDate;
@@ -179,6 +179,6 @@ public class TripQueryService {
       throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
     }
 
-    return new MediaFilesByDateResponseDTO(startOfDay, mediaFiles);
+    return new MediaFilesByDateResponse(startOfDay, mediaFiles);
   }
 }

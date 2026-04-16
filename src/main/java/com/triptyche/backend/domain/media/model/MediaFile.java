@@ -15,15 +15,16 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import java.time.LocalDateTime;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Data
+@Getter
 @Entity
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Table(name = "MediaFile", indexes = {
     @Index(name = "idx_media_file_trip_id", columnList = "tripId"),
@@ -44,22 +45,29 @@ public class MediaFile {
   @JoinColumn(name = "pinPointId", nullable = false)
   private PinPoint pinPoint;
 
-  @Column(name = "mediaType", length = 50)
+  @Column(length = 50)
   private String mediaType;
 
-  @Column(name = "mediaLink", length = 255)
+  @Column(length = 255)
   private String mediaLink;
 
   @Temporal(TemporalType.TIMESTAMP)
-  @Column(name = "recordDate")
   private LocalDateTime recordDate;
 
-  @Column(name = "latitude")
   private Double latitude;
 
-  @Column(name = "longitude")
   private Double longitude;
 
-  @Column(name = "mediaKey", nullable = false, length = 255)
+  @Column(nullable = false, length = 255)
   private String mediaKey;
+
+  public void updateLocation(Double latitude, Double longitude, PinPoint pinPoint) {
+    this.latitude = latitude;
+    this.longitude = longitude;
+    this.pinPoint = pinPoint;
+  }
+
+  public void updateRecordDate(LocalDateTime recordDate) {
+    this.recordDate = recordDate;
+  }
 }

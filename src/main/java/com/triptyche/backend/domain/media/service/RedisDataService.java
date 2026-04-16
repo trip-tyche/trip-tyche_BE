@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 public class RedisDataService {
 
   private final ImageQueueService imageQueueService;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper;
 
   public void saveZeroLocationData(Long tripId, Long mediaFileId, String mediaLink, String recordDate) {
     String redisKey = "trip:" + tripId;

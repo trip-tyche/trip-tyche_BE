@@ -1,12 +1,12 @@
 package com.triptyche.backend.domain.media.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.triptyche.backend.domain.media.dto.MediaFileBatchDeleteRequestDTO;
-import com.triptyche.backend.domain.media.dto.MediaFileBatchUpdateRequestDTO;
-import com.triptyche.backend.domain.media.dto.UnlocatedImageResponseDTO;
-import com.triptyche.backend.domain.media.dto.UnlocatedImageResponseDTO.Media;
-import com.triptyche.backend.domain.media.dto.UpdateMediaFileInfoRequestDTO;
-import com.triptyche.backend.domain.media.dto.UpdateMediaFileLocationRequestDTO;
+import com.triptyche.backend.domain.media.dto.MediaBatchDeleteRequest;
+import com.triptyche.backend.domain.media.dto.MediaBatchUpdateRequest;
+import com.triptyche.backend.domain.media.dto.UnlocatedImageResponse;
+import com.triptyche.backend.domain.media.dto.UnlocatedImageResponse.Media;
+import com.triptyche.backend.domain.media.dto.MediaRegisterRequest;
+import com.triptyche.backend.domain.media.dto.MediaLocationUpdateRequest;
 import com.triptyche.backend.domain.media.event.MediaFileAddedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileDeletedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileLocationUpdatedEvent;
@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,10 +52,8 @@ public class MediaMetadataService {
   private final ObjectMapper objectMapper;
 
 
-  @Value("${spring.cloud.aws.s3.bucketName}")
-  private String bucketName;
-
-  public void processAndSaveMetadataBatch(User user, String tripKey, List<UpdateMediaFileInfoRequestDTO> files) {
+  @Transactional
+  public void processAndSaveMetadataBatch(User user, String tripKey, List<MediaRegisterRequest> files) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
     boolean isOwner = trip.getUser().getUserId().equals(user.getUserId());
@@ -81,7 +78,7 @@ public class MediaMetadataService {
                       .longitude(file.longitude())
                       .build();
             })
-            .collect(Collectors.toList());
+            .toList();
     List<MediaFile> savedMediaFiles = mediaFileRepository.saveAll(mediaFiles);
 
     // Redis 처리 (위치 0.0인 파일들만)
@@ -97,7 +94,10 @@ public class MediaMetadataService {
             });
 
     eventPublisher.publishEvent(new MediaFileAddedEvent(
-            trip,
+            trip.getTripId(),
+            trip.getTripTitle(),
+            trip.getTripKey(),
+            trip.getUser().getUserId(),
             user.getUserId(),
             user.getUserNickName(),
             isOwner,
@@ -105,7 +105,7 @@ public class MediaMetadataService {
   }
 
   @Transactional
-  public int updateMultipleMediaFiles(User user, String tripKey, MediaFileBatchUpdateRequestDTO requestDTO) {
+  public int updateMultipleMediaFiles(User user, String tripKey, MediaBatchUpdateRequest requestDTO) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
@@ -122,16 +122,17 @@ public class MediaMetadataService {
               PinPoint pinPoint = pinPointService.findOrCreateFromList(
                       existingPinPoints, trip, request.latitude(), request.longitude());
 
-              mf.setRecordDate(request.recordDate());
-              mf.setLatitude(request.latitude());
-              mf.setLongitude(request.longitude());
-              mf.setPinPoint(pinPoint);
+              mf.updateRecordDate(request.recordDate());
+              mf.updateLocation(request.latitude(), request.longitude(), pinPoint);
               return mediaFileRepository.save(mf);
             })
             .toList();
 
     eventPublisher.publishEvent(new MediaFileUpdatedEvent(
-            trip,
+            trip.getTripId(),
+            trip.getTripTitle(),
+            trip.getTripKey(),
+            trip.getUser().getUserId(),
             actorId,
             actorNickname,
             isOwner,
@@ -141,7 +142,7 @@ public class MediaMetadataService {
   }
 
   @Transactional
-  public int deleteMultipleMediaFiles(User user, String tripKey, MediaFileBatchDeleteRequestDTO requestDTO) {
+  public int deleteMultipleMediaFiles(User user, String tripKey, MediaBatchDeleteRequest requestDTO) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
@@ -157,7 +158,10 @@ public class MediaMetadataService {
     mediaFileRepository.deleteAll(mediaFiles);
 
     eventPublisher.publishEvent(new MediaFileDeletedEvent(
-            trip,
+            trip.getTripId(),
+            trip.getTripTitle(),
+            trip.getTripKey(),
+            trip.getUser().getUserId(),
             actorId,
             actorNickname,
             isOwner,
@@ -168,7 +172,7 @@ public class MediaMetadataService {
   }
 
   @Transactional(readOnly = true)
-  public List<UnlocatedImageResponseDTO> getUnlocatedImages(User user, String tripKey) {
+  public List<UnlocatedImageResponse> getUnlocatedImages(User user, String tripKey) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     String redisKey = "trip:" + trip.getTripId();
     Map<Object, Object> redisData = imageQueueService.getImageQueue(redisKey);
@@ -199,15 +203,15 @@ public class MediaMetadataService {
 
     return groupedByDate.entrySet().stream()
             .sorted(Entry.comparingByKey())
-            .map(entry -> new UnlocatedImageResponseDTO(entry.getKey(), entry.getValue()))
-            .collect(Collectors.toList());
+            .map(entry -> new UnlocatedImageResponse(entry.getKey(), entry.getValue()))
+            .toList();
   }
 
   @Transactional
   public void updateImageLocation(User user,
                                   String tripKey,
                                   Long mediaFileId,
-                                  UpdateMediaFileLocationRequestDTO requestDTO) {
+                                  MediaLocationUpdateRequest requestDTO) {
 
     Double newLat = requestDTO.latitude();
     Double newLon = requestDTO.longitude();
@@ -220,9 +224,7 @@ public class MediaMetadataService {
             .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
 
     PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, newLat, newLon);
-    mf.setLatitude(newLat);
-    mf.setLongitude(newLon);
-    mf.setPinPoint(pinPoint);
+    mf.updateLocation(newLat, newLon, pinPoint);
     mediaFileRepository.save(mf);
 
     // Redis 캐시 삭제
@@ -233,7 +235,15 @@ public class MediaMetadataService {
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
     boolean isOwner = trip.getUser().getUserId().equals(actorId);
-    eventPublisher.publishEvent(new MediaFileLocationUpdatedEvent(trip, mediaFileId, actorId, actorNickname, isOwner));
+    eventPublisher.publishEvent(new MediaFileLocationUpdatedEvent(
+            trip.getTripId(),
+            trip.getTripTitle(),
+            trip.getTripKey(),
+            trip.getUser().getUserId(),
+            mediaFileId,
+            actorId,
+            actorNickname,
+            isOwner));
   }
 
   private String extractMediaKey(String mediaLink) {

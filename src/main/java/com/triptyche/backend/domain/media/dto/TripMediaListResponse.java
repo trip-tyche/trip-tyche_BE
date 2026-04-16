@@ -2,10 +2,10 @@ package com.triptyche.backend.domain.media.dto;
 
 import java.util.List;
 
-public record EditableMediaFilesResponseDTO(
+public record TripMediaListResponse(
         String startDate,
         String endDate,
-        List<EditableMediaFileResponseDTO> mediaFiles
+        List<MediaFileResponse> mediaFiles
 ) {
 
 }

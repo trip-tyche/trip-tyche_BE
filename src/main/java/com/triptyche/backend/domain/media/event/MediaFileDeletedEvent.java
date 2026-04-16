@@ -1,9 +1,10 @@
 package com.triptyche.backend.domain.media.event;
 
-import com.triptyche.backend.domain.trip.model.Trip;
-
 public record MediaFileDeletedEvent(
-        Trip trip,
+        Long tripId,
+        String tripTitle,
+        String tripKey,
+        Long ownerId,
         Long actorId,
         String actorNickname,
         boolean isOwner,

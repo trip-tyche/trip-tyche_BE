@@ -1,6 +1,6 @@
 package com.triptyche.backend.domain.trip.controller;
 
-import com.triptyche.backend.domain.media.dto.MediaFilesByDateResponseDTO;
+import com.triptyche.backend.domain.media.dto.MediaFilesByDateResponse;
 import com.triptyche.backend.domain.trip.dto.PinPointGalleryResponse;
 import com.triptyche.backend.domain.trip.dto.TripListResponse;
 import com.triptyche.backend.domain.trip.dto.TripMapResponse;
@@ -77,11 +77,11 @@ public class TripQueryController {
   @Operation(summary = "날짜별 이미지 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/de630f9fd0424f1ca1d521037730d296?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/{tripKey}/map")
-  public RestResponse<MediaFilesByDateResponseDTO> getImagesByDate(
+  public RestResponse<MediaFilesByDateResponse> getImagesByDate(
           @CurrentUser User user,
           @PathVariable String tripKey,
           @RequestParam String date) {
-    MediaFilesByDateResponseDTO dateImageDTO = tripQueryService.getImagesByDate(user, tripKey, date);
+    MediaFilesByDateResponse dateImageDTO = tripQueryService.getImagesByDate(user, tripKey, date);
 
     return RestResponse.success(dateImageDTO);
   }

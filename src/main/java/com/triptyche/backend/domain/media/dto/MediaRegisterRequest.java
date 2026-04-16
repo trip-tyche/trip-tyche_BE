@@ -3,7 +3,7 @@ package com.triptyche.backend.domain.media.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record UpdateMediaFileInfoRequestDTO(
+public record MediaRegisterRequest(
         String mediaLink,
         Double latitude,
         Double longitude,

@@ -2,7 +2,7 @@ package com.triptyche.backend.domain.media.dto;
 
 import java.util.List;
 
-public record UnlocatedImageResponseDTO(
+public record UnlocatedImageResponse(
     String recordDate,
     List<Media> media
 ) {
