@@ -1,6 +1,6 @@
 package com.triptyche.backend.domain.trip.repository;
 
-import com.triptyche.backend.domain.media.dto.MediaFileResponseDTO;
+import com.triptyche.backend.domain.media.dto.MediaFileResponse;
 import com.triptyche.backend.domain.trip.dto.PinPointResponse;
 import com.triptyche.backend.domain.trip.model.PinPoint;
 import com.triptyche.backend.domain.trip.model.Trip;
@@ -60,10 +60,9 @@ public interface PinPointRepository extends JpaRepository<PinPoint, Long> {
   void deleteAllByTripIn(@Param("trips") List<Trip> trips);
 
   @Query("""
-              SELECT new com.triptyche.backend.domain.media.dto.MediaFileResponseDTO(
+              SELECT new com.triptyche.backend.domain.media.dto.MediaFileResponse(
                   mf.mediaFileId,
                   mf.mediaLink,
-                  mf.mediaType,
                   mf.recordDate,
                   mf.latitude,
                   mf.longitude
@@ -74,7 +73,7 @@ public interface PinPointRepository extends JpaRepository<PinPoint, Long> {
                 AND mf.recordDate <> :defaultDate
               ORDER BY mf.recordDate ASC
           """)
-  List<MediaFileResponseDTO> findMediaFilesByTripId(
+  List<MediaFileResponse> findMediaFilesByTripId(
           @Param("tripId") Long tripId,
           @Param("defaultDate") LocalDateTime defaultDate);
 }

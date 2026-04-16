@@ -1,7 +1,7 @@
 package com.triptyche.backend.domain.media.repository;
 
 import com.triptyche.backend.domain.media.dto.MediaFilesByDate;
-import com.triptyche.backend.domain.media.dto.PinPointMediaFilesResponseDTO;
+import com.triptyche.backend.domain.media.dto.PinPointMediaResponse;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.trip.model.Trip;
 import java.time.LocalDate;
@@ -23,7 +23,7 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
    * – recordDate = defaultDate인 레코드 제외
    */
   @Query("""
-              SELECT new com.triptyche.backend.domain.media.dto.PinPointMediaFilesResponseDTO(
+              SELECT new com.triptyche.backend.domain.media.dto.PinPointMediaResponse(
                   m.mediaFileId,
                   m.mediaLink,
                   m.recordDate,
@@ -37,7 +37,7 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
                 AND m.recordDate <> :defaultDate
               ORDER BY m.recordDate ASC
           """)
-  List<PinPointMediaFilesResponseDTO> findByTripTripIdAndPinPointPinPointId(
+  List<PinPointMediaResponse> findByTripTripIdAndPinPointPinPointId(
           @Param("tripId") Long tripId,
           @Param("pinPointId") Long pinPointId,
           @Param("defaultDate") LocalDateTime defaultDate

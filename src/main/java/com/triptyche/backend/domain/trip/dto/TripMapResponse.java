@@ -1,6 +1,6 @@
 package com.triptyche.backend.domain.trip.dto;
 
-import com.triptyche.backend.domain.media.dto.MediaFileResponseDTO;
+import com.triptyche.backend.domain.media.dto.MediaFileResponse;
 import java.util.List;
 
 public record TripMapResponse(
@@ -8,7 +8,7 @@ public record TripMapResponse(
         String startDate,
         String endDate,
         List<PinPointResponse> pinPoints,
-        List<MediaFileResponseDTO> mediaFiles
+        List<MediaFileResponse> mediaFiles
 ) {
 
 }

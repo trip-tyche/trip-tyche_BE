@@ -1,10 +1,8 @@
 package com.triptyche.backend.domain.media.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.LocalDateTime;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public record EditableMediaFileResponseDTO(
+public record PinPointMediaResponse(
         Long mediaFileId,
         String mediaLink,
         LocalDateTime recordDate,

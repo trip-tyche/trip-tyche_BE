@@ -1,12 +1,12 @@
 package com.triptyche.backend.domain.media.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.triptyche.backend.domain.media.dto.MediaFileBatchDeleteRequestDTO;
-import com.triptyche.backend.domain.media.dto.MediaFileBatchUpdateRequestDTO;
-import com.triptyche.backend.domain.media.dto.UnlocatedImageResponseDTO;
-import com.triptyche.backend.domain.media.dto.UnlocatedImageResponseDTO.Media;
-import com.triptyche.backend.domain.media.dto.UpdateMediaFileInfoRequestDTO;
-import com.triptyche.backend.domain.media.dto.UpdateMediaFileLocationRequestDTO;
+import com.triptyche.backend.domain.media.dto.MediaBatchDeleteRequest;
+import com.triptyche.backend.domain.media.dto.MediaBatchUpdateRequest;
+import com.triptyche.backend.domain.media.dto.UnlocatedImageResponse;
+import com.triptyche.backend.domain.media.dto.UnlocatedImageResponse.Media;
+import com.triptyche.backend.domain.media.dto.MediaRegisterRequest;
+import com.triptyche.backend.domain.media.dto.MediaLocationUpdateRequest;
 import com.triptyche.backend.domain.media.event.MediaFileAddedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileDeletedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileLocationUpdatedEvent;
@@ -56,7 +56,7 @@ public class MediaMetadataService {
   @Value("${spring.cloud.aws.s3.bucketName}")
   private String bucketName;
 
-  public void processAndSaveMetadataBatch(User user, String tripKey, List<UpdateMediaFileInfoRequestDTO> files) {
+  public void processAndSaveMetadataBatch(User user, String tripKey, List<MediaRegisterRequest> files) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
     boolean isOwner = trip.getUser().getUserId().equals(user.getUserId());
@@ -105,7 +105,7 @@ public class MediaMetadataService {
   }
 
   @Transactional
-  public int updateMultipleMediaFiles(User user, String tripKey, MediaFileBatchUpdateRequestDTO requestDTO) {
+  public int updateMultipleMediaFiles(User user, String tripKey, MediaBatchUpdateRequest requestDTO) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
@@ -139,7 +139,7 @@ public class MediaMetadataService {
   }
 
   @Transactional
-  public int deleteMultipleMediaFiles(User user, String tripKey, MediaFileBatchDeleteRequestDTO requestDTO) {
+  public int deleteMultipleMediaFiles(User user, String tripKey, MediaBatchDeleteRequest requestDTO) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
@@ -166,7 +166,7 @@ public class MediaMetadataService {
   }
 
   @Transactional(readOnly = true)
-  public List<UnlocatedImageResponseDTO> getUnlocatedImages(User user, String tripKey) {
+  public List<UnlocatedImageResponse> getUnlocatedImages(User user, String tripKey) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     String redisKey = "trip:" + trip.getTripId();
     Map<Object, Object> redisData = imageQueueService.getImageQueue(redisKey);
@@ -197,7 +197,7 @@ public class MediaMetadataService {
 
     return groupedByDate.entrySet().stream()
             .sorted(Entry.comparingByKey())
-            .map(entry -> new UnlocatedImageResponseDTO(entry.getKey(), entry.getValue()))
+            .map(entry -> new UnlocatedImageResponse(entry.getKey(), entry.getValue()))
             .collect(Collectors.toList());
   }
 
@@ -205,7 +205,7 @@ public class MediaMetadataService {
   public void updateImageLocation(User user,
                                   String tripKey,
                                   Long mediaFileId,
-                                  UpdateMediaFileLocationRequestDTO requestDTO) {
+                                  MediaLocationUpdateRequest requestDTO) {
 
     Double newLat = requestDTO.latitude();
     Double newLon = requestDTO.longitude();

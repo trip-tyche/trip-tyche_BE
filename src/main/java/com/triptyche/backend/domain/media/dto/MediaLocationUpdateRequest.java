@@ -2,7 +2,7 @@ package com.triptyche.backend.domain.media.dto;
 
 import jakarta.validation.constraints.NotNull;
 
-public record UpdateMediaFileLocationRequestDTO(
+public record MediaLocationUpdateRequest(
         @NotNull(message = "위도는 필수입니다.")
         Double latitude,
 
