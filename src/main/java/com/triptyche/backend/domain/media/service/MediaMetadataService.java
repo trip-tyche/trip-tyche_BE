@@ -122,10 +122,8 @@ public class MediaMetadataService {
               PinPoint pinPoint = pinPointService.findOrCreateFromList(
                       existingPinPoints, trip, request.latitude(), request.longitude());
 
-              mf.setRecordDate(request.recordDate());
-              mf.setLatitude(request.latitude());
-              mf.setLongitude(request.longitude());
-              mf.setPinPoint(pinPoint);
+              mf.updateRecordDate(request.recordDate());
+              mf.updateLocation(request.latitude(), request.longitude(), pinPoint);
               return mediaFileRepository.save(mf);
             })
             .toList();
@@ -220,9 +218,7 @@ public class MediaMetadataService {
             .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
 
     PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, newLat, newLon);
-    mf.setLatitude(newLat);
-    mf.setLongitude(newLon);
-    mf.setPinPoint(pinPoint);
+    mf.updateLocation(newLat, newLon, pinPoint);
     mediaFileRepository.save(mf);
 
     // Redis 캐시 삭제
