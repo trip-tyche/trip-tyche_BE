@@ -10,6 +10,7 @@ import com.triptyche.backend.domain.media.dto.MediaLocationUpdateRequest;
 import com.triptyche.backend.domain.media.event.MediaFileAddedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileDeletedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileLocationUpdatedEvent;
+import com.triptyche.backend.domain.media.event.MediaFileRegisteredEvent;
 import com.triptyche.backend.domain.media.event.MediaFileUpdatedEvent;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
@@ -25,7 +26,6 @@ import com.triptyche.backend.global.redis.ImageQueueService;
 import com.triptyche.backend.global.s3.S3UploadService;
 import com.triptyche.backend.global.util.DateFormatter;
 import com.triptyche.backend.global.util.DateUtil;
-import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,16 +63,19 @@ public class MediaMetadataService {
 
     List<MediaFile> mediaFiles = files.stream()
             .map(file -> {
+              String fileKey = file.fileKey();
+              if (!fileKey.startsWith("originals/")) {
+                throw new CustomException(ResultCode.INVALID_FILE_KEY);
+              }
               LocalDateTime recordDateTime = DateUtil.convertToLocalDateTime(file.recordDate());
               PinPoint pinPoint = pinPointService.findOrCreateFromList(
                       existingPinPoints, trip, file.latitude(), file.longitude());
-              String mediaKey = extractMediaKey(file.mediaLink());
               return MediaFile.builder()
                       .trip(trip)
                       .pinPoint(pinPoint)
                       .mediaType("image/webp")
                       .mediaLink(file.mediaLink())
-                      .mediaKey(mediaKey)
+                      .mediaKey(fileKey)
                       .recordDate(recordDateTime)
                       .latitude(file.latitude())
                       .longitude(file.longitude())
@@ -80,6 +83,13 @@ public class MediaMetadataService {
             })
             .toList();
     List<MediaFile> savedMediaFiles = mediaFileRepository.saveAll(mediaFiles);
+
+    savedMediaFiles.forEach(mediaFile ->
+            eventPublisher.publishEvent(new MediaFileRegisteredEvent(
+                    mediaFile.getMediaFileId(),
+                    mediaFile.getMediaKey()
+            ))
+    );
 
     // Redis 처리 (위치 0.0인 파일들만)
     savedMediaFiles.stream()
@@ -246,8 +256,4 @@ public class MediaMetadataService {
             isOwner));
   }
 
-  private String extractMediaKey(String mediaLink) {
-    URI uri = URI.create(mediaLink);
-    return uri.getPath().substring(1);
-  }
 }
