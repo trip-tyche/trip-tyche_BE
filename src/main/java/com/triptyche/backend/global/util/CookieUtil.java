@@ -28,6 +28,7 @@ public class CookieUtil {
 
     if (isSecure) {
       cookieHeader.append("; Secure");
+      cookieHeader.append("; Domain=triptyche.cloud");
     }
 
     response.addHeader("Set-Cookie", cookieHeader.toString());
@@ -47,6 +48,7 @@ public class CookieUtil {
 
     if (isSecure) {
       cookieHeader.append("; Secure");
+      cookieHeader.append("; Domain=triptyche.cloud");
     }
     response.addHeader("Set-Cookie", cookieHeader.toString());
   }
