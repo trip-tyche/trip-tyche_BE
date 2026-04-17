@@ -7,12 +7,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
   @ExceptionHandler(CustomException.class)
@@ -69,6 +71,7 @@ public class GlobalExceptionHandler {
   // 기타 예외 처리
   @ExceptionHandler(Exception.class)
   public ResponseEntity<RestResponse<Void>> handleAllExceptions(Exception ex) {
+    log.error("[500 Internal Server Error] 처리되지 않은 예외 발생", ex);
     RestResponse<Void> response = RestResponse.error(ResultCode.INTERNAL_SERVER_ERROR);
     return new ResponseEntity<>(response, ResultCode.INTERNAL_SERVER_ERROR.getHttpStatus());
   }
