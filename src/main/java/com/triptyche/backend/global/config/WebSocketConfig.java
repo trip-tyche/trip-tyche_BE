@@ -45,12 +45,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
   public void registerStompEndpoints(StompEndpointRegistry registry) {
     registry.addEndpoint("/ws")
             .setAllowedOrigins(
-                    "https://triptyche.world",
-                    "https://triptychetest.shop",
-                    "https://www.triptychetest.shop",
-                    "https://local.triptyche.world:3000",
-                    "https://triptychetest.shop:3000",
-                    "https://local.triptychetest.shop:3000"
+                    "https://triptyche.cloud",
+                    "https://www.triptyche.cloud",
+                    "http://localhost:3000"
             );
   }
 
