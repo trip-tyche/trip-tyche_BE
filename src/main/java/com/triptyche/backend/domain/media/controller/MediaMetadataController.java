@@ -40,7 +40,7 @@ public class MediaMetadataController {
   public RestResponse<String> processMetadata(
           @CurrentUser User user,
           @PathVariable String tripKey,
-          @RequestBody @Valid List<MediaRegisterRequest> files
+          @RequestBody List<MediaRegisterRequest> files
   ) {
     mediaMetadataService.processAndSaveMetadataBatch(user, tripKey, files);
 
