@@ -53,6 +53,7 @@ public class SecurityConfig {
                             "/v1/auth/logout",
                             "/v1/auth/test-token",
                             "/v1/auth/guest",
+                            "/ws/**",
                             "/ws-test.html"  // WebSocket 로컬 테스트 페이지
                     )
                     .permitAll()
