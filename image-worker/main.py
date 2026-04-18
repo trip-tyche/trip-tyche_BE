@@ -179,6 +179,7 @@ def process_message(s3, message_id: str, fields: dict):
         Key=webp_key,
         Body=webp_bytes,
         ContentType="image/webp",
+        ContentLength=len(webp_bytes),
     )
 
     # 4. DB UPDATE
