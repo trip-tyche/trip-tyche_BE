@@ -8,6 +8,7 @@ import time
 import boto3
 import pymysql
 import redis
+from botocore.config import Config
 from botocore.exceptions import ClientError
 from PIL import Image
 from pillow_heif import register_heif_opener
@@ -71,6 +72,7 @@ def get_s3_client():
         endpoint_url=OCI_S3_ENDPOINT,
         aws_access_key_id=OCI_ACCESS_KEY,
         aws_secret_access_key=OCI_SECRET_KEY,
+        config=Config(signature_version="s3v4"),
     )
 
 

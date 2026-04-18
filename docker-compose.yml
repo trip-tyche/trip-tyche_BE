@@ -116,6 +116,8 @@ services:
       OCI_SECRET_KEY: ${OCI_SECRET_KEY}
       OCI_S3_ENDPOINT: ${OCI_S3_ENDPOINT}
       OCI_BUCKET_NAME: ${OCI_BUCKET_NAME}
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
     deploy:
       resources:
         limits:
