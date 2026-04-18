@@ -10,7 +10,7 @@ import pymysql
 import redis
 from botocore.config import Config
 from botocore.exceptions import ClientError
-from PIL import Image
+from PIL import Image, ImageOps
 from pillow_heif import register_heif_opener
 
 register_heif_opener()
@@ -120,6 +120,8 @@ def move_to_dlq(r: redis.Redis, message_id: str, fields: dict, reason: str):
 
 def resize_and_convert(image_bytes: bytes) -> bytes:
     with Image.open(io.BytesIO(image_bytes)) as img:
+        # EXIF orientation 적용
+        img = ImageOps.exif_transpose(img)
         img = img.convert("RGB")
         w, h = img.size
         if max(w, h) > MAX_IMAGE_SIZE:
@@ -145,7 +147,7 @@ def update_media_link(media_file_id: int, new_url: str):
     try:
         with conn.cursor() as cursor:
             cursor.execute(
-                "UPDATE MediaFile SET media_link = %s WHERE media_file_id = %s",
+                "UPDATE media_file SET media_link = %s WHERE media_file_id = %s",
                 (new_url, media_file_id),
             )
         conn.commit()

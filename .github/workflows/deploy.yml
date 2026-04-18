@@ -49,13 +49,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Copy docker-compose.yml to server
+      - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VM_HOST }}
           username: ubuntu
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "docker-compose.yml"
+          source: "docker-compose.yml,image-worker"
           target: "~/triptyche/"
 
       - name: Deploy to Oracle VM
@@ -67,6 +67,7 @@ jobs:
           script: |
             cd ~/triptyche
             docker compose pull app
+            docker compose build image-worker
             docker compose up -d
             docker image prune -f
 
