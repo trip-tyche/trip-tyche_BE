@@ -52,7 +52,10 @@ public class S3UploadService {
     }
   }
 
-  // 파일 삭제 메서드 추가
+  public String buildUrl(String key) {
+    return endpoint + "/" + bucketName + "/" + key;
+  }
+
   public void deleteFiles(List<String> mediaKeys) {
     try {
       List<ObjectIdentifier> objects = mediaKeys.stream()

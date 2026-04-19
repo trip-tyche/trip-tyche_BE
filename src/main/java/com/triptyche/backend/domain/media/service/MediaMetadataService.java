@@ -74,7 +74,7 @@ public class MediaMetadataService {
                       .trip(trip)
                       .pinPoint(pinPoint)
                       .mediaType("image/webp")
-                      .mediaLink(file.mediaLink())
+                      .mediaLink(s3UploadService.buildUrl(fileKey))
                       .mediaKey(fileKey)
                       .recordDate(recordDateTime)
                       .latitude(file.latitude())
