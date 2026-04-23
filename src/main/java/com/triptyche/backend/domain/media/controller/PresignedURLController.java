@@ -1,8 +1,8 @@
 package com.triptyche.backend.domain.media.controller;
 
-import com.triptyche.backend.domain.media.dto.FilePresignedRequest;
-import com.triptyche.backend.domain.media.dto.FilePresignedResponse;
-import com.triptyche.backend.domain.media.dto.FilePresignedResponse.PresignedUrlDetail;
+import com.triptyche.backend.domain.media.dto.PresignedUrlCreateRequest;
+import com.triptyche.backend.domain.media.dto.PresignedUrlResponse;
+import com.triptyche.backend.domain.media.dto.PresignedUrlResponse.PresignedUrl;
 import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.auth.CurrentUser;
@@ -33,25 +33,25 @@ public class PresignedURLController {
   @Operation(summary = "Presigned URL 요청", description = "<a href='https://www.notion"
           + ".so/maristadev/15066958e5b380cb92cec07208539ca8?pvs=4' target='_blank'>API 명세서</a>")
   @PostMapping("{tripKey}/presigned-url")
-  public RestResponse<FilePresignedResponse> generatePresignedUrl(
+  public RestResponse<PresignedUrlResponse> generatePresignedUrl(
           @CurrentUser User user,
           @PathVariable String tripKey,
-          @Valid @RequestBody FilePresignedRequest request) {
+          @Valid @RequestBody PresignedUrlCreateRequest request) {
 
     tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
-    List<PresignedUrlDetail> presignedUrls = request.files().stream()
+    List<PresignedUrl> presignedUrls = request.files().stream()
             .map(file -> {
               String fileKey = "originals/" + tripKey + "/" + file.fileName();
               String presignedPutUrl = presignedURLService.generatePresignedPutUrl(
                       fileKey, Duration.ofMinutes(10)
               );
 
-              return new FilePresignedResponse.PresignedUrlDetail(fileKey, presignedPutUrl);
+              return new PresignedUrlResponse.PresignedUrl(fileKey, presignedPutUrl);
             })
             .collect(Collectors.toList());
 
-    return RestResponse.success(new FilePresignedResponse(presignedUrls));
+    return RestResponse.success(new PresignedUrlResponse(presignedUrls));
 
   }
 }

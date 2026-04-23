@@ -5,7 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.triptyche.backend.domain.media.service.RedisDataService;
+import com.triptyche.backend.domain.media.service.UnlocatedMediaCacheService;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.model.TripStatus;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
@@ -58,7 +58,7 @@ class TripCommandServiceIntegrationTest {
     private S3UploadService s3UploadService;
 
     @MockBean
-    private RedisDataService redisDataService;
+    private UnlocatedMediaCacheService unlocatedMediaCacheService;
 
     @MockBean
     private RedisTemplate<String, String> redisTemplate;

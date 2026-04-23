@@ -1,13 +1,13 @@
 package com.triptyche.backend.domain.media.controller;
 
 import com.triptyche.backend.domain.media.dto.MediaBatchDeleteRequest;
-import com.triptyche.backend.domain.media.dto.MediaBatchUpdateRequest;
-import com.triptyche.backend.domain.media.dto.MediaLocationUpdateRequest;
-import com.triptyche.backend.domain.media.dto.MediaRegisterRequest;
+import com.triptyche.backend.domain.media.dto.MediaBatchEditRequest;
+import com.triptyche.backend.domain.media.dto.MediaLocationEditRequest;
+import com.triptyche.backend.domain.media.dto.MediaUploadRequest;
 import com.triptyche.backend.domain.media.dto.TripMediaListResponse;
-import com.triptyche.backend.domain.media.dto.UnlocatedImageResponse;
-import com.triptyche.backend.domain.media.service.MediaMetadataService;
-import com.triptyche.backend.domain.media.service.TripImagesService;
+import com.triptyche.backend.domain.media.dto.UnlocatedMediaResponse;
+import com.triptyche.backend.domain.media.service.MediaCommandService;
+import com.triptyche.backend.domain.media.service.MediaQueryService;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.auth.CurrentUser;
 import com.triptyche.backend.global.common.RestResponse;
@@ -30,8 +30,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/trips/{tripKey}/media-files")
 public class MediaMetadataController {
 
-  private final MediaMetadataService mediaMetadataService;
-  private final TripImagesService tripImagesService;
+  private final MediaCommandService mediaCommandService;
+  private final MediaQueryService mediaQueryService;
 
   @Tag(name = "3. 여행등록 페이지 API")
   @Operation(summary = "미디어 메타데이터 등록", description = "<a href='https://www.notion"
@@ -40,9 +40,9 @@ public class MediaMetadataController {
   public RestResponse<String> processMetadata(
           @CurrentUser User user,
           @PathVariable String tripKey,
-          @RequestBody List<MediaRegisterRequest> files
+          @RequestBody List<MediaUploadRequest> files
   ) {
-    mediaMetadataService.processAndSaveMetadataBatch(user, tripKey, files);
+    mediaCommandService.processAndSaveMetadataBatch(user, tripKey, files);
 
     return RestResponse.success("등록에 성공했습니다.");
   }
@@ -54,7 +54,7 @@ public class MediaMetadataController {
   public RestResponse<TripMediaListResponse> getTripImages(
           @CurrentUser User user,
           @PathVariable String tripKey) {
-    TripMediaListResponse responseDTO = tripImagesService.getTripImages(user, tripKey);
+    TripMediaListResponse responseDTO = mediaQueryService.getTripImages(user, tripKey);
     return RestResponse.success(responseDTO);
   }
 
@@ -65,9 +65,9 @@ public class MediaMetadataController {
   public RestResponse<String> updateMultipleMediaFiles(
           @CurrentUser User user,
           @PathVariable String tripKey,
-          @Valid @RequestBody MediaBatchUpdateRequest requestDTO
+          @Valid @RequestBody MediaBatchEditRequest requestDTO
   ) {
-    int updatedCount = mediaMetadataService.updateMultipleMediaFiles(user, tripKey, requestDTO);
+    int updatedCount = mediaCommandService.updateMultipleMediaFiles(user, tripKey, requestDTO);
     return RestResponse.success(updatedCount + "개의 이미지 정보가 성공적으로 수정되었습니다.");
   }
 
@@ -80,7 +80,7 @@ public class MediaMetadataController {
           @PathVariable String tripKey,
           @Valid @RequestBody MediaBatchDeleteRequest requestDTO
   ) {
-    int deleteCount = mediaMetadataService.deleteMultipleMediaFiles(user, tripKey, requestDTO);
+    int deleteCount = mediaCommandService.deleteMultipleMediaFiles(user, tripKey, requestDTO);
     return RestResponse.success(deleteCount + "개의 이미지가 성공적으로 삭제되었습니다.");
   }
 
@@ -88,10 +88,10 @@ public class MediaMetadataController {
   @Operation(summary = "위치정보 없는 이미지 조회(Redis)", description = "<a href='https://www.notion"
           + ".so/maristadev/f15de88a76ff49da85d3d970d8e64aff?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/unlocated")
-  public RestResponse<List<UnlocatedImageResponse>> getUnlocatedImages(
+  public RestResponse<List<UnlocatedMediaResponse>> getUnlocatedImages(
           @CurrentUser User user,
           @PathVariable String tripKey) {
-    List<UnlocatedImageResponse> response = mediaMetadataService.getUnlocatedImages(user, tripKey);
+    List<UnlocatedMediaResponse> response = mediaCommandService.getUnlocatedImages(user, tripKey);
     return RestResponse.success(response);
   }
 
@@ -103,8 +103,8 @@ public class MediaMetadataController {
           @CurrentUser User user,
           @PathVariable String tripKey,
           @PathVariable Long mediaFileId,
-          @Valid @RequestBody MediaLocationUpdateRequest updateMediaFileLocation) {
-    mediaMetadataService.updateImageLocation(user, tripKey, mediaFileId, updateMediaFileLocation);
+          @Valid @RequestBody MediaLocationEditRequest updateMediaFileLocation) {
+    mediaCommandService.updateImageLocation(user, tripKey, mediaFileId, updateMediaFileLocation);
     return RestResponse.success("이미지 위치 정보가 업데이트 되었습니다.");
   }
 }

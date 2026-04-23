@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class RedisDataService {
+public class UnlocatedMediaCacheService {
 
   private final ImageQueueService imageQueueService;
   private final ObjectMapper objectMapper;

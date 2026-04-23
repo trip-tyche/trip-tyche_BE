@@ -2,11 +2,11 @@ package com.triptyche.backend.domain.media.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptyche.backend.domain.media.dto.MediaBatchDeleteRequest;
-import com.triptyche.backend.domain.media.dto.MediaBatchUpdateRequest;
-import com.triptyche.backend.domain.media.dto.UnlocatedImageResponse;
-import com.triptyche.backend.domain.media.dto.UnlocatedImageResponse.Media;
-import com.triptyche.backend.domain.media.dto.MediaRegisterRequest;
-import com.triptyche.backend.domain.media.dto.MediaLocationUpdateRequest;
+import com.triptyche.backend.domain.media.dto.MediaBatchEditRequest;
+import com.triptyche.backend.domain.media.dto.UnlocatedMediaResponse;
+import com.triptyche.backend.domain.media.dto.UnlocatedMediaResponse.MediaSummary;
+import com.triptyche.backend.domain.media.dto.MediaUploadRequest;
+import com.triptyche.backend.domain.media.dto.MediaLocationEditRequest;
 import com.triptyche.backend.domain.media.event.MediaFileAddedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileDeletedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileLocationUpdatedEvent;
@@ -41,12 +41,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class MediaMetadataService {
+public class MediaCommandService {
 
   private final MediaFileRepository mediaFileRepository;
   private final PinPointService pinPointService;
   private final PinPointRepository pinPointRepository;
-  private final RedisDataService redisDataService;
+  private final UnlocatedMediaCacheService unlocatedMediaCacheService;
   private final S3UploadService s3UploadService;
   private final ImageQueueService imageQueueService;
   private final TripAccessValidator tripAccessValidator;
@@ -55,7 +55,7 @@ public class MediaMetadataService {
 
 
   @Transactional
-  public void processAndSaveMetadataBatch(User user, String tripKey, List<MediaRegisterRequest> files) {
+  public void processAndSaveMetadataBatch(User user, String tripKey, List<MediaUploadRequest> files) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
     boolean isOwner = trip.getUser().getUserId().equals(user.getUserId());
@@ -70,7 +70,7 @@ public class MediaMetadataService {
                 throw new CustomException(ResultCode.INVALID_FILE_KEY);
               }
               LocalDateTime recordDateTime = DateUtil.convertToLocalDateTime(file.recordDate());
-              PinPoint pinPoint = pinPointService.findOrCreateFromList(
+              PinPoint pinPoint = pinPointService.assignPinPoint(
                       existingPinPoints, trip, file.latitude(), file.longitude());
               return MediaFile.builder()
                       .trip(trip)
@@ -97,7 +97,7 @@ public class MediaMetadataService {
     savedMediaFiles.stream()
             .filter(mf -> mf.getLatitude() == 0.0 && mf.getLongitude() == 0.0)
             .forEach(mf -> {
-              redisDataService.saveZeroLocationData(
+              unlocatedMediaCacheService.saveZeroLocationData(
                       trip.getTripId(),
                       mf.getMediaFileId(),
                       mf.getMediaLink(),
@@ -117,7 +117,7 @@ public class MediaMetadataService {
   }
 
   @Transactional
-  public int updateMultipleMediaFiles(User user, String tripKey, MediaBatchUpdateRequest requestDTO) {
+  public int updateMultipleMediaFiles(User user, String tripKey, MediaBatchEditRequest requestDTO) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
@@ -127,7 +127,7 @@ public class MediaMetadataService {
             pinPointRepository.findAllByTripTripId(trip.getTripId()));
 
     List<Long> mediaFileIds = requestDTO.mediaFiles().stream()
-            .map(MediaBatchUpdateRequest.MediaFileUpdateRequest::mediaFileId)
+            .map(MediaBatchEditRequest.MediaFileUpdateRequest::mediaFileId)
             .toList();
 
     Map<Long, MediaFile> mediaFileMap = mediaFileRepository.findAllById(mediaFileIds).stream()
@@ -140,7 +140,7 @@ public class MediaMetadataService {
     List<MediaFile> updatedMediaFiles = requestDTO.mediaFiles().stream()
             .map(request -> {
               MediaFile mf = mediaFileMap.get(request.mediaFileId());
-              PinPoint pinPoint = pinPointService.findOrCreateFromList(
+              PinPoint pinPoint = pinPointService.assignPinPoint(
                       existingPinPoints, trip, request.latitude(), request.longitude());
               mf.updateRecordDate(request.recordDate());
               mf.updateLocation(request.latitude(), request.longitude(), pinPoint);
@@ -193,7 +193,7 @@ public class MediaMetadataService {
   }
 
   @Transactional(readOnly = true)
-  public List<UnlocatedImageResponse> getUnlocatedImages(User user, String tripKey) {
+  public List<UnlocatedMediaResponse> getUnlocatedImages(User user, String tripKey) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     String redisKey = "trip:" + trip.getTripId();
     Map<Object, Object> redisData = imageQueueService.getImageQueue(redisKey);
@@ -202,7 +202,7 @@ public class MediaMetadataService {
       throw new CustomException(ResultCode.EDIT_DATA_NOT_FOUND);
     }
 
-    Map<String, List<Media>> groupedByDate = redisData.entrySet().stream()
+    Map<String, List<MediaSummary>> groupedByDate = redisData.entrySet().stream()
             .map(entry -> {
               try {
                 Long mediaFileId = Long.valueOf(entry.getKey().toString());
@@ -212,7 +212,7 @@ public class MediaMetadataService {
                 LocalDateTime recordDateTime = LocalDateTime.parse(recordDateString);
                 String formattedDate = DateFormatter.formatLocalDateToString(recordDateTime.toLocalDate());
 
-                return Map.entry(formattedDate, new Media(mediaFileId, mediaLink));
+                return Map.entry(formattedDate, new MediaSummary(mediaFileId, mediaLink));
               } catch (Exception e) {
                 throw new RuntimeException("Json 파싱 오류", e);
               }
@@ -224,7 +224,7 @@ public class MediaMetadataService {
 
     return groupedByDate.entrySet().stream()
             .sorted(Entry.comparingByKey())
-            .map(entry -> new UnlocatedImageResponse(entry.getKey(), entry.getValue()))
+            .map(entry -> new UnlocatedMediaResponse(entry.getKey(), entry.getValue()))
             .toList();
   }
 
@@ -232,7 +232,7 @@ public class MediaMetadataService {
   public void updateImageLocation(User user,
                                   String tripKey,
                                   Long mediaFileId,
-                                  MediaLocationUpdateRequest requestDTO) {
+                                  MediaLocationEditRequest requestDTO) {
 
     Double newLat = requestDTO.latitude();
     Double newLon = requestDTO.longitude();
@@ -244,7 +244,7 @@ public class MediaMetadataService {
     MediaFile mf = mediaFileRepository.findById(mediaFileId)
             .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
 
-    PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, newLat, newLon);
+    PinPoint pinPoint = pinPointService.assignPinPointWithQuery(trip, newLat, newLon);
     mf.updateLocation(newLat, newLon, pinPoint);
     mediaFileRepository.save(mf);
 

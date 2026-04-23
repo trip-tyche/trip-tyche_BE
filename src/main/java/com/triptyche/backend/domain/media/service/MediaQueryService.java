@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class TripImagesService {
+public class MediaQueryService {
 
   private final MediaFileRepository mediaFileRepository;
   private final TripAccessValidator tripAccessValidator;

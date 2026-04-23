@@ -16,13 +16,13 @@ public class PinPointService {
 
   private static final double EARTH_RADIUS_KM = 6371.01; // 지구 반경
 
-  public PinPoint findOrCreatePinPoint(Trip trip, Double latitude, Double longitude) {
+  public PinPoint assignPinPointWithQuery(Trip trip, Double latitude, Double longitude) {
     List<PinPoint> existingPinPoints = new ArrayList<>(
             pinPointRepository.findByTripTripId(trip.getTripId()));
-    return findOrCreateFromList(existingPinPoints, trip, latitude, longitude);
+    return assignPinPoint(existingPinPoints, trip, latitude, longitude);
   }
 
-  public PinPoint findOrCreateFromList(List<PinPoint> existingPinPoints,
+  public PinPoint assignPinPoint(List<PinPoint> existingPinPoints,
                                        Trip trip,
                                        Double latitude,
                                        Double longitude) {
