@@ -1,5 +1,6 @@
 package com.triptyche.backend.global.redis;
 
+import java.time.Duration;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -14,6 +15,7 @@ public class ImageQueueService {
   // 특정 tripId의 수정 대기 데이터 저장
   public void saveImageQueue(String tripKey, String mediaFileId, Object data) {
     redisTemplate.opsForHash().put(tripKey, mediaFileId, data);
+    redisTemplate.expire(tripKey, Duration.ofDays(7));
   }
 
   // 특정 tripId의 수정 대기 데이터 조회

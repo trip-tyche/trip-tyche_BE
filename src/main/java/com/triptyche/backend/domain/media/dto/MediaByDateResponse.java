@@ -3,9 +3,9 @@ package com.triptyche.backend.domain.media.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record MediaFilesByDateResponse(
+public record MediaByDateResponse(
         LocalDateTime recordDate,
-        List<MediaFilesByDate> mediaFiles
+        List<MediaFileSummary> mediaFiles
 ) {
 
 }

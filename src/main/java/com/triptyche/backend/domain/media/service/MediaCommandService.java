@@ -1,36 +1,31 @@
 package com.triptyche.backend.domain.media.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptyche.backend.domain.media.dto.MediaBatchDeleteRequest;
-import com.triptyche.backend.domain.media.dto.MediaBatchUpdateRequest;
-import com.triptyche.backend.domain.media.dto.UnlocatedImageResponse;
-import com.triptyche.backend.domain.media.dto.UnlocatedImageResponse.Media;
-import com.triptyche.backend.domain.media.dto.MediaRegisterRequest;
-import com.triptyche.backend.domain.media.dto.MediaLocationUpdateRequest;
+import com.triptyche.backend.domain.media.dto.MediaBatchEditRequest;
+import com.triptyche.backend.domain.media.dto.MediaLocationEditRequest;
+import com.triptyche.backend.domain.media.dto.MediaUploadRequest;
 import com.triptyche.backend.domain.media.event.MediaFileAddedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileDeletedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileLocationUpdatedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileRegisteredEvent;
 import com.triptyche.backend.domain.media.event.MediaFileUpdatedEvent;
+import com.triptyche.backend.domain.media.event.MediaFileZeroLocationCacheRequestedEvent;
+import com.triptyche.backend.domain.media.event.MediaFilesS3DeleteRequestedEvent;
+import com.triptyche.backend.domain.media.event.MediaLocationCacheEvictRequestedEvent;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.trip.model.PinPoint;
-import com.triptyche.backend.domain.trip.repository.PinPointRepository;
-import com.triptyche.backend.domain.trip.service.PinPointService;
 import com.triptyche.backend.domain.trip.model.Trip;
+import com.triptyche.backend.domain.trip.service.PinPointService;
 import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
-import com.triptyche.backend.global.redis.ImageQueueService;
 import com.triptyche.backend.global.s3.S3UploadService;
-import com.triptyche.backend.global.util.DateFormatter;
 import com.triptyche.backend.global.util.DateUtil;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -39,27 +34,21 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class MediaMetadataService {
+public class MediaCommandService {
 
   private final MediaFileRepository mediaFileRepository;
   private final PinPointService pinPointService;
-  private final PinPointRepository pinPointRepository;
-  private final RedisDataService redisDataService;
   private final S3UploadService s3UploadService;
-  private final ImageQueueService imageQueueService;
   private final TripAccessValidator tripAccessValidator;
   private final ApplicationEventPublisher eventPublisher;
-  private final ObjectMapper objectMapper;
-
 
   @Transactional
-  public void processAndSaveMetadataBatch(User user, String tripKey, List<MediaRegisterRequest> files) {
+  public void processAndSaveMetadataBatch(User user, String tripKey, List<MediaUploadRequest> files) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
     boolean isOwner = trip.getUser().getUserId().equals(user.getUserId());
 
-    List<PinPoint> existingPinPoints = new ArrayList<>(
-            pinPointRepository.findAllByTripTripId(trip.getTripId()));
+    List<PinPoint> existingPinPoints = pinPointService.findAllByTripId(trip.getTripId());
 
     List<MediaFile> mediaFiles = files.stream()
             .map(file -> {
@@ -68,7 +57,7 @@ public class MediaMetadataService {
                 throw new CustomException(ResultCode.INVALID_FILE_KEY);
               }
               LocalDateTime recordDateTime = DateUtil.convertToLocalDateTime(file.recordDate());
-              PinPoint pinPoint = pinPointService.findOrCreateFromList(
+              PinPoint pinPoint = pinPointService.assignPinPoint(
                       existingPinPoints, trip, file.latitude(), file.longitude());
               return MediaFile.builder()
                       .trip(trip)
@@ -91,17 +80,15 @@ public class MediaMetadataService {
             ))
     );
 
-    // Redis 처리 (위치 0.0인 파일들만)
+    // Redis 처리 (위치 0.0인 파일들만) — DB 커밋 완료 후 이벤트로 처리
     savedMediaFiles.stream()
             .filter(mf -> mf.getLatitude() == 0.0 && mf.getLongitude() == 0.0)
-            .forEach(mf -> {
-              redisDataService.saveZeroLocationData(
-                      trip.getTripId(),
-                      mf.getMediaFileId(),
-                      mf.getMediaLink(),
-                      mf.getRecordDate().toString()
-              );
-            });
+            .forEach(mf -> eventPublisher.publishEvent(new MediaFileZeroLocationCacheRequestedEvent(
+                    trip.getTripId(),
+                    mf.getMediaFileId(),
+                    mf.getMediaLink(),
+                    mf.getRecordDate().toString()
+            )));
 
     eventPublisher.publishEvent(new MediaFileAddedEvent(
             trip.getTripId(),
@@ -115,26 +102,33 @@ public class MediaMetadataService {
   }
 
   @Transactional
-  public int updateMultipleMediaFiles(User user, String tripKey, MediaBatchUpdateRequest requestDTO) {
+  public int updateMultipleMediaFiles(User user, String tripKey, MediaBatchEditRequest requestDTO) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
     boolean isOwner = trip.getUser().getUserId().equals(actorId);
 
-    List<PinPoint> existingPinPoints = new ArrayList<>(
-            pinPointRepository.findAllByTripTripId(trip.getTripId()));
+    List<PinPoint> existingPinPoints = pinPointService.findAllByTripId(trip.getTripId());
+
+    List<Long> mediaFileIds = requestDTO.mediaFiles().stream()
+            .map(MediaBatchEditRequest.MediaFileUpdateRequest::mediaFileId)
+            .toList();
+
+    Map<Long, MediaFile> mediaFileMap = mediaFileRepository.findAllById(mediaFileIds).stream()
+            .collect(Collectors.toMap(MediaFile::getMediaFileId, mf -> mf));
+
+    if (mediaFileMap.size() != mediaFileIds.size()) {
+      throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
+    }
 
     List<MediaFile> updatedMediaFiles = requestDTO.mediaFiles().stream()
             .map(request -> {
-              MediaFile mf = mediaFileRepository.findById(request.mediaFileId())
-                      .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
-
-              PinPoint pinPoint = pinPointService.findOrCreateFromList(
+              MediaFile mf = mediaFileMap.get(request.mediaFileId());
+              PinPoint pinPoint = pinPointService.assignPinPoint(
                       existingPinPoints, trip, request.latitude(), request.longitude());
-
               mf.updateRecordDate(request.recordDate());
               mf.updateLocation(request.latitude(), request.longitude(), pinPoint);
-              return mediaFileRepository.save(mf);
+              return mf;
             })
             .toList();
 
@@ -164,8 +158,9 @@ public class MediaMetadataService {
             .map(MediaFile::getMediaKey)
             .toList();
 
-    s3UploadService.deleteFiles(mediaKeys);
     mediaFileRepository.deleteAll(mediaFiles);
+
+    eventPublisher.publishEvent(new MediaFilesS3DeleteRequestedEvent(mediaKeys));
 
     eventPublisher.publishEvent(new MediaFileDeletedEvent(
             trip.getTripId(),
@@ -181,47 +176,11 @@ public class MediaMetadataService {
     return mediaFiles.size();
   }
 
-  @Transactional(readOnly = true)
-  public List<UnlocatedImageResponse> getUnlocatedImages(User user, String tripKey) {
-    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
-    String redisKey = "trip:" + trip.getTripId();
-    Map<Object, Object> redisData = imageQueueService.getImageQueue(redisKey);
-
-    if (redisData.isEmpty()) {
-      throw new CustomException(ResultCode.EDIT_DATA_NOT_FOUND);
-    }
-
-    Map<String, List<Media>> groupedByDate = redisData.entrySet().stream()
-            .map(entry -> {
-              try {
-                Long mediaFileId = Long.valueOf(entry.getKey().toString());
-                Map<String, Object> imageData = objectMapper.readValue(entry.getValue().toString(), Map.class);
-                String mediaLink = (String) imageData.get("mediaLink");
-                String recordDateString = (String) imageData.get("recordDate");
-                LocalDateTime recordDateTime = LocalDateTime.parse(recordDateString);
-                String formattedDate = DateFormatter.formatLocalDateToString(recordDateTime.toLocalDate());
-
-                return Map.entry(formattedDate, new Media(mediaFileId, mediaLink));
-              } catch (Exception e) {
-                throw new RuntimeException("Json 파싱 오류", e);
-              }
-            })
-            .collect(Collectors.groupingBy(
-                    Entry::getKey,
-                    Collectors.mapping(Entry::getValue, Collectors.toList())
-            ));
-
-    return groupedByDate.entrySet().stream()
-            .sorted(Entry.comparingByKey())
-            .map(entry -> new UnlocatedImageResponse(entry.getKey(), entry.getValue()))
-            .toList();
-  }
-
   @Transactional
   public void updateImageLocation(User user,
                                   String tripKey,
                                   Long mediaFileId,
-                                  MediaLocationUpdateRequest requestDTO) {
+                                  MediaLocationEditRequest requestDTO) {
 
     Double newLat = requestDTO.latitude();
     Double newLon = requestDTO.longitude();
@@ -233,15 +192,12 @@ public class MediaMetadataService {
     MediaFile mf = mediaFileRepository.findById(mediaFileId)
             .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
 
-    PinPoint pinPoint = pinPointService.findOrCreatePinPoint(trip, newLat, newLon);
+    PinPoint pinPoint = pinPointService.assignPinPointWithQuery(trip, newLat, newLon);
     mf.updateLocation(newLat, newLon, pinPoint);
     mediaFileRepository.save(mf);
 
-    // Redis 캐시 삭제
-    String redisKey = "trip:" + trip.getTripId();
-    imageQueueService.deleteFromImageQueue(redisKey, String.valueOf(mediaFileId));
+    eventPublisher.publishEvent(new MediaLocationCacheEvictRequestedEvent(trip.getTripId(), mediaFileId));
 
-    // 이벤트 발행: 위치 갱신
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
     boolean isOwner = trip.getUser().getUserId().equals(actorId);
@@ -255,5 +211,4 @@ public class MediaMetadataService {
             actorNickname,
             isOwner));
   }
-
 }

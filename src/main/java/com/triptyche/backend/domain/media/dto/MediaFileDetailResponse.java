@@ -2,7 +2,7 @@ package com.triptyche.backend.domain.media.dto;
 
 import java.time.LocalDateTime;
 
-public record MediaFilesByDate(
+public record MediaFileDetailResponse(
         Long mediaFileId,
         String mediaLink,
         LocalDateTime recordDate,

@@ -90,19 +90,19 @@ class PinPointServiceTest {
     }
 
     @Nested
-    @DisplayName("findOrCreatePinPoint()")
+    @DisplayName("assignPinPointWithQuery()")
     class FindOrCreatePinPoint {
 
         @Test
         @DisplayName("200m 이내에 기존 PinPoint가 있으면 새로 저장하지 않고 기존 PinPoint를 반환한다")
-        void findOrCreatePinPoint_givenNearbyPinPoint_returnsExistingWithoutSave() {
+        void assignPinPointWithQuery_givenNearbyPinPoint_returnsExistingWithoutSave() {
             // given
             PinPoint existingPinPoint = createPinPoint(10L, BASE_LAT, BASE_LON);
             given(pinPointRepository.findByTripTripId(1L)).willReturn(List.of(existingPinPoint));
 
             // when
             // NEAR_LAT는 BASE_LAT로부터 약 89m 거리 — 200m 임계값 이내
-            PinPoint result = pinPointService.findOrCreatePinPoint(trip, NEAR_LAT, NEAR_LON);
+            PinPoint result = pinPointService.assignPinPointWithQuery(trip, NEAR_LAT, NEAR_LON);
 
             // then
             assertThat(result).isEqualTo(existingPinPoint);
@@ -111,13 +111,13 @@ class PinPointServiceTest {
 
         @Test
         @DisplayName("200m 이내에 기존 PinPoint가 있으면 반환된 PinPoint의 ID가 기존 PinPoint의 ID와 일치한다")
-        void findOrCreatePinPoint_givenNearbyPinPoint_returnedPinPointHasCorrectId() {
+        void assignPinPointWithQuery_givenNearbyPinPoint_returnedPinPointHasCorrectId() {
             // given
             PinPoint existingPinPoint = createPinPoint(10L, BASE_LAT, BASE_LON);
             given(pinPointRepository.findByTripTripId(1L)).willReturn(List.of(existingPinPoint));
 
             // when
-            PinPoint result = pinPointService.findOrCreatePinPoint(trip, NEAR_LAT, NEAR_LON);
+            PinPoint result = pinPointService.assignPinPointWithQuery(trip, NEAR_LAT, NEAR_LON);
 
             // then
             assertThat(result.getPinPointId()).isEqualTo(10L);
@@ -125,7 +125,7 @@ class PinPointServiceTest {
 
         @Test
         @DisplayName("200m 초과 거리에 기존 PinPoint만 있으면 새 PinPoint를 생성하고 저장한다")
-        void findOrCreatePinPoint_givenOnlyFarPinPoints_savesAndReturnsNewPinPoint() {
+        void assignPinPointWithQuery_givenOnlyFarPinPoints_savesAndReturnsNewPinPoint() {
             // given
             PinPoint farPinPoint = createPinPoint(10L, BASE_LAT, BASE_LON);
             given(pinPointRepository.findByTripTripId(1L)).willReturn(List.of(farPinPoint));
@@ -135,7 +135,7 @@ class PinPointServiceTest {
 
             // when
             // FAR_LAT는 BASE_LAT로부터 약 333m 거리 — 200m 임계값 초과
-            PinPoint result = pinPointService.findOrCreatePinPoint(trip, FAR_LAT, FAR_LON);
+            PinPoint result = pinPointService.assignPinPointWithQuery(trip, FAR_LAT, FAR_LON);
 
             // then
             verify(pinPointRepository).save(any(PinPoint.class));
@@ -144,7 +144,7 @@ class PinPointServiceTest {
 
         @Test
         @DisplayName("기존 PinPoint가 하나도 없으면 새 PinPoint를 생성하고 저장한다")
-        void findOrCreatePinPoint_givenNoPinPoints_savesAndReturnsNewPinPoint() {
+        void assignPinPointWithQuery_givenNoPinPoints_savesAndReturnsNewPinPoint() {
             // given
             given(pinPointRepository.findByTripTripId(1L)).willReturn(List.of());
 
@@ -152,7 +152,7 @@ class PinPointServiceTest {
             given(pinPointRepository.save(any(PinPoint.class))).willReturn(savedPinPoint);
 
             // when
-            PinPoint result = pinPointService.findOrCreatePinPoint(trip, BASE_LAT, BASE_LON);
+            PinPoint result = pinPointService.assignPinPointWithQuery(trip, BASE_LAT, BASE_LON);
 
             // then
             verify(pinPointRepository).save(any(PinPoint.class));
@@ -161,7 +161,7 @@ class PinPointServiceTest {
 
         @Test
         @DisplayName("여러 PinPoint 중 200m 이내인 첫 번째 PinPoint를 반환한다")
-        void findOrCreatePinPoint_givenMultiplePinPointsWithOneNearby_returnsNearestFirst() {
+        void assignPinPointWithQuery_givenMultiplePinPointsWithOneNearby_returnsNearestFirst() {
             // given
             PinPoint farPinPoint = createPinPoint(10L, FAR_LAT, FAR_LON);
             PinPoint nearPinPoint = createPinPoint(20L, BASE_LAT, BASE_LON);
@@ -170,7 +170,7 @@ class PinPointServiceTest {
 
             // when
             // NEAR_LAT는 BASE_LAT로부터 약 89m, FAR_LAT로부터는 약 244m
-            PinPoint result = pinPointService.findOrCreatePinPoint(trip, NEAR_LAT, NEAR_LON);
+            PinPoint result = pinPointService.assignPinPointWithQuery(trip, NEAR_LAT, NEAR_LON);
 
             // then
             assertThat(result.getPinPointId()).isEqualTo(20L);
@@ -179,13 +179,13 @@ class PinPointServiceTest {
 
         @Test
         @DisplayName("새 PinPoint 생성 시 요청한 여행과 좌표로 PinPoint가 저장된다")
-        void findOrCreatePinPoint_givenNoPinPoints_savedPinPointHasCorrectTripAndCoordinates() {
+        void assignPinPointWithQuery_givenNoPinPoints_savedPinPointHasCorrectTripAndCoordinates() {
             // given
             given(pinPointRepository.findByTripTripId(1L)).willReturn(List.of());
             given(pinPointRepository.save(any(PinPoint.class))).willAnswer(invocation -> invocation.getArgument(0));
 
             // when
-            PinPoint result = pinPointService.findOrCreatePinPoint(trip, BASE_LAT, BASE_LON);
+            PinPoint result = pinPointService.assignPinPointWithQuery(trip, BASE_LAT, BASE_LON);
 
             // then
             assertThat(result.getLatitude()).isEqualTo(BASE_LAT);
@@ -195,19 +195,19 @@ class PinPointServiceTest {
     }
 
     @Nested
-    @DisplayName("findOrCreateFromList()")
+    @DisplayName("assignPinPoint()")
     class FindOrCreateFromList {
 
         @Test
         @DisplayName("200m 이내에 기존 PinPoint가 있으면 기존 PinPoint를 반환하고 목록 크기가 변하지 않는다")
-        void findOrCreateFromList_givenNearbyPinPoint_returnsExistingAndListSizeUnchanged() {
+        void assignPinPoint_givenNearbyPinPoint_returnsExistingAndListSizeUnchanged() {
             // given
             PinPoint existingPinPoint = createPinPoint(10L, BASE_LAT, BASE_LON);
             List<PinPoint> existingPinPoints = new ArrayList<>(List.of(existingPinPoint));
             int originalSize = existingPinPoints.size();
 
             // when
-            PinPoint result = pinPointService.findOrCreateFromList(existingPinPoints, trip, NEAR_LAT, NEAR_LON);
+            PinPoint result = pinPointService.assignPinPoint(existingPinPoints, trip, NEAR_LAT, NEAR_LON);
 
             // then
             assertThat(result).isEqualTo(existingPinPoint);
@@ -216,13 +216,13 @@ class PinPointServiceTest {
 
         @Test
         @DisplayName("200m 이내에 기존 PinPoint가 있으면 repository.save()를 호출하지 않는다")
-        void findOrCreateFromList_givenNearbyPinPoint_doesNotCallSave() {
+        void assignPinPoint_givenNearbyPinPoint_doesNotCallSave() {
             // given
             PinPoint existingPinPoint = createPinPoint(10L, BASE_LAT, BASE_LON);
             List<PinPoint> existingPinPoints = new ArrayList<>(List.of(existingPinPoint));
 
             // when
-            pinPointService.findOrCreateFromList(existingPinPoints, trip, NEAR_LAT, NEAR_LON);
+            pinPointService.assignPinPoint(existingPinPoints, trip, NEAR_LAT, NEAR_LON);
 
             // then
             verify(pinPointRepository, never()).save(any(PinPoint.class));
@@ -230,7 +230,7 @@ class PinPointServiceTest {
 
         @Test
         @DisplayName("200m 초과 거리에만 기존 PinPoint가 있으면 새 PinPoint를 생성하고 목록에 추가한다")
-        void findOrCreateFromList_givenOnlyFarPinPoints_savesNewAndAddsToList() {
+        void assignPinPoint_givenOnlyFarPinPoints_savesNewAndAddsToList() {
             // given
             PinPoint farPinPoint = createPinPoint(10L, BASE_LAT, BASE_LON);
             List<PinPoint> existingPinPoints = new ArrayList<>(List.of(farPinPoint));
@@ -239,7 +239,7 @@ class PinPointServiceTest {
             given(pinPointRepository.save(any(PinPoint.class))).willReturn(savedPinPoint);
 
             // when
-            PinPoint result = pinPointService.findOrCreateFromList(existingPinPoints, trip, FAR_LAT, FAR_LON);
+            PinPoint result = pinPointService.assignPinPoint(existingPinPoints, trip, FAR_LAT, FAR_LON);
 
             // then
             assertThat(result.getPinPointId()).isEqualTo(20L);
@@ -249,14 +249,14 @@ class PinPointServiceTest {
 
         @Test
         @DisplayName("빈 목록으로 호출하면 새 PinPoint를 생성하고 목록에 추가한다")
-        void findOrCreateFromList_givenEmptyList_savesNewAndAddsToList() {
+        void assignPinPoint_givenEmptyList_savesNewAndAddsToList() {
             // given
             List<PinPoint> existingPinPoints = new ArrayList<>();
             PinPoint savedPinPoint = createPinPoint(1L, BASE_LAT, BASE_LON);
             given(pinPointRepository.save(any(PinPoint.class))).willReturn(savedPinPoint);
 
             // when
-            PinPoint result = pinPointService.findOrCreateFromList(existingPinPoints, trip, BASE_LAT, BASE_LON);
+            PinPoint result = pinPointService.assignPinPoint(existingPinPoints, trip, BASE_LAT, BASE_LON);
 
             // then
             verify(pinPointRepository).save(any(PinPoint.class));
@@ -266,7 +266,7 @@ class PinPointServiceTest {
 
         @Test
         @DisplayName("새로 생성된 PinPoint는 existingPinPoints 목록의 마지막 원소로 추가된다")
-        void findOrCreateFromList_givenEmptyList_newPinPointIsLastElementInList() {
+        void assignPinPoint_givenEmptyList_newPinPointIsLastElementInList() {
             // given
             PinPoint firstPinPoint = createPinPoint(1L, FAR_LAT, FAR_LON);
             List<PinPoint> existingPinPoints = new ArrayList<>(List.of(firstPinPoint));
@@ -278,7 +278,7 @@ class PinPointServiceTest {
             given(pinPointRepository.save(any(PinPoint.class))).willReturn(savedPinPoint);
 
             // when
-            pinPointService.findOrCreateFromList(existingPinPoints, trip, BASE_LAT, BASE_LON);
+            pinPointService.assignPinPoint(existingPinPoints, trip, BASE_LAT, BASE_LON);
 
             // then
             assertThat(existingPinPoints).hasSize(2);
@@ -287,13 +287,13 @@ class PinPointServiceTest {
 
         @Test
         @DisplayName("새 PinPoint 생성 시 요청한 여행과 좌표로 PinPoint가 저장된다")
-        void findOrCreateFromList_givenEmptyList_savedPinPointHasCorrectTripAndCoordinates() {
+        void assignPinPoint_givenEmptyList_savedPinPointHasCorrectTripAndCoordinates() {
             // given
             List<PinPoint> existingPinPoints = new ArrayList<>();
             given(pinPointRepository.save(any(PinPoint.class))).willAnswer(invocation -> invocation.getArgument(0));
 
             // when
-            PinPoint result = pinPointService.findOrCreateFromList(existingPinPoints, trip, BASE_LAT, BASE_LON);
+            PinPoint result = pinPointService.assignPinPoint(existingPinPoints, trip, BASE_LAT, BASE_LON);
 
             // then
             assertThat(result.getLatitude()).isEqualTo(BASE_LAT);
@@ -303,7 +303,7 @@ class PinPointServiceTest {
 
         @Test
         @DisplayName("여러 번 호출 시 매 호출마다 목록이 누적되어 배치 처리가 가능하다")
-        void findOrCreateFromList_givenMultipleCalls_listAccumulatesAcrossCalls() {
+        void assignPinPoint_givenMultipleCalls_listAccumulatesAcrossCalls() {
             // given
             List<PinPoint> existingPinPoints = new ArrayList<>();
 
@@ -315,9 +315,9 @@ class PinPointServiceTest {
 
             // when
             // 첫 번째 호출: 빈 목록 → 신규 생성
-            PinPoint first = pinPointService.findOrCreateFromList(existingPinPoints, trip, BASE_LAT, BASE_LON);
+            PinPoint first = pinPointService.assignPinPoint(existingPinPoints, trip, BASE_LAT, BASE_LON);
             // 두 번째 호출: FAR_LAT 요청, 목록에는 BASE_LAT PinPoint만 존재 (거리 약 333m) → 신규 생성
-            PinPoint second = pinPointService.findOrCreateFromList(existingPinPoints, trip, FAR_LAT, FAR_LON);
+            PinPoint second = pinPointService.assignPinPoint(existingPinPoints, trip, FAR_LAT, FAR_LON);
 
             // then
             assertThat(existingPinPoints).hasSize(2);

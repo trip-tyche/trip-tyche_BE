@@ -1,7 +1,7 @@
 package com.triptyche.backend.domain.media.repository;
 
-import com.triptyche.backend.domain.media.dto.MediaFilesByDate;
-import com.triptyche.backend.domain.media.dto.PinPointMediaResponse;
+import com.triptyche.backend.domain.media.dto.MediaFileSummary;
+import com.triptyche.backend.domain.media.dto.MediaFileDetailResponse;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.trip.model.Trip;
 import java.time.LocalDate;
@@ -23,7 +23,7 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
    * – recordDate = defaultDate인 레코드 제외
    */
   @Query("""
-              SELECT new com.triptyche.backend.domain.media.dto.PinPointMediaResponse(
+              SELECT new com.triptyche.backend.domain.media.dto.MediaFileDetailResponse(
                   m.mediaFileId,
                   m.mediaLink,
                   m.recordDate,
@@ -37,7 +37,7 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
                 AND m.recordDate <> :defaultDate
               ORDER BY m.recordDate ASC
           """)
-  List<PinPointMediaResponse> findByTripTripIdAndPinPointPinPointId(
+  List<MediaFileDetailResponse> findByTripTripIdAndPinPointPinPointId(
           @Param("tripId") Long tripId,
           @Param("pinPointId") Long pinPointId,
           @Param("defaultDate") LocalDateTime defaultDate
@@ -50,7 +50,7 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
    * – recordDate = 1980-01-01T00:00:00인 경우 제외
    */
   @Query("""
-              SELECT new com.triptyche.backend.domain.media.dto.MediaFilesByDate(
+              SELECT new com.triptyche.backend.domain.media.dto.MediaFileSummary(
                 m.mediaFileId,
                 m.mediaLink,
                 m.recordDate,
@@ -64,7 +64,7 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
                 AND m.recordDate <> :defaultDate
               ORDER BY m.recordDate ASC
           """)
-  List<MediaFilesByDate> findByTripTripIdAndRecordDate(
+  List<MediaFileSummary> findByTripTripIdAndRecordDate(
           @Param("tripId") Long tripId,
           @Param("startOfDay") LocalDateTime startOfDay,
           @Param("endOfDay") LocalDateTime endOfDay,

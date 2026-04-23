@@ -1,7 +1,7 @@
 package com.triptyche.backend.domain.trip.controller;
 
-import com.triptyche.backend.domain.media.dto.MediaFilesByDateResponse;
-import com.triptyche.backend.domain.trip.dto.PinPointGalleryResponse;
+import com.triptyche.backend.domain.media.dto.MediaByDateResponse;
+import com.triptyche.backend.domain.trip.dto.PinPointMediaListResponse;
 import com.triptyche.backend.domain.trip.dto.TripListResponse;
 import com.triptyche.backend.domain.trip.dto.TripMapResponse;
 import com.triptyche.backend.domain.trip.dto.TripUpdateResponse;
@@ -63,11 +63,11 @@ public class TripQueryController {
   @Operation(summary = "핀포인트별 슬라이드 쇼를 위한 이미지 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/d172149814414943866df2f04f409970?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/{tripKey}/pinpoints/{pinPointId}/images")
-  public RestResponse<PinPointGalleryResponse> getPointImages(
+  public RestResponse<PinPointMediaListResponse> getPointImages(
           @CurrentUser User user,
           @PathVariable String tripKey,
           @PathVariable Long pinPointId) {
-    PinPointGalleryResponse pinPointImageGalleryResponse = tripQueryService.getPointImages(user, tripKey,
+    PinPointMediaListResponse pinPointImageGalleryResponse = tripQueryService.getPointImages(user, tripKey,
             pinPointId);
 
     return RestResponse.success(pinPointImageGalleryResponse);
@@ -77,11 +77,11 @@ public class TripQueryController {
   @Operation(summary = "날짜별 이미지 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/de630f9fd0424f1ca1d521037730d296?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/{tripKey}/map")
-  public RestResponse<MediaFilesByDateResponse> getImagesByDate(
+  public RestResponse<MediaByDateResponse> getImagesByDate(
           @CurrentUser User user,
           @PathVariable String tripKey,
           @RequestParam String date) {
-    MediaFilesByDateResponse dateImageDTO = tripQueryService.getImagesByDate(user, tripKey, date);
+    MediaByDateResponse dateImageDTO = tripQueryService.getImagesByDate(user, tripKey, date);
 
     return RestResponse.success(dateImageDTO);
   }
