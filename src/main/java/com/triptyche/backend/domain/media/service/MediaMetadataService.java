@@ -12,6 +12,7 @@ import com.triptyche.backend.domain.media.event.MediaFileDeletedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileLocationUpdatedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileRegisteredEvent;
 import com.triptyche.backend.domain.media.event.MediaFileUpdatedEvent;
+import com.triptyche.backend.domain.media.event.MediaFilesS3DeleteRequestedEvent;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.trip.model.PinPoint;
@@ -164,8 +165,9 @@ public class MediaMetadataService {
             .map(MediaFile::getMediaKey)
             .toList();
 
-    s3UploadService.deleteFiles(mediaKeys);
     mediaFileRepository.deleteAll(mediaFiles);
+
+    eventPublisher.publishEvent(new MediaFilesS3DeleteRequestedEvent(mediaKeys));
 
     eventPublisher.publishEvent(new MediaFileDeletedEvent(
             trip.getTripId(),
