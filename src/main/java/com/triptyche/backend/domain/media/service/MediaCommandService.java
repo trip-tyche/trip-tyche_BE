@@ -9,6 +9,7 @@ import com.triptyche.backend.domain.media.event.MediaFileDeletedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileLocationUpdatedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileRegisteredEvent;
 import com.triptyche.backend.domain.media.event.MediaFileUpdatedEvent;
+import com.triptyche.backend.domain.media.event.MediaFileZeroLocationCacheRequestedEvent;
 import com.triptyche.backend.domain.media.event.MediaFilesS3DeleteRequestedEvent;
 import com.triptyche.backend.domain.media.event.MediaLocationCacheEvictRequestedEvent;
 import com.triptyche.backend.domain.media.model.MediaFile;
@@ -37,7 +38,6 @@ public class MediaCommandService {
 
   private final MediaFileRepository mediaFileRepository;
   private final PinPointService pinPointService;
-  private final UnlocatedMediaCacheService unlocatedMediaCacheService;
   private final S3UploadService s3UploadService;
   private final TripAccessValidator tripAccessValidator;
   private final ApplicationEventPublisher eventPublisher;
@@ -80,15 +80,15 @@ public class MediaCommandService {
             ))
     );
 
-    // Redis 처리 (위치 0.0인 파일들만)
+    // Redis 처리 (위치 0.0인 파일들만) — DB 커밋 완료 후 이벤트로 처리
     savedMediaFiles.stream()
             .filter(mf -> mf.getLatitude() == 0.0 && mf.getLongitude() == 0.0)
-            .forEach(mf -> unlocatedMediaCacheService.save(
+            .forEach(mf -> eventPublisher.publishEvent(new MediaFileZeroLocationCacheRequestedEvent(
                     trip.getTripId(),
                     mf.getMediaFileId(),
                     mf.getMediaLink(),
                     mf.getRecordDate().toString()
-            ));
+            )));
 
     eventPublisher.publishEvent(new MediaFileAddedEvent(
             trip.getTripId(),
