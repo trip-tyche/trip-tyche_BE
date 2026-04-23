@@ -93,7 +93,7 @@ public class MediaCommandService {
     savedMediaFiles.stream()
             .filter(mf -> mf.getLatitude() == 0.0 && mf.getLongitude() == 0.0)
             .forEach(mf -> {
-              unlocatedMediaCacheService.saveZeroLocationData(
+              unlocatedMediaCacheService.save(
                       trip.getTripId(),
                       mf.getMediaFileId(),
                       mf.getMediaLink(),
