@@ -13,6 +13,7 @@ import com.triptyche.backend.domain.media.event.MediaFileLocationUpdatedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileRegisteredEvent;
 import com.triptyche.backend.domain.media.event.MediaFileUpdatedEvent;
 import com.triptyche.backend.domain.media.event.MediaFilesS3DeleteRequestedEvent;
+import com.triptyche.backend.domain.media.event.MediaLocationCacheEvictRequestedEvent;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.trip.model.PinPoint;
@@ -247,9 +248,8 @@ public class MediaMetadataService {
     mf.updateLocation(newLat, newLon, pinPoint);
     mediaFileRepository.save(mf);
 
-    // Redis 캐시 삭제
-    String redisKey = "trip:" + trip.getTripId();
-    imageQueueService.deleteFromImageQueue(redisKey, String.valueOf(mediaFileId));
+    // Redis 캐시 삭제 -> DB 커밋 완료 후 이벤트
+    eventPublisher.publishEvent(new MediaLocationCacheEvictRequestedEvent(trip.getTripId(), mediaFileId));
 
     // 이벤트 발행: 위치 갱신
     Long actorId = user.getUserId();
