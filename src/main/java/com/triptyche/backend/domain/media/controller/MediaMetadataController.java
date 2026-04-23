@@ -88,10 +88,10 @@ public class MediaMetadataController {
   @Operation(summary = "위치정보 없는 이미지 조회(Redis)", description = "<a href='https://www.notion"
           + ".so/maristadev/f15de88a76ff49da85d3d970d8e64aff?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping("/unlocated")
-  public RestResponse<List<UnlocatedMediaResponse>> getUnlocatedImages(
+  public RestResponse<List<UnlocatedMediaResponse>> getUnlocatedMedia(
           @CurrentUser User user,
           @PathVariable String tripKey) {
-    List<UnlocatedMediaResponse> response = mediaCommandService.getUnlocatedImages(user, tripKey);
+    List<UnlocatedMediaResponse> response = mediaQueryService.getUnlocatedMedia(user, tripKey);
     return RestResponse.success(response);
   }
 
