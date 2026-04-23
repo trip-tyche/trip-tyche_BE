@@ -17,7 +17,6 @@ import com.triptyche.backend.domain.media.event.MediaLocationCacheEvictRequested
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.trip.model.PinPoint;
-import com.triptyche.backend.domain.trip.repository.PinPointRepository;
 import com.triptyche.backend.domain.trip.service.PinPointService;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
@@ -29,7 +28,6 @@ import com.triptyche.backend.global.s3.S3UploadService;
 import com.triptyche.backend.global.util.DateFormatter;
 import com.triptyche.backend.global.util.DateUtil;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -45,7 +43,6 @@ public class MediaCommandService {
 
   private final MediaFileRepository mediaFileRepository;
   private final PinPointService pinPointService;
-  private final PinPointRepository pinPointRepository;
   private final UnlocatedMediaCacheService unlocatedMediaCacheService;
   private final S3UploadService s3UploadService;
   private final ImageQueueService imageQueueService;
@@ -60,8 +57,7 @@ public class MediaCommandService {
 
     boolean isOwner = trip.getUser().getUserId().equals(user.getUserId());
 
-    List<PinPoint> existingPinPoints = new ArrayList<>(
-            pinPointRepository.findAllByTripTripId(trip.getTripId()));
+    List<PinPoint> existingPinPoints = pinPointService.findAllByTripId(trip.getTripId());
 
     List<MediaFile> mediaFiles = files.stream()
             .map(file -> {
@@ -123,8 +119,7 @@ public class MediaCommandService {
     String actorNickname = user.getUserNickName();
     boolean isOwner = trip.getUser().getUserId().equals(actorId);
 
-    List<PinPoint> existingPinPoints = new ArrayList<>(
-            pinPointRepository.findAllByTripTripId(trip.getTripId()));
+    List<PinPoint> existingPinPoints = pinPointService.findAllByTripId(trip.getTripId());
 
     List<Long> mediaFileIds = requestDTO.mediaFiles().stream()
             .map(MediaBatchEditRequest.MediaFileUpdateRequest::mediaFileId)
