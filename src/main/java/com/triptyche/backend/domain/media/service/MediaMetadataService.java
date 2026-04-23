@@ -125,17 +125,25 @@ public class MediaMetadataService {
     List<PinPoint> existingPinPoints = new ArrayList<>(
             pinPointRepository.findAllByTripTripId(trip.getTripId()));
 
+    List<Long> mediaFileIds = requestDTO.mediaFiles().stream()
+            .map(MediaBatchUpdateRequest.MediaFileUpdateRequest::mediaFileId)
+            .toList();
+
+    Map<Long, MediaFile> mediaFileMap = mediaFileRepository.findAllById(mediaFileIds).stream()
+            .collect(Collectors.toMap(MediaFile::getMediaFileId, mf -> mf));
+
+    if (mediaFileMap.size() != mediaFileIds.size()) {
+      throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
+    }
+
     List<MediaFile> updatedMediaFiles = requestDTO.mediaFiles().stream()
             .map(request -> {
-              MediaFile mf = mediaFileRepository.findById(request.mediaFileId())
-                      .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
-
+              MediaFile mf = mediaFileMap.get(request.mediaFileId());
               PinPoint pinPoint = pinPointService.findOrCreateFromList(
                       existingPinPoints, trip, request.latitude(), request.longitude());
-
               mf.updateRecordDate(request.recordDate());
               mf.updateLocation(request.latitude(), request.longitude(), pinPoint);
-              return mediaFileRepository.save(mf);
+              return mf;
             })
             .toList();
 

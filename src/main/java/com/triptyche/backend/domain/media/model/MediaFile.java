@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@Table(name = "MediaFile", indexes = {
+@Table(name = "media_file", indexes = {
     @Index(name = "idx_media_file_trip_id", columnList = "tripId"),
     @Index(name = "idx_media_file_pin_point_id", columnList = "pinPointId"),
     @Index(name = "idx_media_file_trip_id_record_date", columnList = "tripId, recordDate")
