@@ -1,1 +1,0 @@
-ALTER TABLE share ADD CONSTRAINT uk_share_trip_recipient UNIQUE (trip_id, recipient_id);

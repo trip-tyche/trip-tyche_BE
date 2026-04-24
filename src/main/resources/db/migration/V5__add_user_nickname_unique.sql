@@ -1,1 +1,0 @@
-ALTER TABLE `user` ADD UNIQUE KEY uq_user_nick_name (user_nick_name);
