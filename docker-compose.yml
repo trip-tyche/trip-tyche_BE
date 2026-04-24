@@ -28,6 +28,12 @@ services:
       resources:
         limits:
           memory: 1024M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 40s
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -135,7 +141,8 @@ services:
     image: nginx:alpine
     container_name: triptyche-nginx
     depends_on:
-      - app
+      app:
+        condition: service_healthy
     ports:
       - "80:80"
       - "443:443"

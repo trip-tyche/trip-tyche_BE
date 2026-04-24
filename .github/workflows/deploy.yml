@@ -68,6 +68,7 @@ jobs:
             cd ~/triptyche
             docker compose pull app
             docker compose build image-worker
-            docker compose up -d
+            docker compose up -d --wait
+            docker compose exec -T nginx nginx -s reload
             docker image prune -f
 
