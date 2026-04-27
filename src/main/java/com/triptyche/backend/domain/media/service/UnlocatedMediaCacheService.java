@@ -2,6 +2,9 @@ package com.triptyche.backend.domain.media.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.triptyche.backend.domain.media.dto.CachedMediaEntry;
+import com.triptyche.backend.global.common.ResultCode;
+import com.triptyche.backend.global.exception.CustomException;
 import com.triptyche.backend.global.redis.ImageQueueService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,8 +23,6 @@ public class UnlocatedMediaCacheService {
   private final ImageQueueService imageQueueService;
   private final ObjectMapper objectMapper;
 
-  public record CachedMediaEntry(Long mediaFileId, String mediaLink, LocalDateTime recordDate) {}
-
   public void save(Long tripId, Long mediaFileId, String mediaLink, String recordDate) {
     Map<String, Object> data = new HashMap<>();
     data.put("mediaLink", mediaLink);
@@ -31,7 +32,7 @@ public class UnlocatedMediaCacheService {
       String jsonData = objectMapper.writeValueAsString(data);
       imageQueueService.saveImageQueue(buildKey(tripId), String.valueOf(mediaFileId), jsonData);
     } catch (JsonProcessingException e) {
-      throw new RuntimeException("JSON 변환 중 오류", e);
+      throw new CustomException(ResultCode.JSON_PARSE_ERROR);
     }
   }
 

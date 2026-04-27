@@ -46,7 +46,7 @@ public class MediaCommandService {
   public void processAndSaveMetadataBatch(User user, String tripKey, List<MediaUploadRequest> files) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
-    boolean isOwner = trip.getUser().getUserId().equals(user.getUserId());
+    boolean isOwner = trip.isOwner(user);
 
     List<PinPoint> existingPinPoints = pinPointService.findAllByTripId(trip.getTripId());
 
@@ -106,7 +106,7 @@ public class MediaCommandService {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
-    boolean isOwner = trip.getUser().getUserId().equals(actorId);
+    boolean isOwner = trip.isOwner(user);
 
     List<PinPoint> existingPinPoints = pinPointService.findAllByTripId(trip.getTripId());
 
@@ -150,7 +150,7 @@ public class MediaCommandService {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
-    boolean isOwner = trip.getUser().getUserId().equals(actorId);
+    boolean isOwner = trip.isOwner(user);
 
     List<MediaFile> mediaFiles = mediaFileRepository.findAllById(requestDTO.mediaFileIds());
 
@@ -182,25 +182,18 @@ public class MediaCommandService {
                                   Long mediaFileId,
                                   MediaLocationEditRequest requestDTO) {
 
-    Double newLat = requestDTO.latitude();
-    Double newLon = requestDTO.longitude();
-    if (newLat == null || newLon == null) {
-      throw new CustomException(ResultCode.INVALID_COORDINATE);
-    }
-
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     MediaFile mf = mediaFileRepository.findById(mediaFileId)
             .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
 
-    PinPoint pinPoint = pinPointService.assignPinPointWithQuery(trip, newLat, newLon);
-    mf.updateLocation(newLat, newLon, pinPoint);
-    mediaFileRepository.save(mf);
+    PinPoint pinPoint = pinPointService.assignPinPointWithQuery(trip, requestDTO.latitude(), requestDTO.longitude());
+    mf.updateLocation(requestDTO.latitude(), requestDTO.longitude(), pinPoint);
 
     eventPublisher.publishEvent(new MediaLocationCacheEvictRequestedEvent(trip.getTripId(), mediaFileId));
 
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
-    boolean isOwner = trip.getUser().getUserId().equals(actorId);
+    boolean isOwner = trip.isOwner(user);
     eventPublisher.publishEvent(new MediaFileLocationUpdatedEvent(
             trip.getTripId(),
             trip.getTripTitle(),

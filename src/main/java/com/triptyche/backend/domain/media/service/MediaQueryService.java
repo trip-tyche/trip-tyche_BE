@@ -8,7 +8,7 @@ import com.triptyche.backend.domain.media.dto.UnlocatedMediaResponse;
 import com.triptyche.backend.domain.media.dto.UnlocatedMediaResponse.MediaSummary;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
-import com.triptyche.backend.domain.media.service.UnlocatedMediaCacheService.CachedMediaEntry;
+import com.triptyche.backend.domain.media.dto.CachedMediaEntry;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
