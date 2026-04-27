@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.Duration;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,7 +48,7 @@ public class PresignedURLController {
 
               return new PresignedUrlResponse.PresignedUrl(fileKey, presignedPutUrl);
             })
-            .collect(Collectors.toList());
+            .toList();
 
     return RestResponse.success(new PresignedUrlResponse(presignedUrls));
 

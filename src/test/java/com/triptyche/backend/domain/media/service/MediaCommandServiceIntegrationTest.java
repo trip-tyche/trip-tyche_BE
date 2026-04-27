@@ -115,7 +115,7 @@ class MediaCommandServiceIntegrationTest {
     void saves_mediaFile_to_db() {
       String fileKey = "originals/" + trip.getTripKey() + "/test.jpg";
       List<MediaUploadRequest> files = List.of(
-              new MediaUploadRequest(null, fileKey, 37.5, 127.0, "2024-01-01T00:00:00"));
+              new MediaUploadRequest(fileKey, 37.5, 127.0, "2024-01-01T00:00:00"));
 
       mediaCommandService.processAndSaveMetadataBatch(owner, trip.getTripKey(), files);
 
@@ -132,9 +132,9 @@ class MediaCommandServiceIntegrationTest {
     void clusters_within_200m_to_same_pinpoint() {
       // 약 11m 거리 (200m 이내)
       List<MediaUploadRequest> files = List.of(
-              new MediaUploadRequest(null, "originals/" + trip.getTripKey() + "/a.jpg", 37.5000, 127.0000,
+              new MediaUploadRequest("originals/" + trip.getTripKey() + "/a.jpg", 37.5000, 127.0000,
                       "2024-01-01T00:00:00"),
-              new MediaUploadRequest(null, "originals/" + trip.getTripKey() + "/b.jpg", 37.5001, 127.0001,
+              new MediaUploadRequest("originals/" + trip.getTripKey() + "/b.jpg", 37.5001, 127.0001,
                       "2024-01-01T00:00:00")
       );
 
@@ -154,9 +154,9 @@ class MediaCommandServiceIntegrationTest {
     void separates_beyond_200m_to_different_pinpoints() {
       // 약 2.5km 거리 (200m 초과)
       List<MediaUploadRequest> files = List.of(
-              new MediaUploadRequest(null, "originals/" + trip.getTripKey() + "/a.jpg", 37.5000, 127.0000,
+              new MediaUploadRequest("originals/" + trip.getTripKey() + "/a.jpg", 37.5000, 127.0000,
                       "2024-01-01T00:00:00"),
-              new MediaUploadRequest(null, "originals/" + trip.getTripKey() + "/b.jpg", 37.5200, 127.0200,
+              new MediaUploadRequest("originals/" + trip.getTripKey() + "/b.jpg", 37.5200, 127.0200,
                       "2024-01-01T00:00:00")
       );
 
@@ -188,9 +188,9 @@ class MediaCommandServiceIntegrationTest {
 
       List<MediaUploadRequest> files = List.of(
               // 첫 번째: 정상 → assignPinPoint()까지 실행됨
-              new MediaUploadRequest(null, "originals/" + tripKey + "/valid.jpg", 37.5, 127.0, "2024-01-01T00:00:00"),
+              new MediaUploadRequest("originals/" + tripKey + "/valid.jpg", 37.5, 127.0, "2024-01-01T00:00:00"),
               // 두 번째: fileKey 검증 실패 → CustomException
-              new MediaUploadRequest(null, "invalid/path/test.jpg", 37.5, 127.0, "2024-01-01T00:00:00")
+              new MediaUploadRequest("invalid/path/test.jpg", 37.5, 127.0, "2024-01-01T00:00:00")
       );
 
       try {
@@ -219,7 +219,7 @@ class MediaCommandServiceIntegrationTest {
     @DisplayName("위도/경도 0.0 파일 등록 시 MediaFileZeroLocationCacheRequestedEvent가 발행된다")
     void unlocated_file_triggers_zero_location_event() {
       List<MediaUploadRequest> files = List.of(
-              new MediaUploadRequest(null, "originals/" + trip.getTripKey() + "/unlocated.jpg",
+              new MediaUploadRequest("originals/" + trip.getTripKey() + "/unlocated.jpg",
                       0.0, 0.0, "2024-01-01T00:00:00")
       );
 

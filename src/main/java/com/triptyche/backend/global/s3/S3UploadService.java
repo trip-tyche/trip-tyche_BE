@@ -39,7 +39,7 @@ public class S3UploadService {
     try {
       List<ObjectIdentifier> objects = mediaKeys.stream()
               .map(key -> ObjectIdentifier.builder().key(key).build())
-              .collect(Collectors.toList());
+              .toList();
 
       DeleteObjectsRequest deleteObjectsRequest = DeleteObjectsRequest.builder()
               .bucket(bucketName)
