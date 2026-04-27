@@ -19,7 +19,7 @@ import com.triptyche.backend.domain.share.dto.ShareSummaryResponse;
 import com.triptyche.backend.domain.share.repository.ShareRepository;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
-import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
+import com.triptyche.backend.global.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;

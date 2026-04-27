@@ -17,13 +17,14 @@ import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.trip.model.PinPoint;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.service.PinPointService;
-import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
+import com.triptyche.backend.global.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
 import com.triptyche.backend.global.s3.S3UploadService;
 import com.triptyche.backend.global.util.DateUtil;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -155,7 +156,18 @@ public class MediaCommandService {
     List<MediaFile> mediaFiles = mediaFileRepository.findAllById(request.mediaFileIds());
 
     List<String> mediaKeys = mediaFiles.stream()
-            .map(MediaFile::getMediaKey)
+            .flatMap(mf -> {
+              List<String> keys = new ArrayList<>();
+              if (mf.getMediaKey() != null) {
+                keys.add(mf.getMediaKey());
+              }
+              String webpKey = s3UploadService.extractKey(mf.getMediaLink());
+              if (webpKey != null && !webpKey.equals(mf.getMediaKey())) {
+                keys.add(webpKey);
+              }
+              return keys.stream();
+            })
+            .distinct()
             .toList();
 
     mediaFileRepository.deleteAll(mediaFiles);

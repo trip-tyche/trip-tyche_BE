@@ -3,7 +3,7 @@ package com.triptyche.backend.domain.media.controller;
 import com.triptyche.backend.domain.media.dto.PresignedUrlCreateRequest;
 import com.triptyche.backend.domain.media.dto.PresignedUrlResponse;
 import com.triptyche.backend.domain.media.dto.PresignedUrlResponse.PresignedUrl;
-import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
+import com.triptyche.backend.global.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.auth.CurrentUser;
 import com.triptyche.backend.global.common.RestResponse;
