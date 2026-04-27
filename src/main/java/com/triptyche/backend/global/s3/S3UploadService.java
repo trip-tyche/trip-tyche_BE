@@ -28,6 +28,13 @@ public class S3UploadService {
     return endpoint + "/" + bucketName + "/" + key;
   }
 
+  public String extractKey(String mediaLink) {
+    if (mediaLink == null) return null;
+    String prefix = endpoint + "/" + bucketName + "/";
+    if (!mediaLink.startsWith(prefix)) return null;
+    return mediaLink.substring(prefix.length());
+  }
+
   public void deleteFiles(List<String> mediaKeys) {
     try {
       List<ObjectIdentifier> objects = mediaKeys.stream()

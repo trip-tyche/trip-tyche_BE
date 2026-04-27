@@ -6,6 +6,7 @@ import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.global.s3.S3UploadService;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,9 +39,7 @@ public class TripCleanupScheduler {
       return;
     }
 
-    List<String> mediaKeys = mediaFileRepository.findAllByTripIn(abandonedTrips).stream()
-            .map(MediaFile::getMediaKey)
-            .toList();
+    List<String> mediaKeys = collectAllKeys(mediaFileRepository.findAllByTripIn(abandonedTrips));
 
     cleanupExecutor.deleteAbandonedTrips(abandonedTrips);
     deleteFromStorage(mediaKeys);
@@ -56,12 +55,27 @@ public class TripCleanupScheduler {
       return;
     }
 
-    List<String> mediaKeys = mediaFileRepository.findAllByTripIn(deletedTrips).stream()
-            .map(MediaFile::getMediaKey)
-            .toList();
+    List<String> mediaKeys = collectAllKeys(mediaFileRepository.findAllByTripIn(deletedTrips));
 
     cleanupExecutor.deleteSoftDeletedTrips(deletedTrips);
     deleteFromStorage(mediaKeys);
+  }
+
+  private List<String> collectAllKeys(List<MediaFile> mediaFiles) {
+    return mediaFiles.stream()
+            .flatMap(mf -> {
+              List<String> keys = new ArrayList<>();
+              if (mf.getMediaKey() != null) {
+                keys.add(mf.getMediaKey());
+              }
+              String webpKey = s3UploadService.extractKey(mf.getMediaLink());
+              if (webpKey != null && !webpKey.equals(mf.getMediaKey())) {
+                keys.add(webpKey);
+              }
+              return keys.stream();
+            })
+            .distinct()
+            .toList();
   }
 
   private void deleteFromStorage(List<String> mediaKeys) {
