@@ -11,7 +11,7 @@ import com.triptyche.backend.domain.trip.model.TripStatus;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
-import com.triptyche.backend.global.redis.ImageQueueService;
+import com.triptyche.backend.global.redis.UnlocatedMediaHashRepository;
 import com.triptyche.backend.global.s3.S3UploadService;
 import com.triptyche.backend.global.util.JwtTokenProvider;
 import jakarta.persistence.EntityManager;
@@ -52,7 +52,7 @@ class TripCommandServiceIntegrationTest {
     private EntityManager entityManager;
 
     @MockBean
-    private ImageQueueService imageQueueService;
+    private UnlocatedMediaHashRepository imageQueueService;
 
     @MockBean
     private S3UploadService s3UploadService;

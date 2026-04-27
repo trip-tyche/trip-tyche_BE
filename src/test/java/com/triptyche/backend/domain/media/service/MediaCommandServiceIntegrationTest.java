@@ -21,7 +21,7 @@ import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
-import com.triptyche.backend.global.redis.ImageQueueService;
+import com.triptyche.backend.global.redis.UnlocatedMediaHashRepository;
 import com.triptyche.backend.global.s3.S3UploadService;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
@@ -67,7 +67,7 @@ class MediaCommandServiceIntegrationTest {
   private ApplicationEvents applicationEvents;
 
   @MockBean
-  private ImageQueueService imageQueueService;
+  private UnlocatedMediaHashRepository imageQueueService;
   @MockBean
   private S3UploadService s3UploadService;
   @MockBean

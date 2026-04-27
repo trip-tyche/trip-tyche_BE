@@ -4,27 +4,24 @@ import java.time.Duration;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 
-@Service
+@Repository
 @RequiredArgsConstructor
-public class ImageQueueService {
+public class UnlocatedMediaHashRepository {
 
   private final RedisTemplate<String, Object> redisTemplate;
 
-  // 특정 tripId의 수정 대기 데이터 저장
-  public void saveImageQueue(String tripKey, String mediaFileId, Object data) {
+  public void put(String tripKey, String mediaFileId, Object data) {
     redisTemplate.opsForHash().put(tripKey, mediaFileId, data);
     redisTemplate.expire(tripKey, Duration.ofDays(7));
   }
 
-  // 특정 tripId의 수정 대기 데이터 조회
-  public Map<Object, Object> getImageQueue(String tripKey) {
+  public Map<Object, Object> entries(String tripKey) {
     return redisTemplate.opsForHash().entries(tripKey);
   }
 
-  // 특정 tripId에서 특정 이미지 삭제
-  public void deleteFromImageQueue(String tripKey, String mediaFileId) {
+  public void delete(String tripKey, String mediaFileId) {
     redisTemplate.opsForHash().delete(tripKey, mediaFileId);
   }
 }

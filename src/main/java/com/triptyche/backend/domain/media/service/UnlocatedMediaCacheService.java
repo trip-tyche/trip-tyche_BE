@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptyche.backend.domain.media.dto.CachedMediaEntry;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
-import com.triptyche.backend.global.redis.ImageQueueService;
+import com.triptyche.backend.global.redis.UnlocatedMediaHashRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UnlocatedMediaCacheService {
 
-  private final ImageQueueService imageQueueService;
+  private final UnlocatedMediaHashRepository unlocatedMediaHashRepository;
   private final ObjectMapper objectMapper;
 
   public void save(Long tripId, Long mediaFileId, String mediaLink, String recordDate) {
@@ -30,14 +30,14 @@ public class UnlocatedMediaCacheService {
 
     try {
       String jsonData = objectMapper.writeValueAsString(data);
-      imageQueueService.saveImageQueue(buildKey(tripId), String.valueOf(mediaFileId), jsonData);
+      unlocatedMediaHashRepository.put(buildKey(tripId), String.valueOf(mediaFileId), jsonData);
     } catch (JsonProcessingException e) {
       throw new CustomException(ResultCode.JSON_PARSE_ERROR);
     }
   }
 
   public List<CachedMediaEntry> getAll(Long tripId) {
-    Map<Object, Object> raw = imageQueueService.getImageQueue(buildKey(tripId));
+    Map<Object, Object> raw = unlocatedMediaHashRepository.entries(buildKey(tripId));
     List<CachedMediaEntry> result = new ArrayList<>();
 
     for (Map.Entry<Object, Object> entry : raw.entrySet()) {
@@ -56,7 +56,7 @@ public class UnlocatedMediaCacheService {
 
   public void evict(Long tripId, Long mediaFileId) {
     try {
-      imageQueueService.deleteFromImageQueue(buildKey(tripId), String.valueOf(mediaFileId));
+      unlocatedMediaHashRepository.delete(buildKey(tripId), String.valueOf(mediaFileId));
     } catch (Exception e) {
       log.error("Redis 위치 캐시 삭제 실패 — tripId: {}, mediaFileId: {}, error: {}",
               tripId, mediaFileId, e.getMessage(), e);
