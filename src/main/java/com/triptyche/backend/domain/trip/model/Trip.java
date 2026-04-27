@@ -107,6 +107,10 @@ public class Trip {
     this.status = TripStatus.CONFIRMED;
   }
 
+  public boolean isOwner(User user) {
+    return this.user.getUserId().equals(user.getUserId());
+  }
+
   public boolean isConfirmed() {
     return this.status == TripStatus.CONFIRMED;
   }

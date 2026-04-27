@@ -27,9 +27,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Table(name = "media_file", indexes = {
-    @Index(name = "idx_media_file_trip_id", columnList = "tripId"),
-    @Index(name = "idx_media_file_pin_point_id", columnList = "pinPointId"),
-    @Index(name = "idx_media_file_trip_id_record_date", columnList = "tripId, recordDate")
+    @Index(name = "idx_media_file_trip_id", columnList = "trip_id"),
+    @Index(name = "idx_media_file_pin_point_id", columnList = "pin_point_id"),
+    @Index(name = "idx_media_file_trip_id_record_date", columnList = "trip_id, record_date")
 })
 public class MediaFile {
 
@@ -38,11 +38,11 @@ public class MediaFile {
   private Long mediaFileId;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "tripId", nullable = false)
+  @JoinColumn(name = "trip_id", nullable = false)
   private Trip trip;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "pinPointId", nullable = false)
+  @JoinColumn(name = "pin_point_id", nullable = false)
   private PinPoint pinPoint;
 
   @Column(length = 50)

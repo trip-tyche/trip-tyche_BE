@@ -3,12 +3,11 @@ package com.triptyche.backend.domain.notification.event;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptyche.backend.domain.notification.model.Notification;
 import com.triptyche.backend.domain.notification.model.NotificationStatus;
 import com.triptyche.backend.domain.notification.model.NotificationType;
@@ -33,9 +32,6 @@ class NotificationSenderTest {
   @Mock
   private SimpMessagingTemplate messagingTemplate;
 
-  @Mock
-  private ObjectMapper objectMapper;
-
   @InjectMocks
   private NotificationSender notificationSender;
 
@@ -51,16 +47,11 @@ class NotificationSenderTest {
 
     @Test
     @DisplayName("sendNotification() 호출 시 Notification이 UNREAD 상태로 저장된다")
-    void sendNotification_givenValidParams_savesNotificationWithUnreadStatus()
-            throws JsonProcessingException {
-      // given
-      given(objectMapper.writeValueAsString(any())).willReturn("{}");
+    void sendNotification_givenValidParams_savesNotificationWithUnreadStatus() {
       ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
 
-      // when
       notificationSender.sendNotification(RECIPIENT_ID, TYPE, PAYLOAD, REFERENCE_ID, SENDER_NICKNAME);
 
-      // then
       verify(notificationRepository).save(captor.capture());
       Notification saved = captor.getValue();
       assertThat(saved.getUserId()).isEqualTo(RECIPIENT_ID);
@@ -72,36 +63,25 @@ class NotificationSenderTest {
 
     @Test
     @DisplayName("sendNotification() 호출 시 올바른 WebSocket 경로로 메시지가 전송된다")
-    void sendNotification_givenValidParams_sendsToCorrectWebSocketTopic()
-            throws JsonProcessingException {
-      // given
-      given(objectMapper.writeValueAsString(any())).willReturn("{}");
-
-      // when
+    void sendNotification_givenValidParams_sendsToCorrectWebSocketTopic() {
       notificationSender.sendNotification(RECIPIENT_ID, TYPE, PAYLOAD, REFERENCE_ID, SENDER_NICKNAME);
 
-      // then
       verify(messagingTemplate).convertAndSend(
               eq("/topic/share-notifications/" + RECIPIENT_ID),
-              eq("{}")
+              eq(PAYLOAD)
       );
     }
 
     @Test
     @DisplayName("WebSocket 전송 중 예외가 발생해도 외부로 전파되지 않는다")
-    void sendNotification_whenWebSocketFails_doesNotPropagateException()
-            throws JsonProcessingException {
-      // given
-      given(objectMapper.writeValueAsString(any()))
-              .willThrow(new JsonProcessingException("test") {});
+    void sendNotification_whenWebSocketFails_doesNotPropagateException() {
+      doThrow(new RuntimeException("websocket error"))
+              .when(messagingTemplate).convertAndSend(anyString(), any(Object.class));
 
-      // when & then
-      // 예외가 외부로 전파되지 않아야 한다
       assertThatCode(() ->
               notificationSender.sendNotification(RECIPIENT_ID, TYPE, PAYLOAD, REFERENCE_ID, SENDER_NICKNAME)
       ).doesNotThrowAnyException();
 
-      // DB 저장은 WebSocket 실패와 무관하게 정상 호출됐어야 한다
       verify(notificationRepository).save(any(Notification.class));
     }
   }

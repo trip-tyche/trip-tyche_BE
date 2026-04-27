@@ -1,4 +1,4 @@
-package com.triptyche.backend.domain.trip.validator;
+package com.triptyche.backend.global.validator;
 
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.repository.TripRepository;

@@ -3,7 +3,7 @@ package com.triptyche.backend.domain.media.controller;
 import com.triptyche.backend.domain.media.dto.PresignedUrlCreateRequest;
 import com.triptyche.backend.domain.media.dto.PresignedUrlResponse;
 import com.triptyche.backend.domain.media.dto.PresignedUrlResponse.PresignedUrl;
-import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
+import com.triptyche.backend.global.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.auth.CurrentUser;
 import com.triptyche.backend.global.common.RestResponse;
@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.Duration;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,7 +48,7 @@ public class PresignedURLController {
 
               return new PresignedUrlResponse.PresignedUrl(fileKey, presignedPutUrl);
             })
-            .collect(Collectors.toList());
+            .toList();
 
     return RestResponse.success(new PresignedUrlResponse(presignedUrls));
 

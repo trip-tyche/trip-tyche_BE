@@ -19,7 +19,7 @@ import com.triptyche.backend.domain.share.dto.ShareSummaryResponse;
 import com.triptyche.backend.domain.share.repository.ShareRepository;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
-import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
+import com.triptyche.backend.global.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
@@ -65,7 +65,7 @@ public class TripQueryService {
     Map<Long, List<ShareSummaryResponse>> shareMap = allShares.stream()
             .collect(Collectors.groupingBy(ShareSummaryResponse::tripId));
 
-    List<TripDetailResponse> tripDTOs = trips.stream()
+    List<TripDetailResponse> tripDetails = trips.stream()
             .map(trip -> {
               List<ShareSummaryResponse> shares = shareMap.getOrDefault(trip.getTripId(), List.of());
 
@@ -94,7 +94,7 @@ public class TripQueryService {
             })
             .toList();
 
-    return new TripListResponse(tripDTOs);
+    return new TripListResponse(tripDetails);
   }
 
   public TripUpdateResponse getTripById(User user, String tripKey) {

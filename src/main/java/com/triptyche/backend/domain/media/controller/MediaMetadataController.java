@@ -54,8 +54,8 @@ public class MediaMetadataController {
   public RestResponse<TripMediaListResponse> getTripImages(
           @CurrentUser User user,
           @PathVariable String tripKey) {
-    TripMediaListResponse responseDTO = mediaQueryService.getTripImages(user, tripKey);
-    return RestResponse.success(responseDTO);
+    TripMediaListResponse response = mediaQueryService.getTripImages(user, tripKey);
+    return RestResponse.success(response);
   }
 
   @Tag(name = "4. 이미지 수정 페이지 API")
@@ -65,9 +65,9 @@ public class MediaMetadataController {
   public RestResponse<String> updateMultipleMediaFiles(
           @CurrentUser User user,
           @PathVariable String tripKey,
-          @Valid @RequestBody MediaBatchEditRequest requestDTO
+          @Valid @RequestBody MediaBatchEditRequest request
   ) {
-    int updatedCount = mediaCommandService.updateMultipleMediaFiles(user, tripKey, requestDTO);
+    int updatedCount = mediaCommandService.updateMultipleMediaFiles(user, tripKey, request);
     return RestResponse.success(updatedCount + "개의 이미지 정보가 성공적으로 수정되었습니다.");
   }
 
@@ -78,9 +78,9 @@ public class MediaMetadataController {
   public RestResponse<String> deleteMultipleMediaFiles(
           @CurrentUser User user,
           @PathVariable String tripKey,
-          @Valid @RequestBody MediaBatchDeleteRequest requestDTO
+          @Valid @RequestBody MediaBatchDeleteRequest request
   ) {
-    int deleteCount = mediaCommandService.deleteMultipleMediaFiles(user, tripKey, requestDTO);
+    int deleteCount = mediaCommandService.deleteMultipleMediaFiles(user, tripKey, request);
     return RestResponse.success(deleteCount + "개의 이미지가 성공적으로 삭제되었습니다.");
   }
 

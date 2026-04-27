@@ -8,9 +8,9 @@ import com.triptyche.backend.domain.media.dto.UnlocatedMediaResponse;
 import com.triptyche.backend.domain.media.dto.UnlocatedMediaResponse.MediaSummary;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
-import com.triptyche.backend.domain.media.service.UnlocatedMediaCacheService.CachedMediaEntry;
+import com.triptyche.backend.domain.media.dto.CachedMediaEntry;
 import com.triptyche.backend.domain.trip.model.Trip;
-import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
+import com.triptyche.backend.global.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
@@ -36,7 +36,7 @@ public class MediaQueryService {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripId(trip.getTripId());
 
-    List<MediaFileResponse> mediaFileDTOs = mediaFiles.stream()
+    List<MediaFileResponse> mediaFileResponses = mediaFiles.stream()
             .map(mediaFile -> new MediaFileResponse(
                     mediaFile.getMediaFileId(),
                     mediaFile.getMediaLink(),
@@ -49,7 +49,7 @@ public class MediaQueryService {
     return new TripMediaListResponse(
             formatLocalDateToString(trip.getStartDate()),
             formatLocalDateToString(trip.getEndDate()),
-            mediaFileDTOs
+            mediaFileResponses
     );
   }
 

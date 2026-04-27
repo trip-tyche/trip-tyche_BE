@@ -17,13 +17,14 @@ import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.trip.model.PinPoint;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.service.PinPointService;
-import com.triptyche.backend.domain.trip.validator.TripAccessValidator;
+import com.triptyche.backend.global.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
 import com.triptyche.backend.global.s3.S3UploadService;
 import com.triptyche.backend.global.util.DateUtil;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -46,7 +47,7 @@ public class MediaCommandService {
   public void processAndSaveMetadataBatch(User user, String tripKey, List<MediaUploadRequest> files) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
-    boolean isOwner = trip.getUser().getUserId().equals(user.getUserId());
+    boolean isOwner = trip.isOwner(user);
 
     List<PinPoint> existingPinPoints = pinPointService.findAllByTripId(trip.getTripId());
 
@@ -102,15 +103,15 @@ public class MediaCommandService {
   }
 
   @Transactional
-  public int updateMultipleMediaFiles(User user, String tripKey, MediaBatchEditRequest requestDTO) {
+  public int updateMultipleMediaFiles(User user, String tripKey, MediaBatchEditRequest request) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
-    boolean isOwner = trip.getUser().getUserId().equals(actorId);
+    boolean isOwner = trip.isOwner(user);
 
     List<PinPoint> existingPinPoints = pinPointService.findAllByTripId(trip.getTripId());
 
-    List<Long> mediaFileIds = requestDTO.mediaFiles().stream()
+    List<Long> mediaFileIds = request.mediaFiles().stream()
             .map(MediaBatchEditRequest.MediaFileUpdateRequest::mediaFileId)
             .toList();
 
@@ -121,13 +122,13 @@ public class MediaCommandService {
       throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
     }
 
-    List<MediaFile> updatedMediaFiles = requestDTO.mediaFiles().stream()
-            .map(request -> {
-              MediaFile mf = mediaFileMap.get(request.mediaFileId());
+    List<MediaFile> updatedMediaFiles = request.mediaFiles().stream()
+            .map(fileUpdate -> {
+              MediaFile mf = mediaFileMap.get(fileUpdate.mediaFileId());
               PinPoint pinPoint = pinPointService.assignPinPoint(
-                      existingPinPoints, trip, request.latitude(), request.longitude());
-              mf.updateRecordDate(request.recordDate());
-              mf.updateLocation(request.latitude(), request.longitude(), pinPoint);
+                      existingPinPoints, trip, fileUpdate.latitude(), fileUpdate.longitude());
+              mf.updateRecordDate(fileUpdate.recordDate());
+              mf.updateLocation(fileUpdate.latitude(), fileUpdate.longitude(), pinPoint);
               return mf;
             })
             .toList();
@@ -146,16 +147,27 @@ public class MediaCommandService {
   }
 
   @Transactional
-  public int deleteMultipleMediaFiles(User user, String tripKey, MediaBatchDeleteRequest requestDTO) {
+  public int deleteMultipleMediaFiles(User user, String tripKey, MediaBatchDeleteRequest request) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
-    boolean isOwner = trip.getUser().getUserId().equals(actorId);
+    boolean isOwner = trip.isOwner(user);
 
-    List<MediaFile> mediaFiles = mediaFileRepository.findAllById(requestDTO.mediaFileIds());
+    List<MediaFile> mediaFiles = mediaFileRepository.findAllById(request.mediaFileIds());
 
     List<String> mediaKeys = mediaFiles.stream()
-            .map(MediaFile::getMediaKey)
+            .flatMap(mf -> {
+              List<String> keys = new ArrayList<>();
+              if (mf.getMediaKey() != null) {
+                keys.add(mf.getMediaKey());
+              }
+              String webpKey = s3UploadService.extractKey(mf.getMediaLink());
+              if (webpKey != null && !webpKey.equals(mf.getMediaKey())) {
+                keys.add(webpKey);
+              }
+              return keys.stream();
+            })
+            .distinct()
             .toList();
 
     mediaFileRepository.deleteAll(mediaFiles);
@@ -180,27 +192,20 @@ public class MediaCommandService {
   public void updateImageLocation(User user,
                                   String tripKey,
                                   Long mediaFileId,
-                                  MediaLocationEditRequest requestDTO) {
-
-    Double newLat = requestDTO.latitude();
-    Double newLon = requestDTO.longitude();
-    if (newLat == null || newLon == null) {
-      throw new CustomException(ResultCode.INVALID_COORDINATE);
-    }
+                                  MediaLocationEditRequest request) {
 
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     MediaFile mf = mediaFileRepository.findById(mediaFileId)
             .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
 
-    PinPoint pinPoint = pinPointService.assignPinPointWithQuery(trip, newLat, newLon);
-    mf.updateLocation(newLat, newLon, pinPoint);
-    mediaFileRepository.save(mf);
+    PinPoint pinPoint = pinPointService.assignPinPointWithQuery(trip, request.latitude(), request.longitude());
+    mf.updateLocation(request.latitude(), request.longitude(), pinPoint);
 
     eventPublisher.publishEvent(new MediaLocationCacheEvictRequestedEvent(trip.getTripId(), mediaFileId));
 
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
-    boolean isOwner = trip.getUser().getUserId().equals(actorId);
+    boolean isOwner = trip.isOwner(user);
     eventPublisher.publishEvent(new MediaFileLocationUpdatedEvent(
             trip.getTripId(),
             trip.getTripTitle(),

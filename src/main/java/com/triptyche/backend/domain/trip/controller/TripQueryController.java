@@ -81,8 +81,8 @@ public class TripQueryController {
           @CurrentUser User user,
           @PathVariable String tripKey,
           @RequestParam String date) {
-    MediaByDateResponse dateImageDTO = tripQueryService.getImagesByDate(user, tripKey, date);
+    MediaByDateResponse response = tripQueryService.getImagesByDate(user, tripKey, date);
 
-    return RestResponse.success(dateImageDTO);
+    return RestResponse.success(response);
   }
 }

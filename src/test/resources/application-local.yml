@@ -60,9 +60,16 @@ spring:
 
   redirect:
     url: http://localhost:8080
+    failure-url: http://localhost:8080/login?error
 
 KAKAO_OAUTH_CLIENT_SECRET: test-kakao-secret-key-at-least-32bytes!!
 GOOGLE_OAUTH_CLIENT_SECRET: test-google-secret-key-at-least-32bytes!!
+GUEST_JWT_SECRET: test-guest-secret-key-at-least-32bytes!!
+
+jwt:
+  access-token-expiry-seconds: 3600
+  refresh-token-expiry-seconds: 2592000
+  guest-token-expiry-seconds: 14400
 
 trip:
   soft-delete:
