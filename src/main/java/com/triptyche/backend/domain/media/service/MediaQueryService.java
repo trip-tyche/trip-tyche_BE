@@ -36,7 +36,7 @@ public class MediaQueryService {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripId(trip.getTripId());
 
-    List<MediaFileResponse> mediaFileDTOs = mediaFiles.stream()
+    List<MediaFileResponse> mediaFileResponses = mediaFiles.stream()
             .map(mediaFile -> new MediaFileResponse(
                     mediaFile.getMediaFileId(),
                     mediaFile.getMediaLink(),
@@ -49,7 +49,7 @@ public class MediaQueryService {
     return new TripMediaListResponse(
             formatLocalDateToString(trip.getStartDate()),
             formatLocalDateToString(trip.getEndDate()),
-            mediaFileDTOs
+            mediaFileResponses
     );
   }
 

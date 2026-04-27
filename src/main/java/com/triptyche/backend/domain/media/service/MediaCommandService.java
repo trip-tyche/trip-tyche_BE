@@ -102,7 +102,7 @@ public class MediaCommandService {
   }
 
   @Transactional
-  public int updateMultipleMediaFiles(User user, String tripKey, MediaBatchEditRequest requestDTO) {
+  public int updateMultipleMediaFiles(User user, String tripKey, MediaBatchEditRequest request) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
@@ -110,7 +110,7 @@ public class MediaCommandService {
 
     List<PinPoint> existingPinPoints = pinPointService.findAllByTripId(trip.getTripId());
 
-    List<Long> mediaFileIds = requestDTO.mediaFiles().stream()
+    List<Long> mediaFileIds = request.mediaFiles().stream()
             .map(MediaBatchEditRequest.MediaFileUpdateRequest::mediaFileId)
             .toList();
 
@@ -121,13 +121,13 @@ public class MediaCommandService {
       throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
     }
 
-    List<MediaFile> updatedMediaFiles = requestDTO.mediaFiles().stream()
-            .map(request -> {
-              MediaFile mf = mediaFileMap.get(request.mediaFileId());
+    List<MediaFile> updatedMediaFiles = request.mediaFiles().stream()
+            .map(fileUpdate -> {
+              MediaFile mf = mediaFileMap.get(fileUpdate.mediaFileId());
               PinPoint pinPoint = pinPointService.assignPinPoint(
-                      existingPinPoints, trip, request.latitude(), request.longitude());
-              mf.updateRecordDate(request.recordDate());
-              mf.updateLocation(request.latitude(), request.longitude(), pinPoint);
+                      existingPinPoints, trip, fileUpdate.latitude(), fileUpdate.longitude());
+              mf.updateRecordDate(fileUpdate.recordDate());
+              mf.updateLocation(fileUpdate.latitude(), fileUpdate.longitude(), pinPoint);
               return mf;
             })
             .toList();
@@ -146,13 +146,13 @@ public class MediaCommandService {
   }
 
   @Transactional
-  public int deleteMultipleMediaFiles(User user, String tripKey, MediaBatchDeleteRequest requestDTO) {
+  public int deleteMultipleMediaFiles(User user, String tripKey, MediaBatchDeleteRequest request) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
     boolean isOwner = trip.isOwner(user);
 
-    List<MediaFile> mediaFiles = mediaFileRepository.findAllById(requestDTO.mediaFileIds());
+    List<MediaFile> mediaFiles = mediaFileRepository.findAllById(request.mediaFileIds());
 
     List<String> mediaKeys = mediaFiles.stream()
             .map(MediaFile::getMediaKey)
@@ -180,14 +180,14 @@ public class MediaCommandService {
   public void updateImageLocation(User user,
                                   String tripKey,
                                   Long mediaFileId,
-                                  MediaLocationEditRequest requestDTO) {
+                                  MediaLocationEditRequest request) {
 
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     MediaFile mf = mediaFileRepository.findById(mediaFileId)
             .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
 
-    PinPoint pinPoint = pinPointService.assignPinPointWithQuery(trip, requestDTO.latitude(), requestDTO.longitude());
-    mf.updateLocation(requestDTO.latitude(), requestDTO.longitude(), pinPoint);
+    PinPoint pinPoint = pinPointService.assignPinPointWithQuery(trip, request.latitude(), request.longitude());
+    mf.updateLocation(request.latitude(), request.longitude(), pinPoint);
 
     eventPublisher.publishEvent(new MediaLocationCacheEvictRequestedEvent(trip.getTripId(), mediaFileId));
 

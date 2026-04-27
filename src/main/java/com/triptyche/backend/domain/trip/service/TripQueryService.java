@@ -65,7 +65,7 @@ public class TripQueryService {
     Map<Long, List<ShareSummaryResponse>> shareMap = allShares.stream()
             .collect(Collectors.groupingBy(ShareSummaryResponse::tripId));
 
-    List<TripDetailResponse> tripDTOs = trips.stream()
+    List<TripDetailResponse> tripDetails = trips.stream()
             .map(trip -> {
               List<ShareSummaryResponse> shares = shareMap.getOrDefault(trip.getTripId(), List.of());
 
@@ -94,7 +94,7 @@ public class TripQueryService {
             })
             .toList();
 
-    return new TripListResponse(tripDTOs);
+    return new TripListResponse(tripDetails);
   }
 
   public TripUpdateResponse getTripById(User user, String tripKey) {
