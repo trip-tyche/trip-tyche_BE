@@ -8,7 +8,6 @@ import com.triptyche.backend.global.exception.CustomException;
 import com.triptyche.backend.global.redis.UnlocatedMediaHashRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +23,9 @@ public class UnlocatedMediaCacheService {
   private final ObjectMapper objectMapper;
 
   public void save(Long tripId, Long mediaFileId, String mediaLink, String recordDate) {
-    Map<String, Object> data = new HashMap<>();
-    data.put("mediaLink", mediaLink);
-    data.put("recordDate", recordDate);
-
     try {
-      String jsonData = objectMapper.writeValueAsString(data);
+      CachedMediaEntry entry = new CachedMediaEntry(mediaFileId, mediaLink, LocalDateTime.parse(recordDate));
+      String jsonData = objectMapper.writeValueAsString(entry);
       unlocatedMediaHashRepository.put(buildKey(tripId), String.valueOf(mediaFileId), jsonData);
     } catch (JsonProcessingException e) {
       throw new CustomException(ResultCode.JSON_PARSE_ERROR);
@@ -42,11 +38,7 @@ public class UnlocatedMediaCacheService {
 
     for (Map.Entry<Object, Object> entry : raw.entrySet()) {
       try {
-        Long mediaFileId = Long.valueOf(entry.getKey().toString());
-        Map<String, Object> data = objectMapper.readValue(entry.getValue().toString(), Map.class);
-        String mediaLink = (String) data.get("mediaLink");
-        LocalDateTime recordDate = LocalDateTime.parse((String) data.get("recordDate"));
-        result.add(new CachedMediaEntry(mediaFileId, mediaLink, recordDate));
+        result.add(objectMapper.readValue(entry.getValue().toString(), CachedMediaEntry.class));
       } catch (Exception e) {
         log.error("위치없는 미디어 캐시 파싱 실패 — key: {}, error: {}", entry.getKey(), e.getMessage(), e);
       }
