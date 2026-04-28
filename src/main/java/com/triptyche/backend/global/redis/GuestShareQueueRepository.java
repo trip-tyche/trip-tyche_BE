@@ -18,7 +18,7 @@ public class GuestShareQueueRepository {
 
   private final RedisTemplate<String, Object> redisTemplate;
   private static final String KEY = "guest:share_queue";
-  private static final long DELAY_SECONDS = 60L;
+  private static final long DELAY_SECONDS = 15L;
 
   public void enqueue(Long guestUserId) {
     try {
