@@ -82,7 +82,7 @@ public class TripCleanupScheduler {
     if (mediaKeys.isEmpty()) return;
 
     List<String> deletableKeys = mediaKeys.stream()
-            .filter(key -> !key.startsWith("demo/"))
+            .filter(key -> !key.startsWith("seed/"))
             .toList();
 
     if (deletableKeys.isEmpty()) return;
