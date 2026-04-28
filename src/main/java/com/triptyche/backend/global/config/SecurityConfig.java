@@ -9,6 +9,7 @@ import com.triptyche.backend.global.util.JwtTokenProvider;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -57,6 +58,11 @@ public class SecurityConfig {
                             "/ws-test.html"  // WebSocket 로컬 테스트 페이지
                     )
                     .permitAll()
+                    .requestMatchers(HttpMethod.PATCH, "/v1/shares/**").hasAnyRole("USER", "GUEST")
+                    .requestMatchers(HttpMethod.POST,   "/v1/**").hasRole("USER")
+                    .requestMatchers(HttpMethod.PUT,    "/v1/**").hasRole("USER")
+                    .requestMatchers(HttpMethod.DELETE, "/v1/**").hasRole("USER")
+                    .requestMatchers(HttpMethod.PATCH,  "/v1/**").hasRole("USER")
                     .requestMatchers("/v1/**").authenticated()
                     .anyRequest().authenticated()
             )

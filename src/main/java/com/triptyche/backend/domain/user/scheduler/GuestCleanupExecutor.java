@@ -9,6 +9,7 @@ import com.triptyche.backend.domain.trip.repository.PinPointRepository;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
+import com.triptyche.backend.global.redis.GuestShareQueueRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ public class GuestCleanupExecutor {
     private final MediaFileRepository mediaFileRepository;
     private final PinPointRepository pinPointRepository;
     private final NotificationRepository notificationRepository;
+    private final GuestShareQueueRepository guestShareQueueRepository;
 
     @Transactional
     public List<String> deleteExpiredGuests(List<User> expiredGuests) {
@@ -36,7 +38,7 @@ public class GuestCleanupExecutor {
         List<String> s3Keys = allTrips.isEmpty() ? List.of() :
                 mediaFileRepository.findAllByTripIn(allTrips).stream()
                         .map(MediaFile::getMediaKey)
-                        .filter(key -> !key.startsWith("demo/"))
+                        .filter(key -> !key.startsWith("seed/"))
                         .toList();
 
         // DB 삭제 순서 (FK 제약 준수)
@@ -48,6 +50,7 @@ public class GuestCleanupExecutor {
             // JPQL bulk delete — @SQLRestriction 우회, soft-deleted Trip도 포함 삭제 (의도된 동작)
             tripRepository.deleteAllByUserIn(expiredGuests);
         }
+        guestShareQueueRepository.removeAll(userIds);
         userRepository.deleteAllByUserIdIn(userIds);
 
         log.info("만료된 게스트 계정 정리 완료 — {}건", expiredGuests.size());

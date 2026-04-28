@@ -55,7 +55,7 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ubuntu
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "docker-compose.yml,image-worker"
+          source: "docker-compose.yml,database,image-worker"
           target: "~/triptyche/"
 
       - name: Deploy to Oracle VM

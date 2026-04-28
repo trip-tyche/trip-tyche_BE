@@ -70,6 +70,18 @@ services:
     networks:
       - app-network
 
+  flyway:
+    image: flyway/flyway:10
+    container_name: triptyche-flyway
+    depends_on:
+      db:
+        condition: service_healthy
+    command: -url=jdbc:mysql://db:3306/${MYSQL_DATABASE} -user=${MYSQL_USER} -password=${MYSQL_PASSWORD} -connectRetries=5 migrate
+    volumes:
+      - ./database/migration:/flyway/sql
+    networks:
+      - app-network
+
   redis:
     image: redis:7-alpine
     container_name: triptyche-redis
