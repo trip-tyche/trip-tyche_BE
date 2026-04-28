@@ -1,5 +1,7 @@
 package com.triptyche.backend.global.config;
 
+import com.triptyche.backend.domain.media.model.MediaFile;
+import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.share.model.Share;
 import com.triptyche.backend.domain.share.model.ShareStatus;
 import com.triptyche.backend.domain.share.repository.ShareRepository;
@@ -8,10 +10,15 @@ import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.model.TripStatus;
 import com.triptyche.backend.domain.trip.repository.PinPointRepository;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
+import com.triptyche.backend.domain.trip.service.PinPointService;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
+import com.triptyche.backend.global.s3.S3UploadService;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -21,8 +28,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Local dev seed data: 3 realistic trips (Tokyo / Paris / New York), each with 5 pinpoints.
+ * Local dev seed data: 3 trips (Tokyo / Paris / New York), each with 5 pinpoints + media files.
  * Runs only in local profile. Idempotent — skips if data already exists.
+ * Media files reference images pre-uploaded to OCI under seed/{city}/{filename}.webp.
  */
 @Profile("local")
 @Component
@@ -40,6 +48,11 @@ public class DataInitializer implements ApplicationRunner {
   private final TripRepository tripRepository;
   private final PinPointRepository pinPointRepository;
   private final ShareRepository shareRepository;
+  private final MediaFileRepository mediaFileRepository;
+  private final PinPointService pinPointService;
+  private final S3UploadService s3UploadService;
+
+  // ── Trip seed data ─────────────────────────────────────────────────────────
 
   private record TripData(
       String title,
@@ -95,19 +108,58 @@ public class DataInitializer implements ApplicationRunner {
       )
   );
 
+  // ── Media seed data ────────────────────────────────────────────────────────
+
+  private record SeedMedia(
+      String folder,
+      String filename,
+      double latitude,
+      double longitude,
+      LocalDateTime recordDate
+  ) {}
+
+  private static final Map<String, List<SeedMedia>> SEED_MEDIA = Map.of(
+      "도쿄 벚꽃 여행", List.of(
+          new SeedMedia("tokyo", "shibuya.webp",  35.6595, 139.7004, LocalDateTime.of(2024,  3, 28, 10, 30)),
+          new SeedMedia("tokyo", "asakusa.webp",  35.7148, 139.7967, LocalDateTime.of(2024,  3, 29, 11,  0)),
+          new SeedMedia("tokyo", "shinjuku.webp", 35.6852, 139.7100, LocalDateTime.of(2024,  3, 30, 14,  0)),
+          new SeedMedia("tokyo", "skytree.webp",  35.7101, 139.8107, LocalDateTime.of(2024,  4,  1, 16, 30)),
+          new SeedMedia("tokyo", "harajuku.webp", 35.6702, 139.7027, LocalDateTime.of(2024,  4,  2, 12,  0))
+      ),
+      "파리 로맨틱 여행", List.of(
+          new SeedMedia("paris", "eiffel.webp",     48.8584, 2.2945, LocalDateTime.of(2024,  7, 14, 19,  0)),
+          new SeedMedia("paris", "louvre.webp",     48.8606, 2.3376, LocalDateTime.of(2024,  7, 15, 10, 30)),
+          new SeedMedia("paris", "notredame.webp",  48.8530, 2.3499, LocalDateTime.of(2024,  7, 16, 13,  0)),
+          new SeedMedia("paris", "montmartre.webp", 48.8867, 2.3431, LocalDateTime.of(2024,  7, 18, 17, 30)),
+          new SeedMedia("paris", "versailles.webp", 48.8049, 2.1204, LocalDateTime.of(2024,  7, 19, 11,  0))
+      ),
+      "뉴욕 가을 여행", List.of(
+          new SeedMedia("newyork", "liberty.webp",     40.6892, -74.0445, LocalDateTime.of(2024, 10, 10, 10,  0)),
+          new SeedMedia("newyork", "centralpark.webp", 40.7851, -73.9683, LocalDateTime.of(2024, 10, 11, 14,  0)),
+          new SeedMedia("newyork", "timessquare.webp", 40.7580, -73.9855, LocalDateTime.of(2024, 10, 12, 20, 30)),
+          new SeedMedia("newyork", "brooklyn.webp",    40.7061, -73.9969, LocalDateTime.of(2024, 10, 14, 11,  0)),
+          new SeedMedia("newyork", "met.webp",         40.7794, -73.9632, LocalDateTime.of(2024, 10, 15, 15,  0))
+      )
+  );
+
+  // ── Runner ─────────────────────────────────────────────────────────────────
+
   @Override
   @Transactional
   public void run(ApplicationArguments args) {
     log.info("[DataInitializer] Local seed data initialization start");
 
-    User testUser = getOrCreateUser(TEST_USER_EMAIL, "testUser1", "test1");
+    User testUser  = getOrCreateUser(TEST_USER_EMAIL,  "testUser1", "test1");
     User testUser2 = getOrCreateUser(TEST_USER2_EMAIL, "testUser2", "test2");
 
-    createTripsIfAbsent(testUser);
+    List<Trip> trips = getOrCreateTrips(testUser);
+    trips.forEach(this::seedMediaIfAbsent);
     createSharesIfAbsent(testUser, testUser2);
 
-    log.info("[DataInitializer] Done — {} trips with pinpoints seeded", TRIP_COUNT);
+    log.info("[DataInitializer] Done — {} trips seeded", TRIP_COUNT);
   }
+
+  // ── Private helpers ────────────────────────────────────────────────────────
 
   private User getOrCreateUser(String email, String name, String nickname) {
     return userRepository.findByUserEmail(email)
@@ -124,13 +176,14 @@ public class DataInitializer implements ApplicationRunner {
         });
   }
 
-  private void createTripsIfAbsent(User owner) {
+  private List<Trip> getOrCreateTrips(User owner) {
     long existing = tripRepository.countByUserAndStatus(owner, TripStatus.CONFIRMED);
     if (existing >= TRIP_COUNT) {
-      log.info("[DataInitializer] Trips already exist ({}) — skip", existing);
-      return;
+      log.info("[DataInitializer] Trips already exist ({}) — skip creation", existing);
+      return tripRepository.findAllAccessibleTripsWithOwner(owner.getUserId());
     }
 
+    List<Trip> created = new ArrayList<>();
     for (TripData data : SEED_TRIPS) {
       Trip trip = Trip.builder()
           .user(owner)
@@ -151,8 +204,43 @@ public class DataInitializer implements ApplicationRunner {
             .build();
         pinPointRepository.save(pinPoint);
       }
+      created.add(trip);
       log.info("[DataInitializer] Trip '{}' created with {} pinpoints", data.title(), data.pinPoints().size());
     }
+    return created;
+  }
+
+  private void seedMediaIfAbsent(Trip trip) {
+    List<MediaFile> existing = mediaFileRepository.findByTripTripId(trip.getTripId());
+    if (!existing.isEmpty()) {
+      log.info("[DataInitializer] Media already exists for '{}' — skip", trip.getTripTitle());
+      return;
+    }
+
+    List<SeedMedia> seedList = SEED_MEDIA.get(trip.getTripTitle());
+    if (seedList == null) {
+      return;
+    }
+
+    List<PinPoint> pinPoints = pinPointService.findAllByTripId(trip.getTripId());
+    for (SeedMedia seed : seedList) {
+      String mediaKey  = "seed/" + seed.folder() + "/" + seed.filename();
+      String mediaLink = s3UploadService.buildUrl(mediaKey);
+      PinPoint pinPoint = pinPointService.assignPinPoint(pinPoints, trip, seed.latitude(), seed.longitude());
+
+      MediaFile mediaFile = MediaFile.builder()
+          .trip(trip)
+          .pinPoint(pinPoint)
+          .mediaType("image/webp")
+          .mediaLink(mediaLink)
+          .mediaKey(mediaKey)
+          .recordDate(seed.recordDate())
+          .latitude(seed.latitude())
+          .longitude(seed.longitude())
+          .build();
+      mediaFileRepository.save(mediaFile);
+    }
+    log.info("[DataInitializer] {} media files seeded for '{}'", seedList.size(), trip.getTripTitle());
   }
 
   private void createSharesIfAbsent(User owner, User recipient) {
