@@ -58,7 +58,7 @@ public class SecurityConfig {
                             "/ws-test.html"  // WebSocket 로컬 테스트 페이지
                     )
                     .permitAll()
-                    .requestMatchers(HttpMethod.PATCH, "/v1/shares/**").hasAnyRole("USER", "GUEST")
+                    .requestMatchers(HttpMethod.PATCH, "/v1/shares/**", "/v1/notifications/**").hasAnyRole("USER", "GUEST")
                     .requestMatchers(HttpMethod.POST,   "/v1/**").hasRole("USER")
                     .requestMatchers(HttpMethod.PUT,    "/v1/**").hasRole("USER")
                     .requestMatchers(HttpMethod.DELETE, "/v1/**").hasRole("USER")
