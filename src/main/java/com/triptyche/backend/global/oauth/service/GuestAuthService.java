@@ -65,6 +65,11 @@ public class GuestAuthService {
         List<Trip> templateTrips = tripRepository.findAllByUser(templateUser);
 
         for (Trip templateTrip : templateTrips) {
+            // 뉴욕 여행은 공유 신청 플로우로 제공 — 복사 제외
+            if (templateTrip.getTripTitle().contains("뉴욕")) {
+                continue;
+            }
+
             Trip guestTrip = Trip.builder()
                     .user(guestUser)
                     .tripTitle(templateTrip.getTripTitle())
@@ -101,6 +106,6 @@ public class GuestAuthService {
                 }
             }
         }
-        log.info("게스트 데모 데이터 복사 완료: {}", guestUser.getUserEmail());
+        log.info("게스트 데모 데이터 복사 완료 (도쿄·파리): {}", guestUser.getUserEmail());
     }
 }
