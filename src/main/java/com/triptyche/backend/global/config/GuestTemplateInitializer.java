@@ -119,6 +119,9 @@ public class GuestTemplateInitializer implements ApplicationRunner {
       return;
     }
 
+    // OCI_S3_ENDPOINT 환경변수가 이미 https:// 를 포함할 수 있으므로 중복 방지
+    String baseUrl = s3Endpoint.startsWith("https://") ? s3Endpoint : "https://" + s3Endpoint;
+
     for (TripData data : SEED_TRIPS) {
       Trip trip = Trip.builder()
           .user(templateUser)
@@ -148,7 +151,7 @@ public class GuestTemplateInitializer implements ApplicationRunner {
             .pinPoint(pinPoint)
             .mediaType(MEDIA_TYPE)
             .mediaKey(mediaKey)
-            .mediaLink("https://" + s3Endpoint + "/triptyche-storage/" + mediaKey)
+            .mediaLink(baseUrl + "/triptyche-storage/" + mediaKey)
             .latitude(pin.latitude())
             .longitude(pin.longitude())
             .recordDate(LocalDateTime.of(data.startDate().plusDays(i), LocalTime.NOON))
