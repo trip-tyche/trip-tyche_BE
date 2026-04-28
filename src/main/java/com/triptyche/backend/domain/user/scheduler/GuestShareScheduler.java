@@ -25,7 +25,7 @@ public class GuestShareScheduler {
     private final TripRepository tripRepository;
     private final ShareService shareService;
 
-    @Scheduled(cron = "0/30 * * * * *")
+    @Scheduled(cron = "0/10 * * * * *")
     public void sendShareToReadyGuests() {
         List<Long> dueIds = guestShareQueueRepository.pollDueIds();
         if (dueIds.isEmpty()) {
