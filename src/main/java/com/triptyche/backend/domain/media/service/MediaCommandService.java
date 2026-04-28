@@ -193,7 +193,6 @@ public class MediaCommandService {
                                   String tripKey,
                                   Long mediaFileId,
                                   MediaLocationEditRequest request) {
-
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
     MediaFile mf = mediaFileRepository.findById(mediaFileId)
             .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
@@ -216,4 +215,5 @@ public class MediaCommandService {
             actorNickname,
             isOwner));
   }
+
 }

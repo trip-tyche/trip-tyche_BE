@@ -39,7 +39,6 @@ public class ShareService {
 
   @Transactional
   public ShareCreateResponse createShare(ShareCreateRequest request, User user) {
-
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(request.tripKey(), user);
 
     if (trip.getUser().getUserId().equals(request.recipientId())) {

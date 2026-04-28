@@ -72,7 +72,7 @@ public class JwtTokenProvider {
    */
   public String createGuestToken(String userEmail, String provider) {
     Claims claims = Jwts.claims().setSubject(userEmail);
-    claims.put("roles", List.of("ROLE_USER"));
+    claims.put("roles", List.of("ROLE_GUEST"));
     claims.put("provider", provider);
 
     Date now = new Date();
