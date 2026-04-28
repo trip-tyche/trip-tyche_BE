@@ -10,13 +10,13 @@ import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.model.UserRole;
 import com.triptyche.backend.domain.user.repository.UserRepository;
+import com.triptyche.backend.global.s3.S3UploadService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -31,9 +31,7 @@ public class GuestTemplateInitializer implements ApplicationRunner {
   private static final String PROVIDER = "guest_template";
   private static final String MEDIA_TYPE = "image/webp";
 
-  @Value("${OCI_S3_ENDPOINT}")
-  private String s3Endpoint;
-
+  private final S3UploadService s3UploadService;
   private final UserRepository userRepository;
   private final TripRepository tripRepository;
   private final PinPointRepository pinPointRepository;
@@ -119,9 +117,6 @@ public class GuestTemplateInitializer implements ApplicationRunner {
       return;
     }
 
-    // OCI_S3_ENDPOINT 환경변수가 이미 https:// 를 포함할 수 있으므로 중복 방지
-    String baseUrl = s3Endpoint.startsWith("https://") ? s3Endpoint : "https://" + s3Endpoint;
-
     for (TripData data : SEED_TRIPS) {
       Trip trip = Trip.builder()
           .user(templateUser)
@@ -151,7 +146,7 @@ public class GuestTemplateInitializer implements ApplicationRunner {
             .pinPoint(pinPoint)
             .mediaType(MEDIA_TYPE)
             .mediaKey(mediaKey)
-            .mediaLink(baseUrl + "/triptyche-storage/" + mediaKey)
+            .mediaLink(s3UploadService.buildUrl(mediaKey))
             .latitude(pin.latitude())
             .longitude(pin.longitude())
             .recordDate(LocalDateTime.of(data.startDate().plusDays(i), LocalTime.NOON))
