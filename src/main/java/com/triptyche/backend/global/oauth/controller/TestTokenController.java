@@ -4,6 +4,7 @@ import com.triptyche.backend.global.common.RestResponse;
 import com.triptyche.backend.global.oauth.dto.TestTokenCreateRequest;
 import com.triptyche.backend.global.oauth.dto.TestTokenCreateResponse;
 import com.triptyche.backend.global.util.JwtTokenProvider;
+import com.triptyche.backend.domain.user.model.UserRole;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
@@ -25,7 +26,7 @@ public class TestTokenController {
   @PostMapping("/test-token")
   public RestResponse<TestTokenCreateResponse> createTestToken(@RequestBody TestTokenCreateRequest request) {
     String provider = request.provider() != null ? request.provider() : DEFAULT_PROVIDER;
-    String accessToken = jwtTokenProvider.createAccessToken(request.email(), List.of("ROLE_USER"), provider);
+    String accessToken = jwtTokenProvider.createAccessToken(request.email(), List.of(UserRole.USER.authority()), provider);
     return RestResponse.success(new TestTokenCreateResponse(accessToken));
   }
 }

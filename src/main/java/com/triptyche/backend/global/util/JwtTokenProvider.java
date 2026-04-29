@@ -1,6 +1,7 @@
 package com.triptyche.backend.global.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.triptyche.backend.domain.user.model.UserRole;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.config.JwtProperties;
 import com.triptyche.backend.global.exception.CustomException;
@@ -72,7 +73,7 @@ public class JwtTokenProvider {
    */
   public String createGuestToken(String userEmail, String provider) {
     Claims claims = Jwts.claims().setSubject(userEmail);
-    claims.put("roles", List.of("ROLE_GUEST"));
+    claims.put("roles", List.of(UserRole.GUEST.authority()));
     claims.put("provider", provider);
 
     Date now = new Date();

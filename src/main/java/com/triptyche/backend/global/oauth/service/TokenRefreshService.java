@@ -5,6 +5,7 @@ import com.triptyche.backend.global.config.JwtProperties;
 import com.triptyche.backend.global.exception.CustomException;
 import com.triptyche.backend.global.oauth.repository.RefreshTokenRepository;
 import com.triptyche.backend.global.util.JwtTokenProvider;
+import com.triptyche.backend.domain.user.model.UserRole;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -60,7 +61,7 @@ public class TokenRefreshService {
       }
 
       // 6. 새로운 토큰 발급
-      List<String> roles = List.of("ROLE_USER");
+      List<String> roles = List.of(UserRole.USER.authority());
       String newAccessToken = jwtTokenProvider.createAccessToken(userEmail, roles, provider);
       String newRefreshToken = jwtTokenProvider.createRefreshToken(userEmail, provider);
 
