@@ -1,4 +1,4 @@
-package com.triptyche.backend.global.redis;
+package com.triptyche.backend.domain.guest.repository;
 
 import com.triptyche.backend.global.config.GuestProperties;
 import java.time.Instant;

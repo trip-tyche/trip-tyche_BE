@@ -1,4 +1,4 @@
-package com.triptyche.backend.global.config;
+package com.triptyche.backend.domain.guest.init;
 
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
@@ -10,6 +10,7 @@ import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.model.UserRole;
 import com.triptyche.backend.domain.user.repository.UserRepository;
+import com.triptyche.backend.global.config.GuestProperties;
 import com.triptyche.backend.global.s3.S3UploadService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

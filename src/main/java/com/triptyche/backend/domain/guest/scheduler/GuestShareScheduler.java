@@ -1,5 +1,6 @@
-package com.triptyche.backend.domain.user.scheduler;
+package com.triptyche.backend.domain.guest.scheduler;
 
+import com.triptyche.backend.domain.guest.repository.GuestShareQueueRepository;
 import com.triptyche.backend.domain.share.dto.ShareCreateRequest;
 import com.triptyche.backend.domain.share.service.ShareService;
 import com.triptyche.backend.domain.trip.model.Trip;
@@ -7,7 +8,6 @@ import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
 import com.triptyche.backend.global.config.GuestProperties;
-import com.triptyche.backend.global.redis.GuestShareQueueRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

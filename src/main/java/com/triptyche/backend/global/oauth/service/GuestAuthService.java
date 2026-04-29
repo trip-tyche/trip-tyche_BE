@@ -14,7 +14,7 @@ import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.config.GuestProperties;
 import com.triptyche.backend.global.config.JwtProperties;
 import com.triptyche.backend.global.exception.CustomException;
-import com.triptyche.backend.global.redis.GuestShareQueueRepository;
+import com.triptyche.backend.domain.guest.repository.GuestShareQueueRepository;
 import com.triptyche.backend.global.util.CookieUtil;
 import com.triptyche.backend.global.util.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
