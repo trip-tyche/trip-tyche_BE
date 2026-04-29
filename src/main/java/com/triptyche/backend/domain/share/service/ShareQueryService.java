@@ -1,7 +1,9 @@
 package com.triptyche.backend.domain.share.service;
 
+import com.triptyche.backend.domain.share.dto.ShareSummaryResponse;
 import com.triptyche.backend.domain.share.repository.ShareRepository;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,5 +18,10 @@ public class ShareQueryService {
   @Transactional(readOnly = true)
   public Set<Long> findApprovedRecipientIdsByTripId(Long tripId) {
     return new HashSet<>(shareRepository.findApprovedRecipientIdsByTripId(tripId));
+  }
+
+  @Transactional(readOnly = true)
+  public List<ShareSummaryResponse> findApprovedShareSummariesByTripIds(List<Long> tripIds) {
+    return shareRepository.findApprovedShareSummariesByTripIds(tripIds);
   }
 }

@@ -6,7 +6,7 @@ import com.triptyche.backend.domain.media.dto.MediaFileResponse;
 import com.triptyche.backend.domain.media.dto.MediaFileSummary;
 import com.triptyche.backend.domain.media.dto.MediaByDateResponse;
 import com.triptyche.backend.domain.media.dto.MediaFileDetailResponse;
-import com.triptyche.backend.domain.media.repository.MediaFileRepository;
+import com.triptyche.backend.domain.media.service.MediaQueryService;
 import com.triptyche.backend.domain.trip.dto.PinPointMediaListResponse;
 import com.triptyche.backend.domain.trip.dto.PinPointResponse;
 import com.triptyche.backend.domain.trip.dto.TripDetailResponse;
@@ -16,7 +16,7 @@ import com.triptyche.backend.domain.trip.dto.TripUpdateResponse;
 import com.triptyche.backend.domain.trip.model.PinPoint;
 import com.triptyche.backend.domain.trip.repository.PinPointRepository;
 import com.triptyche.backend.domain.share.dto.ShareSummaryResponse;
-import com.triptyche.backend.domain.share.repository.ShareRepository;
+import com.triptyche.backend.domain.share.service.ShareQueryService;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.global.validator.TripAccessValidator;
@@ -44,8 +44,8 @@ public class TripQueryService {
 
   private final TripRepository tripRepository;
   private final PinPointRepository pinPointRepository;
-  private final MediaFileRepository mediaFileRepository;
-  private final ShareRepository shareRepository;
+  private final MediaQueryService mediaQueryService;
+  private final ShareQueryService shareQueryService;
   private final TripAccessValidator tripAccessValidator;
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
   private static final LocalDateTime DEFAULT_INVALID_DATE = LocalDateTime.of(1980, 1, 1, 0, 0, 0);
@@ -60,7 +60,7 @@ public class TripQueryService {
 
     List<Long> tripIds = trips.stream().map(Trip::getTripId).toList();
 
-    List<ShareSummaryResponse> allShares = shareRepository.findApprovedShareSummariesByTripIds(tripIds);
+    List<ShareSummaryResponse> allShares = shareQueryService.findApprovedShareSummariesByTripIds(tripIds);
 
     Map<Long, List<ShareSummaryResponse>> shareMap = allShares.stream()
             .collect(Collectors.groupingBy(ShareSummaryResponse::tripId));
@@ -100,8 +100,8 @@ public class TripQueryService {
   public TripUpdateResponse getTripById(User user, String tripKey) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
-    List<String> mediaFilesDates = mediaFileRepository
-            .findDistinctRecordDatesByTripId(trip.getTripId(), DEFAULT_INVALID_DATE)
+    List<String> mediaFilesDates = mediaQueryService
+            .findDistinctRecordDatesByTripId(trip.getTripId())
             .stream()
             .map(DateFormatter::formatLocalDateToString)
             .toList();
@@ -148,8 +148,8 @@ public class TripQueryService {
     PinPoint pinPoint = pinPointRepository.findById(pinPointId)
             .orElseThrow(() -> new CustomException(ResultCode.PINPOINT_NOT_FOUND));
 
-    List<MediaFileDetailResponse> mediaFiles = mediaFileRepository.findByTripTripIdAndPinPointPinPointId(
-            trip.getTripId(), pinPointId, DEFAULT_INVALID_DATE);
+    List<MediaFileDetailResponse> mediaFiles = mediaQueryService.findDetailsByTripAndPinPoint(
+            trip.getTripId(), pinPointId);
     if (mediaFiles.isEmpty()) {
       throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
     }
@@ -179,8 +179,8 @@ public class TripQueryService {
     LocalDateTime startOfDay = parsedDate.atStartOfDay();
     LocalDateTime endOfDay = parsedDate.atTime(23, 59, 59);
 
-    List<MediaFileSummary> mediaFiles = mediaFileRepository.findByTripTripIdAndRecordDate(trip.getTripId(), startOfDay,
-            endOfDay, DEFAULT_INVALID_DATE);
+    List<MediaFileSummary> mediaFiles = mediaQueryService.findSummariesByTripAndDate(
+            trip.getTripId(), startOfDay, endOfDay);
     if (mediaFiles.isEmpty()) {
       throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
     }
