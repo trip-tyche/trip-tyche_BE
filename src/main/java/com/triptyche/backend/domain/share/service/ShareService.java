@@ -10,7 +10,7 @@ import com.triptyche.backend.domain.share.model.Share;
 import com.triptyche.backend.domain.share.model.ShareStatus;
 import com.triptyche.backend.domain.share.repository.ShareRepository;
 import com.triptyche.backend.domain.trip.model.Trip;
-import com.triptyche.backend.global.validator.TripAccessValidator;
+import com.triptyche.backend.domain.trip.service.TripAccessGuard;
 import com.triptyche.backend.domain.user.dto.UserSearchResponse;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
@@ -31,7 +31,7 @@ public class ShareService {
   private final UserRepository userRepository;
   private final UserService userService;
   private final ApplicationEventPublisher eventPublisher;
-  private final TripAccessValidator tripAccessValidator;
+  private final TripAccessGuard tripAccessGuard;
 
   public UserSearchResponse findShareableUser(String nickname) {
     return userService.getUserByNickName(nickname);
@@ -39,7 +39,7 @@ public class ShareService {
 
   @Transactional
   public ShareCreateResponse createShare(ShareCreateRequest request, User user) {
-    Trip trip = tripAccessValidator.validateAccessibleTripByKey(request.tripKey(), user);
+    Trip trip = tripAccessGuard.validateAccessibleTripByKey(request.tripKey(), user);
 
     if (trip.getUser().getUserId().equals(request.recipientId())) {
       throw new CustomException(ResultCode.CANNOT_SHARE_TO_SELF);

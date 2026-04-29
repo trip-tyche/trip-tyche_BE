@@ -7,7 +7,7 @@ import com.triptyche.backend.domain.trip.event.TripUpdatedEvent;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.model.TripStatus;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
-import com.triptyche.backend.global.validator.TripAccessValidator;
+import com.triptyche.backend.domain.trip.service.TripAccessGuard;
 import com.triptyche.backend.domain.user.model.User;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class TripCommandService {
 
   private final TripRepository tripRepository;
-  private final TripAccessValidator tripAccessValidator;
+  private final TripAccessGuard tripAccessGuard;
   private final ApplicationEventPublisher eventPublisher;
 
 
@@ -42,21 +42,21 @@ public class TripCommandService {
 
   @Transactional
   public void markImagesUploaded(User user, String tripKey) {
-    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
+    Trip trip = tripAccessGuard.validateAccessibleTripByKey(tripKey, user);
 
     trip.markImagesUploaded();
   }
 
   @Transactional
   public void finalizeTrip(User user, String tripKey) {
-    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
+    Trip trip = tripAccessGuard.validateAccessibleTripByKey(tripKey, user);
 
     trip.confirmTrip();
   }
 
   @Transactional
   public void updateTrip(User user, String tripKey, TripUpdateRequest request) {
-    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
+    Trip trip = tripAccessGuard.validateAccessibleTripByKey(tripKey, user);
 
     trip.updateInfo(
         request.tripTitle(),
@@ -80,7 +80,7 @@ public class TripCommandService {
 
   @Transactional
   public void deleteTrip(User user, String tripKey) {
-    Trip trip = tripAccessValidator.validateOwnerByKey(tripKey, user);
+    Trip trip = tripAccessGuard.validateOwnerByKey(tripKey, user);
 
     trip.softDelete();
 

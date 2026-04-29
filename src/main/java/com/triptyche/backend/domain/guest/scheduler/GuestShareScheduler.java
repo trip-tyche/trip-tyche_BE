@@ -7,7 +7,9 @@ import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
+import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.config.GuestProperties;
+import com.triptyche.backend.global.exception.CustomException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,8 +63,17 @@ public class GuestShareScheduler {
                 ShareCreateRequest request = new ShareCreateRequest(targetTrip.getTripKey(), guestUserId);
                 shareService.createShare(request, templateUser);
                 log.info("게스트 공유 신청 완료: guestUserId={}, tripKey={}", guestUserId, targetTrip.getTripKey());
+            } catch (CustomException e) {
+                if (e.getResultCode() == ResultCode.SHARE_ALREADY_EXIST
+                        || e.getResultCode() == ResultCode.DUPLICATE_DATA_CONFLICT) {
+                    log.info("이미 공유된 게스트 — skip: guestUserId={}", guestUserId);
+                } else {
+                    log.error("게스트 공유 신청 실패 (비즈니스 예외): guestUserId={}, code={}",
+                            guestUserId, e.getResultCode());
+                }
             } catch (Exception e) {
-                log.error("게스트 공유 신청 실패: guestUserId={}, error={}", guestUserId, e.getMessage());
+                log.error("게스트 공유 신청 실패 (일시 오류): guestUserId={}, error={}",
+                        guestUserId, e.getMessage());
             }
         }
     }

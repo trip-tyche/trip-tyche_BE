@@ -17,7 +17,7 @@ import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.trip.model.PinPoint;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.service.PinPointService;
-import com.triptyche.backend.global.validator.TripAccessValidator;
+import com.triptyche.backend.domain.trip.service.TripAccessGuard;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
@@ -40,12 +40,12 @@ public class MediaCommandService {
   private final MediaFileRepository mediaFileRepository;
   private final PinPointService pinPointService;
   private final S3KeyResolver s3KeyResolver;
-  private final TripAccessValidator tripAccessValidator;
+  private final TripAccessGuard tripAccessGuard;
   private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
   public void processAndSaveMetadataBatch(User user, String tripKey, List<MediaUploadRequest> files) {
-    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
+    Trip trip = tripAccessGuard.validateAccessibleTripByKey(tripKey, user);
 
     boolean isOwner = trip.isOwner(user);
 
@@ -104,7 +104,7 @@ public class MediaCommandService {
 
   @Transactional
   public int updateMultipleMediaFiles(User user, String tripKey, MediaBatchEditRequest request) {
-    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
+    Trip trip = tripAccessGuard.validateAccessibleTripByKey(tripKey, user);
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
     boolean isOwner = trip.isOwner(user);
@@ -148,7 +148,7 @@ public class MediaCommandService {
 
   @Transactional
   public int deleteMultipleMediaFiles(User user, String tripKey, MediaBatchDeleteRequest request) {
-    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
+    Trip trip = tripAccessGuard.validateAccessibleTripByKey(tripKey, user);
     Long actorId = user.getUserId();
     String actorNickname = user.getUserNickName();
     boolean isOwner = trip.isOwner(user);
@@ -193,7 +193,7 @@ public class MediaCommandService {
                                   String tripKey,
                                   Long mediaFileId,
                                   MediaLocationEditRequest request) {
-    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
+    Trip trip = tripAccessGuard.validateAccessibleTripByKey(tripKey, user);
     MediaFile mf = mediaFileRepository.findById(mediaFileId)
             .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
 

@@ -12,7 +12,7 @@ import com.triptyche.backend.domain.media.dto.UnlocatedMediaResponse.MediaSummar
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.trip.model.Trip;
-import com.triptyche.backend.global.validator.TripAccessValidator;
+import com.triptyche.backend.domain.trip.service.TripAccessGuard;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
@@ -34,12 +34,12 @@ public class MediaQueryService {
   private static final LocalDateTime DEFAULT_INVALID_DATE = LocalDateTime.of(1980, 1, 1, 0, 0, 0);
 
   private final MediaFileRepository mediaFileRepository;
-  private final TripAccessValidator tripAccessValidator;
+  private final TripAccessGuard tripAccessGuard;
   private final UnlocatedMediaCacheService unlocatedMediaCacheService;
 
   @Transactional(readOnly = true)
   public TripMediaListResponse getTripImages(User user, String tripKey) {
-    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
+    Trip trip = tripAccessGuard.validateAccessibleTripByKey(tripKey, user);
     List<MediaFile> mediaFiles = mediaFileRepository.findByTripTripId(trip.getTripId());
 
     List<MediaFileResponse> mediaFileResponses = mediaFiles.stream()
@@ -61,7 +61,7 @@ public class MediaQueryService {
 
   @Transactional(readOnly = true)
   public List<UnlocatedMediaResponse> getUnlocatedMedia(User user, String tripKey) {
-    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
+    Trip trip = tripAccessGuard.validateAccessibleTripByKey(tripKey, user);
     List<CachedMediaEntry> entries = unlocatedMediaCacheService.getAll(trip.getTripId());
 
     if (entries.isEmpty()) {
