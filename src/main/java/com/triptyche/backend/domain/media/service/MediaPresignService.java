@@ -6,7 +6,7 @@ import com.triptyche.backend.domain.media.dto.PresignedUrlResponse.PresignedUrl;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.s3.PresignedURLService;
 import com.triptyche.backend.global.s3.S3KeyResolver;
-import com.triptyche.backend.global.validator.TripAccessValidator;
+import com.triptyche.backend.domain.trip.service.TripAccessGuard;
 import java.time.Duration;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -18,11 +18,11 @@ public class MediaPresignService {
 
     private static final Duration PRESIGNED_URL_TTL = Duration.ofMinutes(10);
 
-    private final TripAccessValidator tripAccessValidator;
+    private final TripAccessGuard tripAccessGuard;
     private final PresignedURLService presignedURLService;
 
     public PresignedUrlResponse issuePutUrls(User user, String tripKey, PresignedUrlCreateRequest request) {
-        tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
+        tripAccessGuard.validateAccessibleTripByKey(tripKey, user);
 
         List<PresignedUrl> presignedUrls = request.files().stream()
                 .map(file -> {

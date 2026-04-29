@@ -23,7 +23,7 @@ import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
 import com.triptyche.backend.global.util.DateFormatter;
-import com.triptyche.backend.global.validator.TripAccessValidator;
+import com.triptyche.backend.domain.trip.service.TripAccessGuard;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -45,7 +45,7 @@ public class TripFacade {
 
   private final TripRepository tripRepository;
   private final PinPointRepository pinPointRepository;
-  private final TripAccessValidator tripAccessValidator;
+  private final TripAccessGuard tripAccessGuard;
   private final MediaQueryService mediaQueryService;
   private final ShareQueryService shareQueryService;
 
@@ -95,7 +95,7 @@ public class TripFacade {
   }
 
   public TripUpdateResponse getTripById(User user, String tripKey) {
-    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
+    Trip trip = tripAccessGuard.validateAccessibleTripByKey(tripKey, user);
 
     List<String> mediaFilesDates = mediaQueryService
             .findDistinctRecordDatesByTripId(trip.getTripId())
@@ -115,7 +115,7 @@ public class TripFacade {
   }
 
   public TripMapResponse getTripInfoById(User user, String tripKey) {
-    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
+    Trip trip = tripAccessGuard.validateAccessibleTripByKey(tripKey, user);
 
     List<PinPointResponse> pinPoints = pinPointRepository.findEarliestSingleMediaFileForEachPinPointByTripId(
             trip.getTripId(), DEFAULT_INVALID_DATE);
@@ -140,7 +140,7 @@ public class TripFacade {
   }
 
   public PinPointMediaListResponse getPointImages(User user, String tripKey, Long pinPointId) {
-    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
+    Trip trip = tripAccessGuard.validateAccessibleTripByKey(tripKey, user);
 
     PinPoint pinPoint = pinPointRepository.findById(pinPointId)
             .orElseThrow(() -> new CustomException(ResultCode.PINPOINT_NOT_FOUND));
@@ -155,7 +155,7 @@ public class TripFacade {
   }
 
   public MediaByDateResponse getImagesByDate(User user, String tripKey, String date) {
-    Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
+    Trip trip = tripAccessGuard.validateAccessibleTripByKey(tripKey, user);
 
     LocalDate parsedDate;
     try {

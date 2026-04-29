@@ -14,7 +14,7 @@ import com.triptyche.backend.domain.share.model.Share;
 import com.triptyche.backend.domain.share.model.ShareStatus;
 import com.triptyche.backend.domain.share.repository.ShareRepository;
 import com.triptyche.backend.domain.trip.model.Trip;
-import com.triptyche.backend.global.validator.TripAccessValidator;
+import com.triptyche.backend.domain.trip.service.TripAccessGuard;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
 import com.triptyche.backend.global.common.ResultCode;
@@ -45,7 +45,7 @@ class ShareServiceTest {
   private ApplicationEventPublisher eventPublisher;
 
   @Mock
-  private TripAccessValidator tripAccessValidator;
+  private TripAccessGuard tripAccessGuard;
 
   @InjectMocks
   private ShareService shareService;
@@ -87,7 +87,7 @@ class ShareServiceTest {
     @BeforeEach
     void setUp() {
       request = new ShareCreateRequest(TEST_TRIP_KEY, RECIPIENT_ID);
-      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
+      given(tripAccessGuard.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
     }
 
     @Test

@@ -1,4 +1,4 @@
-package com.triptyche.backend.global.validator;
+package com.triptyche.backend.domain.trip.service;
 
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
@@ -6,11 +6,11 @@ import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
 @RequiredArgsConstructor
-public class TripAccessValidator {
+public class TripAccessGuard {
 
   private final TripRepository tripRepository;
 

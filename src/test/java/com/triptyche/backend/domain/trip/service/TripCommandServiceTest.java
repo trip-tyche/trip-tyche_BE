@@ -15,7 +15,7 @@ import com.triptyche.backend.domain.trip.event.TripUpdatedEvent;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.model.TripStatus;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
-import com.triptyche.backend.global.validator.TripAccessValidator;
+import com.triptyche.backend.domain.trip.service.TripAccessGuard;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
@@ -38,7 +38,7 @@ class TripCommandServiceTest {
   private TripRepository tripRepository;
 
   @Mock
-  private TripAccessValidator tripAccessValidator;
+  private TripAccessGuard tripAccessGuard;
 
   @Mock
   private ApplicationEventPublisher eventPublisher;
@@ -127,7 +127,7 @@ class TripCommandServiceTest {
     void markImagesUploaded_givenDraftTrip_statusChangesToImagesUploaded() {
       // given
       Trip trip = createTrip(TripStatus.DRAFT, owner);
-      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
+      given(tripAccessGuard.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
 
       // when
       tripCommandService.markImagesUploaded(owner, TEST_TRIP_KEY);
@@ -141,7 +141,7 @@ class TripCommandServiceTest {
     void markImagesUploaded_givenNonDraftTrip_throwsInvalidTripState() {
       // given
       Trip trip = createTrip(TripStatus.IMAGES_UPLOADED, owner);
-      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
+      given(tripAccessGuard.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
 
       // when & then
       assertThatThrownBy(() -> tripCommandService.markImagesUploaded(owner, TEST_TRIP_KEY))
@@ -154,7 +154,7 @@ class TripCommandServiceTest {
     @DisplayName("접근 권한이 없는 사용자가 요청하면 ACCESS_DENIED 예외가 발생한다")
     void markImagesUploaded_givenUnauthorizedUser_throwsAccessDenied() {
       // given
-      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, otherUser))
+      given(tripAccessGuard.validateAccessibleTripByKey(TEST_TRIP_KEY, otherUser))
               .willThrow(new CustomException(ResultCode.ACCESS_DENIED));
 
       // when & then
@@ -174,7 +174,7 @@ class TripCommandServiceTest {
     void finalizeTrip_givenImagesUploadedTrip_statusChangesToConfirmed() {
       // given
       Trip trip = createTrip(TripStatus.IMAGES_UPLOADED, owner);
-      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
+      given(tripAccessGuard.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
 
       // when
       tripCommandService.finalizeTrip(owner, TEST_TRIP_KEY);
@@ -188,7 +188,7 @@ class TripCommandServiceTest {
     void finalizeTrip_givenNonImagesUploadedTrip_throwsInvalidTripState() {
       // given
       Trip trip = createTrip(TripStatus.DRAFT, owner);
-      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
+      given(tripAccessGuard.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
 
       // when & then
       assertThatThrownBy(() -> tripCommandService.finalizeTrip(owner, TEST_TRIP_KEY))
@@ -201,7 +201,7 @@ class TripCommandServiceTest {
     @DisplayName("접근 권한이 없는 사용자가 요청하면 ACCESS_DENIED 예외가 발생한다")
     void finalizeTrip_givenUnauthorizedUser_throwsAccessDenied() {
       // given
-      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, otherUser))
+      given(tripAccessGuard.validateAccessibleTripByKey(TEST_TRIP_KEY, otherUser))
               .willThrow(new CustomException(ResultCode.ACCESS_DENIED));
 
       // when & then
@@ -234,7 +234,7 @@ class TripCommandServiceTest {
     void updateTrip_givenOwner_updatesInfoAndPublishesEventWithIsOwnerTrue() {
       // given
       Trip trip = createTrip(TripStatus.CONFIRMED, owner);
-      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
+      given(tripAccessGuard.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
 
       // when
       tripCommandService.updateTrip(owner, TEST_TRIP_KEY, updateRequest);
@@ -252,7 +252,7 @@ class TripCommandServiceTest {
     void updateTrip_givenSharedUser_publishesEventWithIsOwnerFalse() {
       // given
       Trip trip = createTrip(TripStatus.CONFIRMED, owner);
-      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, otherUser)).willReturn(trip);
+      given(tripAccessGuard.validateAccessibleTripByKey(TEST_TRIP_KEY, otherUser)).willReturn(trip);
 
       // when
       tripCommandService.updateTrip(otherUser, TEST_TRIP_KEY, updateRequest);
@@ -267,7 +267,7 @@ class TripCommandServiceTest {
     @DisplayName("접근 권한이 없는 사용자가 수정 요청하면 ACCESS_DENIED 예외가 발생한다")
     void updateTrip_givenUnauthorizedUser_throwsAccessDenied() {
       // given
-      given(tripAccessValidator.validateAccessibleTripByKey(TEST_TRIP_KEY, otherUser))
+      given(tripAccessGuard.validateAccessibleTripByKey(TEST_TRIP_KEY, otherUser))
               .willThrow(new CustomException(ResultCode.ACCESS_DENIED));
 
       // when & then
@@ -287,7 +287,7 @@ class TripCommandServiceTest {
     void deleteTrip_givenOwner_softDeletesAndPublishesEvent() {
       // given
       Trip trip = createTrip(TripStatus.CONFIRMED, owner);
-      given(tripAccessValidator.validateOwnerByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
+      given(tripAccessGuard.validateOwnerByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
 
       // when
       tripCommandService.deleteTrip(owner, TEST_TRIP_KEY);
@@ -301,7 +301,7 @@ class TripCommandServiceTest {
     @DisplayName("소유자가 아닌 사용자가 삭제 요청하면 ACCESS_DENIED 예외가 발생한다")
     void deleteTrip_givenNonOwner_throwsAccessDenied() {
       // given
-      given(tripAccessValidator.validateOwnerByKey(TEST_TRIP_KEY, otherUser))
+      given(tripAccessGuard.validateOwnerByKey(TEST_TRIP_KEY, otherUser))
               .willThrow(new CustomException(ResultCode.ACCESS_DENIED));
 
       // when & then
@@ -316,7 +316,7 @@ class TripCommandServiceTest {
     void deleteTrip_givenOwner_eventContainsOwnerInfo() {
       // given
       Trip trip = createTrip(TripStatus.CONFIRMED, owner);
-      given(tripAccessValidator.validateOwnerByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
+      given(tripAccessGuard.validateOwnerByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
 
       // when
       tripCommandService.deleteTrip(owner, TEST_TRIP_KEY);
