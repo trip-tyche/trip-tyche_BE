@@ -160,6 +160,12 @@ public class TripQueryService {
     );
   }
 
+  public String getTripTitleById(Long tripId) {
+    return tripRepository.findById(tripId)
+            .map(Trip::getTripTitle)
+            .orElse("UNKNOWN_TRIP");
+  }
+
   public MediaByDateResponse getImagesByDate(User user, String tripKey, String date) {
     Trip trip = tripAccessValidator.validateAccessibleTripByKey(tripKey, user);
 
