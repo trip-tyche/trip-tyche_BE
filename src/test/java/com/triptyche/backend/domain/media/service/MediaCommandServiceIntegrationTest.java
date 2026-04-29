@@ -22,7 +22,7 @@ import com.triptyche.backend.domain.user.repository.UserRepository;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
 import com.triptyche.backend.global.redis.UnlocatedMediaHashRepository;
-import com.triptyche.backend.global.s3.S3UploadService;
+import com.triptyche.backend.global.s3.S3KeyResolver;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -69,7 +69,7 @@ class MediaCommandServiceIntegrationTest {
   @MockBean
   private UnlocatedMediaHashRepository imageQueueService;
   @MockBean
-  private S3UploadService s3UploadService;
+  private S3KeyResolver s3KeyResolver;
   @MockBean
   private UnlocatedMediaCacheService unlocatedMediaCacheService;
   @MockBean
@@ -82,7 +82,7 @@ class MediaCommandServiceIntegrationTest {
 
   @BeforeEach
   void setUp() {
-    given(s3UploadService.buildUrl(anyString())).willReturn("https://mock-url.com/test.webp");
+    given(s3KeyResolver.buildUrl(anyString())).willReturn("https://mock-url.com/test.webp");
 
     owner = userRepository.save(User.builder()
             .userName("소유자")
