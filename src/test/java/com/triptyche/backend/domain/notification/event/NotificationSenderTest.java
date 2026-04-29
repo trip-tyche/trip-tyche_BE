@@ -1,11 +1,7 @@
 package com.triptyche.backend.domain.notification.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
 import com.triptyche.backend.domain.notification.model.Notification;
@@ -21,7 +17,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationSenderTest {
@@ -30,7 +26,7 @@ class NotificationSenderTest {
   private NotificationRepository notificationRepository;
 
   @Mock
-  private SimpMessagingTemplate messagingTemplate;
+  private ApplicationEventPublisher eventPublisher;
 
   @InjectMocks
   private NotificationSender notificationSender;
@@ -62,27 +58,26 @@ class NotificationSenderTest {
     }
 
     @Test
-    @DisplayName("sendNotification() 호출 시 올바른 WebSocket 경로로 메시지가 전송된다")
-    void sendNotification_givenValidParams_sendsToCorrectWebSocketTopic() {
+    @DisplayName("sendNotification() 호출 시 NotificationSavedEvent가 올바른 필드로 발행된다")
+    void sendNotification_givenValidParams_publishesNotificationSavedEventWithCorrectFields() {
+      ArgumentCaptor<NotificationSavedEvent> captor = ArgumentCaptor.forClass(NotificationSavedEvent.class);
+
       notificationSender.sendNotification(RECIPIENT_ID, TYPE, PAYLOAD, REFERENCE_ID, SENDER_NICKNAME);
 
-      verify(messagingTemplate).convertAndSend(
-              eq("/topic/share-notifications/" + RECIPIENT_ID),
-              eq(PAYLOAD)
-      );
+      verify(eventPublisher).publishEvent(captor.capture());
+      NotificationSavedEvent event = captor.getValue();
+      assertThat(event.recipientId()).isEqualTo(RECIPIENT_ID);
+      assertThat(event.type()).isEqualTo(TYPE);
+      assertThat(event.payload()).isEqualTo(PAYLOAD);
     }
 
     @Test
-    @DisplayName("WebSocket 전송 중 예외가 발생해도 외부로 전파되지 않는다")
-    void sendNotification_whenWebSocketFails_doesNotPropagateException() {
-      doThrow(new RuntimeException("websocket error"))
-              .when(messagingTemplate).convertAndSend(anyString(), any(Object.class));
-
-      assertThatCode(() ->
-              notificationSender.sendNotification(RECIPIENT_ID, TYPE, PAYLOAD, REFERENCE_ID, SENDER_NICKNAME)
-      ).doesNotThrowAnyException();
+    @DisplayName("알림 저장 후 이벤트가 발행되어 DB 저장과 WebSocket 송신이 분리된다")
+    void sendNotification_givenValidParams_savesNotificationAndPublishesEvent() {
+      notificationSender.sendNotification(RECIPIENT_ID, TYPE, PAYLOAD, REFERENCE_ID, SENDER_NICKNAME);
 
       verify(notificationRepository).save(any(Notification.class));
+      verify(eventPublisher).publishEvent(any(NotificationSavedEvent.class));
     }
   }
 }

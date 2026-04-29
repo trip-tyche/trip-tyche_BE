@@ -7,7 +7,7 @@ import com.triptyche.backend.domain.notification.repository.NotificationReposito
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -16,16 +16,13 @@ import org.springframework.stereotype.Component;
 public class NotificationSender {
 
   private final NotificationRepository notificationRepository;
-  private final SimpMessagingTemplate messagingTemplate;
+  private final ApplicationEventPublisher eventPublisher;
 
-  /**
-   * 알림 저장 및 웹소켓 전송
-   */
   public void sendNotification(Long recipientId, NotificationType type,
                                Map<String, Object> payload, Long referenceId,
                                String senderNickname) {
     saveNotification(recipientId, type, referenceId, senderNickname);
-    sendWebSocketMessage(recipientId, type, payload);
+    eventPublisher.publishEvent(new NotificationSavedEvent(recipientId, type, payload));
   }
 
   private void saveNotification(Long recipientId, NotificationType type,
@@ -38,18 +35,5 @@ public class NotificationSender {
             .senderNickname(senderNickname)
             .build();
     notificationRepository.save(notification);
-  }
-
-  private void sendWebSocketMessage(Long recipientId, NotificationType type,
-                                    Map<String, Object> payload) {
-    try {
-      messagingTemplate.convertAndSend(
-              "/topic/share-notifications/" + recipientId,
-              payload
-      );
-      log.info("[{}] 알림 전송 완료: recipient={}", type, recipientId);
-    } catch (Exception e) {
-      log.error("[{}] 알림 전송 실패: recipient={}", type, recipientId, e);
-    }
   }
 }
