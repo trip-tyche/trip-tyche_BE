@@ -1,4 +1,4 @@
-package com.triptyche.backend.domain.user.scheduler;
+package com.triptyche.backend.domain.guest.scheduler;
 
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.model.UserRole;

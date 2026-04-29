@@ -1,7 +1,7 @@
 package com.triptyche.backend.domain.notification.event;
 
 import com.triptyche.backend.domain.notification.model.NotificationType;
-import com.triptyche.backend.domain.share.repository.ShareRepository;
+import com.triptyche.backend.domain.share.service.ShareQueryService;
 import com.triptyche.backend.domain.trip.event.TripDeletedEvent;
 import com.triptyche.backend.domain.trip.event.TripUpdatedEvent;
 import java.util.HashSet;
@@ -21,7 +21,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class TripNotificationEventListener {
 
   private final NotificationSender notificationSender;
-  private final ShareRepository shareRepository;
+  private final ShareQueryService shareQueryService;
 
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -98,7 +98,7 @@ public class TripNotificationEventListener {
   }
 
   private Set<Long> getApprovedShareRecipientsByTripId(Long tripId) {
-    return new HashSet<>(shareRepository.findApprovedRecipientIdsByTripId(tripId));
+    return shareQueryService.findApprovedRecipientIdsByTripId(tripId);
   }
 
   /**

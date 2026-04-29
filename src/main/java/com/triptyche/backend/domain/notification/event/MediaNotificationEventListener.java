@@ -5,7 +5,7 @@ import com.triptyche.backend.domain.media.event.MediaFileDeletedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileLocationUpdatedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileUpdatedEvent;
 import com.triptyche.backend.domain.notification.model.NotificationType;
-import com.triptyche.backend.domain.share.repository.ShareRepository;
+import com.triptyche.backend.domain.share.service.ShareQueryService;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -23,7 +23,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class MediaNotificationEventListener {
 
   private final NotificationSender notificationSender;
-  private final ShareRepository shareRepository;
+  private final ShareQueryService shareQueryService;
 
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -139,7 +139,7 @@ public class MediaNotificationEventListener {
    * 승인된 공유자 ID 목록 조회
    */
   private Set<Long> getApprovedShareRecipientIds(Long tripId) {
-    return new HashSet<>(shareRepository.findApprovedRecipientIdsByTripId(tripId));
+    return shareQueryService.findApprovedRecipientIdsByTripId(tripId);
   }
 
   /**

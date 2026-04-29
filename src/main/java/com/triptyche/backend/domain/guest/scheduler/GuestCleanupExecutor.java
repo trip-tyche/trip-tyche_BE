@@ -1,5 +1,6 @@
-package com.triptyche.backend.domain.user.scheduler;
+package com.triptyche.backend.domain.guest.scheduler;
 
+import com.triptyche.backend.domain.guest.repository.GuestShareQueueRepository;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.notification.repository.NotificationRepository;
@@ -9,7 +10,7 @@ import com.triptyche.backend.domain.trip.repository.PinPointRepository;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
-import com.triptyche.backend.global.redis.GuestShareQueueRepository;
+import com.triptyche.backend.global.s3.S3KeyResolver;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,7 @@ public class GuestCleanupExecutor {
         List<String> s3Keys = allTrips.isEmpty() ? List.of() :
                 mediaFileRepository.findAllByTripIn(allTrips).stream()
                         .map(MediaFile::getMediaKey)
-                        .filter(key -> !key.startsWith("seed/"))
+                        .filter(key -> !S3KeyResolver.isSeedKey(key))
                         .toList();
 
         // DB 삭제 순서 (FK 제약 준수)

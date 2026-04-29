@@ -21,8 +21,8 @@ import com.triptyche.backend.global.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
-import com.triptyche.backend.global.s3.S3UploadService;
-import com.triptyche.backend.global.util.DateUtil;
+import com.triptyche.backend.global.s3.S3KeyResolver;
+import com.triptyche.backend.global.util.DateFormatter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +39,7 @@ public class MediaCommandService {
 
   private final MediaFileRepository mediaFileRepository;
   private final PinPointService pinPointService;
-  private final S3UploadService s3UploadService;
+  private final S3KeyResolver s3KeyResolver;
   private final TripAccessValidator tripAccessValidator;
   private final ApplicationEventPublisher eventPublisher;
 
@@ -54,17 +54,17 @@ public class MediaCommandService {
     List<MediaFile> mediaFiles = files.stream()
             .map(file -> {
               String fileKey = file.fileKey();
-              if (!fileKey.startsWith("originals/")) {
+              if (!S3KeyResolver.isOriginalKey(fileKey)) {
                 throw new CustomException(ResultCode.INVALID_FILE_KEY);
               }
-              LocalDateTime recordDateTime = DateUtil.convertToLocalDateTime(file.recordDate());
+              LocalDateTime recordDateTime = DateFormatter.convertToLocalDateTime(file.recordDate());
               PinPoint pinPoint = pinPointService.assignPinPoint(
                       existingPinPoints, trip, file.latitude(), file.longitude());
               return MediaFile.builder()
                       .trip(trip)
                       .pinPoint(pinPoint)
                       .mediaType("image/webp")
-                      .mediaLink(s3UploadService.buildUrl(fileKey))
+                      .mediaLink(s3KeyResolver.buildUrl(fileKey))
                       .mediaKey(fileKey)
                       .recordDate(recordDateTime)
                       .latitude(file.latitude())
@@ -161,7 +161,7 @@ public class MediaCommandService {
               if (mf.getMediaKey() != null) {
                 keys.add(mf.getMediaKey());
               }
-              String webpKey = s3UploadService.extractKey(mf.getMediaLink());
+              String webpKey = s3KeyResolver.extractKey(mf.getMediaLink());
               if (webpKey != null && !webpKey.equals(mf.getMediaKey())) {
                 keys.add(webpKey);
               }

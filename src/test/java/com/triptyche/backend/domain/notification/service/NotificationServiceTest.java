@@ -10,14 +10,12 @@ import com.triptyche.backend.domain.notification.model.Notification;
 import com.triptyche.backend.domain.notification.model.NotificationStatus;
 import com.triptyche.backend.domain.notification.model.NotificationType;
 import com.triptyche.backend.domain.notification.repository.NotificationRepository;
-import com.triptyche.backend.domain.trip.model.Trip;
-import com.triptyche.backend.domain.trip.repository.TripRepository;
+import com.triptyche.backend.domain.trip.service.TripQueryService;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -33,7 +31,7 @@ class NotificationServiceTest {
   private NotificationRepository notificationRepository;
 
   @Mock
-  private TripRepository tripRepository;
+  private TripQueryService tripQueryService;
 
   @InjectMocks
   private NotificationService notificationService;
@@ -175,24 +173,13 @@ class NotificationServiceTest {
   @DisplayName("getNotificationDetail()")
   class GetNotificationDetail {
 
-    private Trip trip;
-
-    @BeforeEach
-    void setUp() {
-      // Trip은 Builder로 최소 필드만 구성 (getTripTitle()만 필요)
-      trip = Trip.builder()
-              .tripId(TRIP_ID)
-              .tripTitle("제주도 여행")
-              .build();
-    }
-
     @Test
     @DisplayName("알림과 연관 여행이 모두 존재하면 여행 제목, 알림 타입, 발신자가 담긴 응답을 반환한다")
     void getNotificationDetail_givenExistingNotificationAndTrip_returnsDetailResponse() {
       // given
       Notification notification = buildNotification(NOTIFICATION_ID, NotificationStatus.UNREAD);
       given(notificationRepository.findById(NOTIFICATION_ID)).willReturn(Optional.of(notification));
-      given(tripRepository.findById(TRIP_ID)).willReturn(Optional.of(trip));
+      given(tripQueryService.getTripTitleById(TRIP_ID)).willReturn("제주도 여행");
 
       // when
       NotificationDetailResponse result = notificationService.getNotificationDetail(NOTIFICATION_ID);
@@ -210,7 +197,7 @@ class NotificationServiceTest {
       // 여행이 삭제되었거나 referenceId가 유효하지 않은 경우를 검증한다
       Notification notification = buildNotification(NOTIFICATION_ID, NotificationStatus.UNREAD);
       given(notificationRepository.findById(NOTIFICATION_ID)).willReturn(Optional.of(notification));
-      given(tripRepository.findById(TRIP_ID)).willReturn(Optional.empty());
+      given(tripQueryService.getTripTitleById(TRIP_ID)).willReturn("UNKNOWN_TRIP");
 
       // when
       NotificationDetailResponse result = notificationService.getNotificationDetail(NOTIFICATION_ID);

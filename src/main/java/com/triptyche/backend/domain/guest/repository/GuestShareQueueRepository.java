@@ -1,14 +1,15 @@
-package com.triptyche.backend.global.redis;
+package com.triptyche.backend.domain.guest.repository;
 
+import com.triptyche.backend.global.config.GuestProperties;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -17,12 +18,18 @@ import org.springframework.stereotype.Repository;
 public class GuestShareQueueRepository {
 
   private final RedisTemplate<String, Object> redisTemplate;
+  private final GuestProperties guestProperties;
   private static final String KEY = "guest:share_queue";
-  private static final long DELAY_SECONDS = 15L;
+
+  private static final RedisScript<List> POLL_DUE_IDS_SCRIPT = RedisScript.of(
+      "local m = redis.call('ZRANGEBYSCORE', KEYS[1], '0', ARGV[1])\n" +
+      "if #m > 0 then redis.call('ZREMRANGEBYSCORE', KEYS[1], '0', ARGV[1]) end\n" +
+      "return m",
+      List.class);
 
   public void enqueue(Long guestUserId) {
     try {
-      double score = Instant.now().getEpochSecond() + DELAY_SECONDS;
+      double score = Instant.now().getEpochSecond() + guestProperties.shareDelaySeconds();
       redisTemplate.opsForZSet().add(KEY, guestUserId.toString(), score);
       log.debug("게스트 공유 큐 등록: guestUserId={}, fireAt={}", guestUserId, score);
     } catch (RedisConnectionFailureException e) {
@@ -32,14 +39,14 @@ public class GuestShareQueueRepository {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public List<Long> pollDueIds() {
     try {
-      double now = Instant.now().getEpochSecond();
-      Set<Object> members = redisTemplate.opsForZSet().rangeByScore(KEY, 0, now);
+      String now = String.valueOf(Instant.now().getEpochSecond());
+      List<Object> members = (List<Object>) redisTemplate.execute(POLL_DUE_IDS_SCRIPT, List.of(KEY), now);
       if (members == null || members.isEmpty()) {
         return Collections.emptyList();
       }
-      redisTemplate.opsForZSet().removeRangeByScore(KEY, 0, now);
       return members.stream()
           .map(m -> Long.parseLong(m.toString()))
           .collect(Collectors.toList());

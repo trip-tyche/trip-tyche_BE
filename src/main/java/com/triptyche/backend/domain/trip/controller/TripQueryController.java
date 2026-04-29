@@ -5,7 +5,7 @@ import com.triptyche.backend.domain.trip.dto.PinPointMediaListResponse;
 import com.triptyche.backend.domain.trip.dto.TripListResponse;
 import com.triptyche.backend.domain.trip.dto.TripMapResponse;
 import com.triptyche.backend.domain.trip.dto.TripUpdateResponse;
-import com.triptyche.backend.domain.trip.service.TripQueryService;
+import com.triptyche.backend.domain.trip.facade.TripFacade;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.auth.CurrentUser;
 import com.triptyche.backend.global.common.RestResponse;
@@ -23,17 +23,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/trips")
 public class TripQueryController {
 
-  private final TripQueryService tripQueryService;
+  private final TripFacade tripFacade;
 
   @Tag(name = "2. 여행관리 페이지 API")
   @Operation(summary = "여행관리페이지 사용자의 여행 정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/680d29996d0941b9aa742a280e2b3b27?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping
-  public RestResponse<TripListResponse> getUserTrips(
-          @CurrentUser User user) {
-
-    TripListResponse tripsResponse = tripQueryService.getTripsByUser(user);
-    return RestResponse.success(tripsResponse);
+  public RestResponse<TripListResponse> getUserTrips(@CurrentUser User user) {
+    return RestResponse.success(tripFacade.getTripsByUser(user));
   }
 
   @Tag(name = "2. 여행관리 페이지 API")
@@ -43,9 +40,7 @@ public class TripQueryController {
   public RestResponse<TripUpdateResponse> getTripById(
           @CurrentUser User user,
           @PathVariable String tripKey) {
-    TripUpdateResponse tripInfo = tripQueryService.getTripById(user, tripKey);
-
-    return RestResponse.success(tripInfo);
+    return RestResponse.success(tripFacade.getTripById(user, tripKey));
   }
 
   @Tag(name = "5. Map 페이지 API")
@@ -55,8 +50,7 @@ public class TripQueryController {
   public RestResponse<TripMapResponse> getTripInfo(
           @CurrentUser User user,
           @PathVariable String tripKey) {
-    TripMapResponse tripInfo = tripQueryService.getTripInfoById(user, tripKey);
-    return RestResponse.success(tripInfo);
+    return RestResponse.success(tripFacade.getTripInfoById(user, tripKey));
   }
 
   @Tag(name = "5. Map 페이지 API")
@@ -67,10 +61,7 @@ public class TripQueryController {
           @CurrentUser User user,
           @PathVariable String tripKey,
           @PathVariable Long pinPointId) {
-    PinPointMediaListResponse pinPointImageGalleryResponse = tripQueryService.getPointImages(user, tripKey,
-            pinPointId);
-
-    return RestResponse.success(pinPointImageGalleryResponse);
+    return RestResponse.success(tripFacade.getPointImages(user, tripKey, pinPointId));
   }
 
   @Tag(name = "6. 날짜별 페이지 API")
@@ -81,8 +72,6 @@ public class TripQueryController {
           @CurrentUser User user,
           @PathVariable String tripKey,
           @RequestParam String date) {
-    MediaByDateResponse response = tripQueryService.getImagesByDate(user, tripKey, date);
-
-    return RestResponse.success(response);
+    return RestResponse.success(tripFacade.getImagesByDate(user, tripKey, date));
   }
 }

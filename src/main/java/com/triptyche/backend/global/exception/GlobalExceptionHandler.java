@@ -3,8 +3,10 @@ package com.triptyche.backend.global.exception;
 import com.triptyche.backend.global.common.RestResponse;
 import com.triptyche.backend.global.common.ResultCode;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +18,11 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<RestResponse<Void>> handleAccessDenied(AccessDeniedException e) {
+    return new ResponseEntity<>(RestResponse.error(ResultCode.ACCESS_DENIED), HttpStatus.FORBIDDEN);
+  }
 
   @ExceptionHandler(CustomException.class)
   public ResponseEntity<RestResponse<Void>> handleCustomException(CustomException ex) {

@@ -4,6 +4,7 @@ import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
+import com.triptyche.backend.global.s3.S3KeyResolver;
 import com.triptyche.backend.global.s3.S3UploadService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ public class TripCleanupScheduler {
   private final MediaFileRepository mediaFileRepository;
   private final TripCleanupExecutor cleanupExecutor;
   private final S3UploadService s3UploadService;
+  private final S3KeyResolver s3KeyResolver;
 
   @Value("${trip.soft-delete.retention-days:30}")
   private int retentionDays;
@@ -68,7 +70,7 @@ public class TripCleanupScheduler {
               if (mf.getMediaKey() != null) {
                 keys.add(mf.getMediaKey());
               }
-              String webpKey = s3UploadService.extractKey(mf.getMediaLink());
+              String webpKey = s3KeyResolver.extractKey(mf.getMediaLink());
               if (webpKey != null && !webpKey.equals(mf.getMediaKey())) {
                 keys.add(webpKey);
               }
@@ -82,7 +84,7 @@ public class TripCleanupScheduler {
     if (mediaKeys.isEmpty()) return;
 
     List<String> deletableKeys = mediaKeys.stream()
-            .filter(key -> !key.startsWith("seed/"))
+            .filter(key -> !S3KeyResolver.isSeedKey(key))
             .toList();
 
     if (deletableKeys.isEmpty()) return;

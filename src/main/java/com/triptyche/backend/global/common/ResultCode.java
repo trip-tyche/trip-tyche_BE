@@ -1,5 +1,6 @@
 package com.triptyche.backend.global.common;
 
+import com.triptyche.backend.global.s3.S3KeyResolver;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -56,7 +57,7 @@ public enum ResultCode {
   FILE_PROCESSING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 5003, "파일 처리 중 오류가 발생했습니다."),
   FILE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, 5004, "업로드된 파일 삭제에 실패했습니다."),
   FILE_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, 5005, "파일 크기가 허용된 용량을 초과했습니다."),
-  INVALID_FILE_KEY(HttpStatus.BAD_REQUEST, 5006, "유효하지 않은 파일 키입니다. originals/ 경로로 업로드된 파일만 등록할 수 있습니다."),
+  INVALID_FILE_KEY(HttpStatus.BAD_REQUEST, 5006, "유효하지 않은 파일 키입니다. " + S3KeyResolver.ORIGINALS_PREFIX + " 경로로 업로드된 파일만 등록할 수 있습니다."),
   JSON_PARSE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 5007, "데이터 변환 중 오류가 발생했습니다."),
 
   // 날짜별 정보 조회 관련 오류 코드 (6000번대)

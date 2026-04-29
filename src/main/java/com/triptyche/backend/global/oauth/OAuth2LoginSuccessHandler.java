@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import com.triptyche.backend.domain.user.model.UserRole;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +48,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
       return;
     }
 
-    List<String> roles = List.of("ROLE_USER");
+    List<String> roles = List.of(UserRole.USER.authority());
     String accessToken = jwtTokenProvider.createAccessToken(email, roles, provider);
     String refreshToken = jwtTokenProvider.createRefreshToken(email, provider);
     refreshTokenRepository.save(email, refreshToken, jwtProperties.refreshTokenExpirySeconds());

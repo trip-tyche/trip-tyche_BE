@@ -1,4 +1,4 @@
-package com.triptyche.backend.global.config;
+package com.triptyche.backend.domain.guest.init;
 
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
@@ -10,7 +10,8 @@ import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.model.UserRole;
 import com.triptyche.backend.domain.user.repository.UserRepository;
-import com.triptyche.backend.global.s3.S3UploadService;
+import com.triptyche.backend.global.config.GuestProperties;
+import com.triptyche.backend.global.s3.S3KeyResolver;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -27,11 +28,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class GuestTemplateInitializer implements ApplicationRunner {
 
-  private static final String TEMPLATE_EMAIL = "guest_template@triptyche.com";
   private static final String PROVIDER = "guest_template";
   private static final String MEDIA_TYPE = "image/webp";
 
-  private final S3UploadService s3UploadService;
+  private final GuestProperties guestProperties;
+  private final S3KeyResolver s3KeyResolver;
   private final UserRepository userRepository;
   private final TripRepository tripRepository;
   private final PinPointRepository pinPointRepository;
@@ -98,17 +99,17 @@ public class GuestTemplateInitializer implements ApplicationRunner {
   public void run(ApplicationArguments args) {
     log.info("[GuestTemplateInitializer] 게스트 템플릿 시드 초기화 시작");
 
-    User templateUser = userRepository.findByUserEmail(TEMPLATE_EMAIL)
+    User templateUser = userRepository.findByUserEmail(guestProperties.templateEmail())
         .orElseGet(() -> {
           User user = User.builder()
-              .userEmail(TEMPLATE_EMAIL)
+              .userEmail(guestProperties.templateEmail())
               .userName("데모계정")
               .userNickName("데모계정")
               .provider(PROVIDER)
               .role(UserRole.USER)
               .build();
           userRepository.save(user);
-          log.info("[GuestTemplateInitializer] 템플릿 계정 생성: {}", TEMPLATE_EMAIL);
+          log.info("[GuestTemplateInitializer] 템플릿 계정 생성: {}", guestProperties.templateEmail());
           return user;
         });
 
@@ -146,7 +147,7 @@ public class GuestTemplateInitializer implements ApplicationRunner {
             .pinPoint(pinPoint)
             .mediaType(MEDIA_TYPE)
             .mediaKey(mediaKey)
-            .mediaLink(s3UploadService.buildUrl(mediaKey))
+            .mediaLink(s3KeyResolver.buildUrl(mediaKey))
             .latitude(pin.latitude())
             .longitude(pin.longitude())
             .recordDate(LocalDateTime.of(data.startDate().plusDays(i), LocalTime.NOON))

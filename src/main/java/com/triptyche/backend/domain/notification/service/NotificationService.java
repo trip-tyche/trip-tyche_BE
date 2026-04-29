@@ -5,12 +5,10 @@ import com.triptyche.backend.domain.notification.dto.NotificationResponse;
 import com.triptyche.backend.domain.notification.model.Notification;
 import com.triptyche.backend.domain.notification.model.NotificationStatus;
 import com.triptyche.backend.domain.notification.repository.NotificationRepository;
-import com.triptyche.backend.domain.trip.model.Trip;
-import com.triptyche.backend.domain.trip.repository.TripRepository;
+import com.triptyche.backend.domain.trip.service.TripQueryService;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationService {
 
   private final NotificationRepository notificationRepository;
-  private final TripRepository tripRepository;
+  private final TripQueryService tripQueryService;
 
 
   @Transactional(readOnly = true)
@@ -56,8 +54,7 @@ public class NotificationService {
   public NotificationDetailResponse getNotificationDetail(Long notificationId) {
     Notification notification = notificationRepository.findById(notificationId)
             .orElseThrow(() -> new CustomException(ResultCode.NOTIFICATION_NOT_FOUND));
-    Optional<Trip> trip = tripRepository.findById(notification.getReferenceId());
-    String tripTitle = trip.map(Trip::getTripTitle).orElse("UNKNOWN_TRIP");
+    String tripTitle = tripQueryService.getTripTitleById(notification.getReferenceId());
 
     return new NotificationDetailResponse(
             tripTitle,
