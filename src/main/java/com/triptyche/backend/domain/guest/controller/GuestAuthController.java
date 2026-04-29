@@ -1,4 +1,4 @@
-package com.triptyche.backend.global.oauth.controller;
+package com.triptyche.backend.domain.guest.controller;
 
 import com.triptyche.backend.domain.guest.service.GuestOnboardingService;
 import com.triptyche.backend.global.common.RestResponse;
