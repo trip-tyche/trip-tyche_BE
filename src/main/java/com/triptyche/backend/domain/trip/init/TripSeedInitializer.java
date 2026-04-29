@@ -28,9 +28,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Local dev seed data: 3 trips (Tokyo / Paris / New York), each with 5 pinpoints + media files.
- * Runs only in local profile. Idempotent — skips if data already exists.
- * Media files reference images pre-uploaded to OCI under seed/{city}/{filename}.webp.
+ * 로컬 개발용 시드 데이터: 도쿄·파리·뉴욕 3개 여행, 각 5개 핀포인트 + 미디어 파일.
+ * local 프로파일에서만 실행. 멱등성 보장 — 데이터가 이미 존재하면 건너뜀.
+ * 미디어 파일은 OCI에 seed/{city}/{filename}.webp 경로로 미리 업로드된 이미지를 참조.
  */
 @Profile("local")
 @Component
@@ -147,7 +147,7 @@ public class TripSeedInitializer implements ApplicationRunner {
   @Override
   @Transactional
   public void run(ApplicationArguments args) {
-    log.info("[TripSeedInitializer] Local seed data initialization start");
+    log.info("[TripSeedInitializer] 로컬 시드 데이터 초기화 시작");
 
     User testUser  = getOrCreateUser(TEST_USER_EMAIL,  "testUser1", "test1");
     User testUser2 = getOrCreateUser(TEST_USER2_EMAIL, "testUser2", "test2");
@@ -156,7 +156,7 @@ public class TripSeedInitializer implements ApplicationRunner {
     trips.forEach(this::seedMediaIfAbsent);
     createSharesIfAbsent(testUser, testUser2);
 
-    log.info("[TripSeedInitializer] Done — {} trips seeded", TRIP_COUNT);
+    log.info("[TripSeedInitializer] 완료 — 여행 {}개 시드", TRIP_COUNT);
   }
 
   // ── Private helpers ────────────────────────────────────────────────────────
@@ -171,7 +171,7 @@ public class TripSeedInitializer implements ApplicationRunner {
               .provider(PROVIDER)
               .build();
           userRepository.save(user);
-          log.info("[TripSeedInitializer] User created: {}", email);
+          log.info("[TripSeedInitializer] 사용자 생성: {}", email);
           return user;
         });
   }
@@ -179,7 +179,7 @@ public class TripSeedInitializer implements ApplicationRunner {
   private List<Trip> getOrCreateTrips(User owner) {
     long existing = tripRepository.countByUserAndStatus(owner, TripStatus.CONFIRMED);
     if (existing >= TRIP_COUNT) {
-      log.info("[TripSeedInitializer] Trips already exist ({}) — skip creation", existing);
+      log.info("[TripSeedInitializer] 여행 이미 존재 ({}) — 생성 건너뜀", existing);
       return tripRepository.findAllAccessibleTripsWithOwner(owner.getUserId());
     }
 
@@ -205,7 +205,7 @@ public class TripSeedInitializer implements ApplicationRunner {
         pinPointRepository.save(pinPoint);
       }
       created.add(trip);
-      log.info("[TripSeedInitializer] Trip '{}' created with {} pinpoints", data.title(), data.pinPoints().size());
+      log.info("[TripSeedInitializer] 여행 '{}' 생성 완료 — 핀포인트 {}개", data.title(), data.pinPoints().size());
     }
     return created;
   }
@@ -213,7 +213,7 @@ public class TripSeedInitializer implements ApplicationRunner {
   private void seedMediaIfAbsent(Trip trip) {
     List<MediaFile> existing = mediaFileRepository.findByTripTripId(trip.getTripId());
     if (!existing.isEmpty()) {
-      log.info("[TripSeedInitializer] Media already exists for '{}' — skip", trip.getTripTitle());
+      log.info("[TripSeedInitializer] '{}' 미디어 이미 존재 — 건너뜀", trip.getTripTitle());
       return;
     }
 
@@ -240,7 +240,7 @@ public class TripSeedInitializer implements ApplicationRunner {
           .build();
       mediaFileRepository.save(mediaFile);
     }
-    log.info("[TripSeedInitializer] {} media files seeded for '{}'", seedList.size(), trip.getTripTitle());
+    log.info("[TripSeedInitializer] '{}' 미디어 파일 {}개 시드 완료", trip.getTripTitle(), seedList.size());
   }
 
   private void createSharesIfAbsent(User owner, User recipient) {
@@ -251,7 +251,7 @@ public class TripSeedInitializer implements ApplicationRunner {
 
     long existingShares = shareRepository.findAllByRecipientId(recipient.getUserId()).size();
     if (existingShares >= SHARED_TRIP_COUNT) {
-      log.info("[TripSeedInitializer] Shares already exist ({}) — skip", existingShares);
+      log.info("[TripSeedInitializer] 공유 이미 존재 ({}) — 건너뜀", existingShares);
       return;
     }
 
@@ -268,6 +268,6 @@ public class TripSeedInitializer implements ApplicationRunner {
             shareRepository.save(share);
           }
         });
-    log.info("[TripSeedInitializer] {} shares created for test2", SHARED_TRIP_COUNT);
+    log.info("[TripSeedInitializer] test2 공유 {}개 생성 완료", SHARED_TRIP_COUNT);
   }
 }
