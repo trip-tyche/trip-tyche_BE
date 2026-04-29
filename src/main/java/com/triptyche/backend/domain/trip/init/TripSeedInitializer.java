@@ -1,4 +1,4 @@
-package com.triptyche.backend.global.config;
+package com.triptyche.backend.domain.trip.init;
 
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
@@ -36,7 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class DataInitializer implements ApplicationRunner {
+public class TripSeedInitializer implements ApplicationRunner {
 
   private static final String TEST_USER_EMAIL = "test@test.com";
   private static final String TEST_USER2_EMAIL = "test2@test.com";
@@ -147,7 +147,7 @@ public class DataInitializer implements ApplicationRunner {
   @Override
   @Transactional
   public void run(ApplicationArguments args) {
-    log.info("[DataInitializer] Local seed data initialization start");
+    log.info("[TripSeedInitializer] Local seed data initialization start");
 
     User testUser  = getOrCreateUser(TEST_USER_EMAIL,  "testUser1", "test1");
     User testUser2 = getOrCreateUser(TEST_USER2_EMAIL, "testUser2", "test2");
@@ -156,7 +156,7 @@ public class DataInitializer implements ApplicationRunner {
     trips.forEach(this::seedMediaIfAbsent);
     createSharesIfAbsent(testUser, testUser2);
 
-    log.info("[DataInitializer] Done — {} trips seeded", TRIP_COUNT);
+    log.info("[TripSeedInitializer] Done — {} trips seeded", TRIP_COUNT);
   }
 
   // ── Private helpers ────────────────────────────────────────────────────────
@@ -171,7 +171,7 @@ public class DataInitializer implements ApplicationRunner {
               .provider(PROVIDER)
               .build();
           userRepository.save(user);
-          log.info("[DataInitializer] User created: {}", email);
+          log.info("[TripSeedInitializer] User created: {}", email);
           return user;
         });
   }
@@ -179,7 +179,7 @@ public class DataInitializer implements ApplicationRunner {
   private List<Trip> getOrCreateTrips(User owner) {
     long existing = tripRepository.countByUserAndStatus(owner, TripStatus.CONFIRMED);
     if (existing >= TRIP_COUNT) {
-      log.info("[DataInitializer] Trips already exist ({}) — skip creation", existing);
+      log.info("[TripSeedInitializer] Trips already exist ({}) — skip creation", existing);
       return tripRepository.findAllAccessibleTripsWithOwner(owner.getUserId());
     }
 
@@ -205,7 +205,7 @@ public class DataInitializer implements ApplicationRunner {
         pinPointRepository.save(pinPoint);
       }
       created.add(trip);
-      log.info("[DataInitializer] Trip '{}' created with {} pinpoints", data.title(), data.pinPoints().size());
+      log.info("[TripSeedInitializer] Trip '{}' created with {} pinpoints", data.title(), data.pinPoints().size());
     }
     return created;
   }
@@ -213,7 +213,7 @@ public class DataInitializer implements ApplicationRunner {
   private void seedMediaIfAbsent(Trip trip) {
     List<MediaFile> existing = mediaFileRepository.findByTripTripId(trip.getTripId());
     if (!existing.isEmpty()) {
-      log.info("[DataInitializer] Media already exists for '{}' — skip", trip.getTripTitle());
+      log.info("[TripSeedInitializer] Media already exists for '{}' — skip", trip.getTripTitle());
       return;
     }
 
@@ -240,7 +240,7 @@ public class DataInitializer implements ApplicationRunner {
           .build();
       mediaFileRepository.save(mediaFile);
     }
-    log.info("[DataInitializer] {} media files seeded for '{}'", seedList.size(), trip.getTripTitle());
+    log.info("[TripSeedInitializer] {} media files seeded for '{}'", seedList.size(), trip.getTripTitle());
   }
 
   private void createSharesIfAbsent(User owner, User recipient) {
@@ -251,7 +251,7 @@ public class DataInitializer implements ApplicationRunner {
 
     long existingShares = shareRepository.findAllByRecipientId(recipient.getUserId()).size();
     if (existingShares >= SHARED_TRIP_COUNT) {
-      log.info("[DataInitializer] Shares already exist ({}) — skip", existingShares);
+      log.info("[TripSeedInitializer] Shares already exist ({}) — skip", existingShares);
       return;
     }
 
@@ -268,6 +268,6 @@ public class DataInitializer implements ApplicationRunner {
             shareRepository.save(share);
           }
         });
-    log.info("[DataInitializer] {} shares created for test2", SHARED_TRIP_COUNT);
+    log.info("[TripSeedInitializer] {} shares created for test2", SHARED_TRIP_COUNT);
   }
 }
