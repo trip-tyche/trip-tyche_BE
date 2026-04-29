@@ -8,6 +8,7 @@ import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.auth.CurrentUser;
 import com.triptyche.backend.global.common.RestResponse;
 import com.triptyche.backend.global.s3.PresignedURLService;
+import com.triptyche.backend.global.s3.S3KeyResolver;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -41,7 +42,7 @@ public class PresignedURLController {
 
     List<PresignedUrl> presignedUrls = request.files().stream()
             .map(file -> {
-              String fileKey = "originals/" + tripKey + "/" + file.fileName();
+              String fileKey = S3KeyResolver.buildOriginalKey(tripKey, file.fileName());
               String presignedPutUrl = presignedURLService.generatePresignedPutUrl(
                       fileKey, Duration.ofMinutes(10)
               );

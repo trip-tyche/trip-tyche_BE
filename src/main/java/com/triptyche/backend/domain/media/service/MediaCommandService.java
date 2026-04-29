@@ -21,6 +21,7 @@ import com.triptyche.backend.global.validator.TripAccessValidator;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
+import com.triptyche.backend.global.s3.S3KeyResolver;
 import com.triptyche.backend.global.s3.S3UploadService;
 import com.triptyche.backend.global.util.DateUtil;
 import java.time.LocalDateTime;
@@ -54,7 +55,7 @@ public class MediaCommandService {
     List<MediaFile> mediaFiles = files.stream()
             .map(file -> {
               String fileKey = file.fileKey();
-              if (!fileKey.startsWith("originals/")) {
+              if (!S3KeyResolver.isOriginalKey(fileKey)) {
                 throw new CustomException(ResultCode.INVALID_FILE_KEY);
               }
               LocalDateTime recordDateTime = DateUtil.convertToLocalDateTime(file.recordDate());

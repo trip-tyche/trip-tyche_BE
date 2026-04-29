@@ -4,6 +4,7 @@ import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
+import com.triptyche.backend.global.s3.S3KeyResolver;
 import com.triptyche.backend.global.s3.S3UploadService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -82,7 +83,7 @@ public class TripCleanupScheduler {
     if (mediaKeys.isEmpty()) return;
 
     List<String> deletableKeys = mediaKeys.stream()
-            .filter(key -> !key.startsWith("seed/"))
+            .filter(key -> !S3KeyResolver.isSeedKey(key))
             .toList();
 
     if (deletableKeys.isEmpty()) return;
