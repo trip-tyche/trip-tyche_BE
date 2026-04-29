@@ -23,7 +23,7 @@ import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
 import com.triptyche.backend.global.s3.S3KeyResolver;
 import com.triptyche.backend.global.s3.S3UploadService;
-import com.triptyche.backend.global.util.DateUtil;
+import com.triptyche.backend.global.util.DateFormatter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +58,7 @@ public class MediaCommandService {
               if (!S3KeyResolver.isOriginalKey(fileKey)) {
                 throw new CustomException(ResultCode.INVALID_FILE_KEY);
               }
-              LocalDateTime recordDateTime = DateUtil.convertToLocalDateTime(file.recordDate());
+              LocalDateTime recordDateTime = DateFormatter.convertToLocalDateTime(file.recordDate());
               PinPoint pinPoint = pinPointService.assignPinPoint(
                       existingPinPoints, trip, file.latitude(), file.longitude());
               return MediaFile.builder()
