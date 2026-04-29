@@ -6,6 +6,7 @@ import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
+import com.triptyche.backend.global.config.GuestProperties;
 import com.triptyche.backend.global.redis.GuestShareQueueRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -18,23 +19,22 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class GuestShareScheduler {
 
-    private static final String TEMPLATE_EMAIL = "guest_template@triptyche.com";
-
     private final GuestShareQueueRepository guestShareQueueRepository;
     private final UserRepository userRepository;
     private final TripRepository tripRepository;
     private final ShareService shareService;
+    private final GuestProperties guestProperties;
 
-    @Scheduled(cron = "0/10 * * * * *")
+    @Scheduled(cron = "${triptyche.guest.share-poll-cron}")
     public void sendShareToReadyGuests() {
         List<Long> dueIds = guestShareQueueRepository.pollDueIds();
         if (dueIds.isEmpty()) {
             return;
         }
 
-        User templateUser = userRepository.findByUserEmail(TEMPLATE_EMAIL).orElse(null);
+        User templateUser = userRepository.findByUserEmail(guestProperties.templateEmail()).orElse(null);
         if (templateUser == null) {
-            log.warn("게스트 공유 스케줄러: 템플릿 계정을 찾을 수 없음 — {}", TEMPLATE_EMAIL);
+            log.warn("게스트 공유 스케줄러: 템플릿 계정을 찾을 수 없음 — {}", guestProperties.templateEmail());
             return;
         }
 
@@ -44,10 +44,17 @@ public class GuestShareScheduler {
             return;
         }
 
-        Trip targetTrip = templateTrips.stream()
-                .filter(t -> t.getTripTitle().contains("뉴욕"))
-                .findFirst()
-                .orElse(templateTrips.get(templateTrips.size() - 1));
+        Trip targetTrip;
+        try {
+            targetTrip = templateTrips.stream()
+                    .filter(t -> guestProperties.shareTargetTripTitle().equals(t.getTripTitle()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException(
+                            "공유 대상 트립을 찾을 수 없습니다: " + guestProperties.shareTargetTripTitle()));
+        } catch (IllegalStateException e) {
+            log.error("게스트 공유 스케줄러: {}", e.getMessage());
+            return;
+        }
 
         for (Long guestUserId : dueIds) {
             try {
