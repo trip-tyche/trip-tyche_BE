@@ -1,7 +1,6 @@
-package com.triptyche.backend.global.oauth.service;
+package com.triptyche.backend.domain.guest.service;
 
 import com.triptyche.backend.domain.guest.repository.GuestShareQueueRepository;
-import com.triptyche.backend.domain.guest.service.GuestTemplateCloneService;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.service.UserService;
 import com.triptyche.backend.global.config.JwtProperties;
@@ -16,19 +15,19 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class GuestAuthService {
+public class GuestOnboardingService {
 
     private static final String GUEST_PROVIDER = "guest";
 
     private final UserService userService;
+    private final GuestTemplateCloneService guestTemplateCloneService;
+    private final GuestShareQueueRepository guestShareQueueRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtProperties jwtProperties;
     private final CookieUtil cookieUtil;
-    private final GuestShareQueueRepository guestShareQueueRepository;
-    private final GuestTemplateCloneService guestTemplateCloneService;
 
     @Transactional
-    public String issueGuestToken(HttpServletResponse response) {
+    public String onboard(HttpServletResponse response) {
         User guestUser = userService.createGuestUser();
 
         guestTemplateCloneService.cloneForGuest(guestUser);
