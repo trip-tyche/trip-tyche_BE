@@ -11,7 +11,7 @@ import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.model.UserRole;
 import com.triptyche.backend.domain.user.repository.UserRepository;
 import com.triptyche.backend.global.config.GuestProperties;
-import com.triptyche.backend.global.s3.S3UploadService;
+import com.triptyche.backend.global.s3.S3KeyResolver;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -32,7 +32,7 @@ public class GuestTemplateInitializer implements ApplicationRunner {
   private static final String MEDIA_TYPE = "image/webp";
 
   private final GuestProperties guestProperties;
-  private final S3UploadService s3UploadService;
+  private final S3KeyResolver s3KeyResolver;
   private final UserRepository userRepository;
   private final TripRepository tripRepository;
   private final PinPointRepository pinPointRepository;
@@ -147,7 +147,7 @@ public class GuestTemplateInitializer implements ApplicationRunner {
             .pinPoint(pinPoint)
             .mediaType(MEDIA_TYPE)
             .mediaKey(mediaKey)
-            .mediaLink(s3UploadService.buildUrl(mediaKey))
+            .mediaLink(s3KeyResolver.buildUrl(mediaKey))
             .latitude(pin.latitude())
             .longitude(pin.longitude())
             .recordDate(LocalDateTime.of(data.startDate().plusDays(i), LocalTime.NOON))

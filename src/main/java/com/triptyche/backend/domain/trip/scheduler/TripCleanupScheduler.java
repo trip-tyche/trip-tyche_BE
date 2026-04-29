@@ -24,6 +24,7 @@ public class TripCleanupScheduler {
   private final MediaFileRepository mediaFileRepository;
   private final TripCleanupExecutor cleanupExecutor;
   private final S3UploadService s3UploadService;
+  private final S3KeyResolver s3KeyResolver;
 
   @Value("${trip.soft-delete.retention-days:30}")
   private int retentionDays;
@@ -69,7 +70,7 @@ public class TripCleanupScheduler {
               if (mf.getMediaKey() != null) {
                 keys.add(mf.getMediaKey());
               }
-              String webpKey = s3UploadService.extractKey(mf.getMediaLink());
+              String webpKey = s3KeyResolver.extractKey(mf.getMediaLink());
               if (webpKey != null && !webpKey.equals(mf.getMediaKey())) {
                 keys.add(webpKey);
               }

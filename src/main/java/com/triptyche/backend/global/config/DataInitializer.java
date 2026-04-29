@@ -13,7 +13,7 @@ import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.trip.service.PinPointService;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
-import com.triptyche.backend.global.s3.S3UploadService;
+import com.triptyche.backend.global.s3.S3KeyResolver;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -50,7 +50,7 @@ public class DataInitializer implements ApplicationRunner {
   private final ShareRepository shareRepository;
   private final MediaFileRepository mediaFileRepository;
   private final PinPointService pinPointService;
-  private final S3UploadService s3UploadService;
+  private final S3KeyResolver s3KeyResolver;
 
   // ── Trip seed data ─────────────────────────────────────────────────────────
 
@@ -225,7 +225,7 @@ public class DataInitializer implements ApplicationRunner {
     List<PinPoint> pinPoints = pinPointService.findAllByTripId(trip.getTripId());
     for (SeedMedia seed : seedList) {
       String mediaKey  = "seed/" + seed.folder() + "/" + seed.filename();
-      String mediaLink = s3UploadService.buildUrl(mediaKey);
+      String mediaLink = s3KeyResolver.buildUrl(mediaKey);
       PinPoint pinPoint = pinPointService.assignPinPoint(pinPoints, trip, seed.latitude(), seed.longitude());
 
       MediaFile mediaFile = MediaFile.builder()
