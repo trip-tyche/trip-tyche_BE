@@ -12,6 +12,7 @@ import com.triptyche.backend.domain.user.repository.UserRepository;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.config.GuestProperties;
 import com.triptyche.backend.global.exception.CustomException;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,9 @@ public class GuestTemplateCloneService {
                 .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
         List<Trip> templateTrips = tripRepository.findAllByUser(templateUser);
+
+        List<PinPoint> guestPins = new ArrayList<>();
+        List<MediaFile> guestMediaFiles = new ArrayList<>();
 
         for (Trip templateTrip : templateTrips) {
             // shareTargetTripTitle 여행은 공유 신청 플로우로 제공 — 복사 제외
@@ -61,7 +65,7 @@ public class GuestTemplateCloneService {
                         .latitude(templatePin.getLatitude())
                         .longitude(templatePin.getLongitude())
                         .build();
-                pinPointRepository.save(guestPin);
+                guestPins.add(guestPin);
 
                 for (MediaFile templateMf : templatePin.getMediaFiles()) {
                     MediaFile guestMf = MediaFile.builder()
@@ -74,10 +78,13 @@ public class GuestTemplateCloneService {
                             .latitude(templateMf.getLatitude())
                             .longitude(templateMf.getLongitude())
                             .build();
-                    mediaFileRepository.save(guestMf);
+                    guestMediaFiles.add(guestMf);
                 }
             }
         }
+
+        pinPointRepository.saveAll(guestPins);
+        mediaFileRepository.saveAll(guestMediaFiles);
         log.info("게스트 데모 데이터 복사 완료 (도쿄·파리): {}", guestUser.getUserEmail());
     }
 }
