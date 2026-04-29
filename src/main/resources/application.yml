@@ -9,6 +9,13 @@ jwt:
   refresh-token-expiry-seconds: 2592000   # 30일
   guest-token-expiry-seconds: 14400       # 4시간
 
+triptyche:
+  guest:
+    template-email: "guest_template@triptyche.com"
+    share-target-trip-title: "뉴욕 가을 여행"
+    share-delay-seconds: 15
+    share-poll-cron: "0/10 * * * * *"
+
 ---
 spring:
   config:

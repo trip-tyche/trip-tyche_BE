@@ -27,10 +27,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class GuestTemplateInitializer implements ApplicationRunner {
 
-  private static final String TEMPLATE_EMAIL = "guest_template@triptyche.com";
   private static final String PROVIDER = "guest_template";
   private static final String MEDIA_TYPE = "image/webp";
 
+  private final GuestProperties guestProperties;
   private final S3UploadService s3UploadService;
   private final UserRepository userRepository;
   private final TripRepository tripRepository;
@@ -98,17 +98,17 @@ public class GuestTemplateInitializer implements ApplicationRunner {
   public void run(ApplicationArguments args) {
     log.info("[GuestTemplateInitializer] 게스트 템플릿 시드 초기화 시작");
 
-    User templateUser = userRepository.findByUserEmail(TEMPLATE_EMAIL)
+    User templateUser = userRepository.findByUserEmail(guestProperties.templateEmail())
         .orElseGet(() -> {
           User user = User.builder()
-              .userEmail(TEMPLATE_EMAIL)
+              .userEmail(guestProperties.templateEmail())
               .userName("데모계정")
               .userNickName("데모계정")
               .provider(PROVIDER)
               .role(UserRole.USER)
               .build();
           userRepository.save(user);
-          log.info("[GuestTemplateInitializer] 템플릿 계정 생성: {}", TEMPLATE_EMAIL);
+          log.info("[GuestTemplateInitializer] 템플릿 계정 생성: {}", guestProperties.templateEmail());
           return user;
         });
 

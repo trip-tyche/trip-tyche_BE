@@ -11,6 +11,7 @@ import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
 import com.triptyche.backend.domain.user.service.UserService;
 import com.triptyche.backend.global.common.ResultCode;
+import com.triptyche.backend.global.config.GuestProperties;
 import com.triptyche.backend.global.config.JwtProperties;
 import com.triptyche.backend.global.exception.CustomException;
 import com.triptyche.backend.global.redis.GuestShareQueueRepository;
@@ -29,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class GuestAuthService {
 
     private static final String GUEST_PROVIDER = "guest";
-    private static final String TEMPLATE_EMAIL = "guest_template@triptyche.com";
 
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
@@ -40,6 +40,7 @@ public class GuestAuthService {
     private final PinPointRepository pinPointRepository;
     private final MediaFileRepository mediaFileRepository;
     private final GuestShareQueueRepository guestShareQueueRepository;
+    private final GuestProperties guestProperties;
 
     @Transactional
     public String issueGuestToken(HttpServletResponse response) {
@@ -59,14 +60,14 @@ public class GuestAuthService {
     }
 
     private void copyDemoDataFromTemplate(User guestUser) {
-        User templateUser = userRepository.findByUserEmail(TEMPLATE_EMAIL)
+        User templateUser = userRepository.findByUserEmail(guestProperties.templateEmail())
                 .orElseThrow(() -> new CustomException(ResultCode.USER_NOT_FOUND));
 
         List<Trip> templateTrips = tripRepository.findAllByUser(templateUser);
 
         for (Trip templateTrip : templateTrips) {
-            // 뉴욕 여행은 공유 신청 플로우로 제공 — 복사 제외
-            if (templateTrip.getTripTitle().contains("뉴욕")) {
+            // shareTargetTripTitle 여행은 공유 신청 플로우로 제공 — 복사 제외
+            if (guestProperties.shareTargetTripTitle().equals(templateTrip.getTripTitle())) {
                 continue;
             }
 
