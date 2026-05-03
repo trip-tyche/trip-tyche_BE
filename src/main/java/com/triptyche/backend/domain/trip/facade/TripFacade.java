@@ -14,6 +14,8 @@ import com.triptyche.backend.domain.trip.dto.PinPointResponse;
 import com.triptyche.backend.domain.trip.dto.TripDetailResponse;
 import com.triptyche.backend.domain.trip.dto.TripListResponse;
 import com.triptyche.backend.domain.trip.dto.TripMapResponse;
+import com.triptyche.backend.domain.trip.dto.TripSummaryListResponse;
+import com.triptyche.backend.domain.trip.dto.TripSummaryResponse;
 import com.triptyche.backend.domain.trip.dto.TripUpdateResponse;
 import com.triptyche.backend.domain.trip.model.PinPoint;
 import com.triptyche.backend.domain.trip.model.Trip;
@@ -92,6 +94,22 @@ public class TripFacade {
             .toList();
 
     return new TripListResponse(tripDetails);
+  }
+
+  public TripSummaryListResponse getTripsSummary(User user) {
+    List<Trip> trips = tripRepository.findAllAccessibleTripsWithOwner(user.getUserId());
+
+    List<TripSummaryResponse> summaries = trips.stream()
+            .map(trip -> new TripSummaryResponse(
+                    trip.getTripKey(),
+                    trip.getTripTitle(),
+                    trip.getCountry(),
+                    formatLocalDateToString(trip.getStartDate()),
+                    formatLocalDateToString(trip.getEndDate())
+            ))
+            .toList();
+
+    return new TripSummaryListResponse(summaries);
   }
 
   public TripUpdateResponse getTripById(User user, String tripKey) {
