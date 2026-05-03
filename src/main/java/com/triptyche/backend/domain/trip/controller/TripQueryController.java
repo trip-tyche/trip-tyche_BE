@@ -5,8 +5,10 @@ import com.triptyche.backend.domain.trip.dto.PinPointMediaListResponse;
 import com.triptyche.backend.domain.trip.dto.TripListResponse;
 import com.triptyche.backend.domain.trip.dto.TripMapResponse;
 import com.triptyche.backend.domain.trip.dto.TripUpdateResponse;
+import com.triptyche.backend.domain.guest.service.GuestShareTriggerService;
 import com.triptyche.backend.domain.trip.facade.TripFacade;
 import com.triptyche.backend.domain.user.model.User;
+import com.triptyche.backend.domain.user.model.UserRole;
 import com.triptyche.backend.global.auth.CurrentUser;
 import com.triptyche.backend.global.common.RestResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,13 +26,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class TripQueryController {
 
   private final TripFacade tripFacade;
+  private final GuestShareTriggerService guestShareTriggerService;
 
   @Tag(name = "2. 여행관리 페이지 API")
   @Operation(summary = "여행관리페이지 사용자의 여행 정보 조회", description = "<a href='https://www.notion"
           + ".so/maristadev/680d29996d0941b9aa742a280e2b3b27?pvs=4' target='_blank'>API 명세서</a>")
   @GetMapping
   public RestResponse<TripListResponse> getUserTrips(@CurrentUser User user) {
-    return RestResponse.success(tripFacade.getTripsByUser(user));
+    RestResponse<TripListResponse> response = RestResponse.success(tripFacade.getTripsByUser(user));
+    if (user.getRole() == UserRole.GUEST) {
+      guestShareTriggerService.triggerIfNeeded(user.getUserId());
+    }
+    return response;
   }
 
   @Tag(name = "2. 여행관리 페이지 API")

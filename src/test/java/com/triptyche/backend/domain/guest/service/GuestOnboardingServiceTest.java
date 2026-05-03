@@ -7,7 +7,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 
-import com.triptyche.backend.domain.guest.repository.GuestShareQueueRepository;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.model.UserRole;
 import com.triptyche.backend.domain.user.service.UserService;
@@ -27,7 +26,6 @@ class GuestOnboardingServiceTest {
 
     @Mock private UserService userService;
     @Mock private GuestTemplateCloneService guestTemplateCloneService;
-    @Mock private GuestShareQueueRepository guestShareQueueRepository;
     @Mock private JwtTokenProvider jwtTokenProvider;
     @Mock private JwtProperties jwtProperties;
     @Mock private CookieUtil cookieUtil;
@@ -52,18 +50,6 @@ class GuestOnboardingServiceTest {
         guestOnboardingService.onboard(mock(HttpServletResponse.class));
 
         then(guestTemplateCloneService).should().cloneForGuest(GUEST_USER);
-    }
-
-    @Test
-    @DisplayName("onboard() — 생성된 게스트 userId로 공유 큐에 등록한다")
-    void onboard_enqueuesToShareQueueWithGuestUserId() {
-        given(userService.createGuestUser()).willReturn(GUEST_USER);
-        given(jwtTokenProvider.createGuestToken(anyString(), anyString())).willReturn("token");
-        given(jwtProperties.guestTokenExpirySeconds()).willReturn(14400L);
-
-        guestOnboardingService.onboard(mock(HttpServletResponse.class));
-
-        then(guestShareQueueRepository).should().enqueue(eq(1L));
     }
 
     @Test
