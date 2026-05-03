@@ -1,13 +1,14 @@
 package com.triptyche.backend.domain.guest.service;
 
 import com.triptyche.backend.domain.share.dto.ShareCreateRequest;
-import com.triptyche.backend.domain.share.repository.ShareRepository;
 import com.triptyche.backend.domain.share.service.ShareService;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
+import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.config.GuestProperties;
+import com.triptyche.backend.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -19,7 +20,6 @@ import org.springframework.stereotype.Service;
 public class GuestShareTriggerService {
 
     private final ShareService shareService;
-    private final ShareRepository shareRepository;
     private final UserRepository userRepository;
     private final TripRepository tripRepository;
     private final GuestProperties guestProperties;
@@ -41,10 +41,6 @@ public class GuestShareTriggerService {
             return;
         }
 
-        if (shareRepository.existsByTripAndRecipientId(templateTrip, guestUserId)) {
-            return;
-        }
-
         try {
             Thread.sleep(500);
         } catch (InterruptedException e) {
@@ -55,6 +51,11 @@ public class GuestShareTriggerService {
         try {
             shareService.createShare(new ShareCreateRequest(templateTrip.getTripKey(), guestUserId), templateUser);
             log.info("게스트 공유 신청 완료: guestUserId={}, tripKey={}", guestUserId, templateTrip.getTripKey());
+        } catch (CustomException e) {
+            if (e.getResultCode() != ResultCode.SHARE_ALREADY_EXIST
+                    && e.getResultCode() != ResultCode.DUPLICATE_DATA_CONFLICT) {
+                log.error("게스트 공유 신청 실패: guestUserId={}, code={}", guestUserId, e.getResultCode());
+            }
         } catch (Exception e) {
             log.error("게스트 공유 신청 실패: guestUserId={}, error={}", guestUserId, e.getMessage());
         }
