@@ -1,6 +1,5 @@
 package com.triptyche.backend.domain.guest.service;
 
-import com.triptyche.backend.domain.guest.repository.GuestShareQueueRepository;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.service.UserService;
 import com.triptyche.backend.global.config.JwtProperties;
@@ -21,7 +20,6 @@ public class GuestOnboardingService {
 
     private final UserService userService;
     private final GuestTemplateCloneService guestTemplateCloneService;
-    private final GuestShareQueueRepository guestShareQueueRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtProperties jwtProperties;
     private final CookieUtil cookieUtil;
@@ -31,7 +29,6 @@ public class GuestOnboardingService {
         User guestUser = userService.createGuestUser();
 
         guestTemplateCloneService.cloneForGuest(guestUser);
-        guestShareQueueRepository.enqueue(guestUser.getUserId());
 
         String guestEmail = guestUser.getUserEmail();
         String accessToken = jwtTokenProvider.createGuestToken(guestEmail, GUEST_PROVIDER);

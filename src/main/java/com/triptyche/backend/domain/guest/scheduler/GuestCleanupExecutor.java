@@ -1,6 +1,5 @@
 package com.triptyche.backend.domain.guest.scheduler;
 
-import com.triptyche.backend.domain.guest.repository.GuestShareQueueRepository;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.notification.repository.NotificationRepository;
@@ -28,7 +27,6 @@ public class GuestCleanupExecutor {
     private final MediaFileRepository mediaFileRepository;
     private final PinPointRepository pinPointRepository;
     private final NotificationRepository notificationRepository;
-    private final GuestShareQueueRepository guestShareQueueRepository;
 
     @Transactional
     public List<String> deleteExpiredGuests(List<User> expiredGuests) {
@@ -51,7 +49,6 @@ public class GuestCleanupExecutor {
             // JPQL bulk delete — @SQLRestriction 우회, soft-deleted Trip도 포함 삭제 (의도된 동작)
             tripRepository.deleteAllByUserIn(expiredGuests);
         }
-        guestShareQueueRepository.removeAll(userIds);
         userRepository.deleteAllByUserIdIn(userIds);
 
         log.info("만료된 게스트 계정 정리 완료 — {}건", expiredGuests.size());
