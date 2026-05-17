@@ -29,7 +29,10 @@ import lombok.NoArgsConstructor;
 @Table(name = "media_file", indexes = {
     @Index(name = "idx_media_file_trip_id", columnList = "trip_id"),
     @Index(name = "idx_media_file_pin_point_id", columnList = "pin_point_id"),
-    @Index(name = "idx_media_file_trip_id_record_date", columnList = "trip_id, record_date")
+    @Index(name = "idx_media_file_trip_id_record_date", columnList = "trip_id, record_date"),
+    // 동일 tripKey로 metadata POST가 반복돼도 같은 fileKey는 한 행만 존재하도록 강제.
+    // service-level dedup과 함께 idempotent 등록을 보장한다.
+    @Index(name = "uq_media_file_trip_id_media_key", columnList = "trip_id, media_key", unique = true)
 })
 public class MediaFile {
 

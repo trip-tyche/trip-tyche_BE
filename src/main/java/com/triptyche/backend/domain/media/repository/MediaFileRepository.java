@@ -6,6 +6,7 @@ import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.trip.model.Trip;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -73,6 +74,21 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
   );
 
   List<MediaFile> findByTripTripId(Long tripId);
+
+  /**
+   * 주어진 mediaKey 후보들 중 이미 해당 trip에 등록된 키만 반환.
+   * 사용자가 같은 tripKey로 metadata POST를 반복했을 때 중복 INSERT를 막기 위한 사전 dedup 용도.
+   */
+  @Query("""
+          SELECT m.mediaKey
+          FROM MediaFile m
+          WHERE m.trip.tripId = :tripId
+            AND m.mediaKey IN :mediaKeys
+          """)
+  List<String> findExistingMediaKeys(
+          @Param("tripId") Long tripId,
+          @Param("mediaKeys") Collection<String> mediaKeys
+  );
 
   @Query("""
           SELECT DISTINCT CAST(m.recordDate AS localdate)

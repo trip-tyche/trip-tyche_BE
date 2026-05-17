@@ -25,8 +25,10 @@ import com.triptyche.backend.global.s3.S3KeyResolver;
 import com.triptyche.backend.global.util.DateFormatter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -49,14 +51,35 @@ public class MediaCommandService {
 
     boolean isOwner = trip.isOwner(user);
 
+    // fileKey 형식은 dedup 이전에 검증 (잘못된 키가 섞여 들어오면 빠르게 거부).
+    files.forEach(file -> {
+      if (!S3KeyResolver.isOriginalKey(file.fileKey())) {
+        throw new CustomException(ResultCode.INVALID_FILE_KEY);
+      }
+    });
+
+    // 동일 tripKey로 metadata POST가 반복돼도 같은 fileKey가 중복 저장되지 않도록 사전 dedup.
+    // UNIQUE 인덱스(uq_media_file_trip_id_media_key)와 함께 idempotent 등록을 보장.
+    Set<String> incomingKeys = files.stream()
+            .map(MediaUploadRequest::fileKey)
+            .collect(Collectors.toSet());
+    Set<String> existingKeys = incomingKeys.isEmpty()
+            ? Set.of()
+            : new HashSet<>(mediaFileRepository.findExistingMediaKeys(trip.getTripId(), incomingKeys));
+
+    List<MediaUploadRequest> newFiles = files.stream()
+            .filter(f -> !existingKeys.contains(f.fileKey()))
+            .toList();
+
+    if (newFiles.isEmpty()) {
+      // 모든 fileKey가 이미 등록된 상태 → 새 INSERT/이벤트 없이 조용히 성공 처리(완전 idempotent).
+      return;
+    }
+
     List<PinPoint> existingPinPoints = pinPointService.findAllByTripId(trip.getTripId());
 
-    List<MediaFile> mediaFiles = files.stream()
+    List<MediaFile> mediaFiles = newFiles.stream()
             .map(file -> {
-              String fileKey = file.fileKey();
-              if (!S3KeyResolver.isOriginalKey(fileKey)) {
-                throw new CustomException(ResultCode.INVALID_FILE_KEY);
-              }
               LocalDateTime recordDateTime = DateFormatter.convertToLocalDateTime(file.recordDate());
               PinPoint pinPoint = pinPointService.assignPinPoint(
                       existingPinPoints, trip, file.latitude(), file.longitude());
@@ -64,8 +87,8 @@ public class MediaCommandService {
                       .trip(trip)
                       .pinPoint(pinPoint)
                       .mediaType("image/webp")
-                      .mediaLink(s3KeyResolver.buildUrl(fileKey))
-                      .mediaKey(fileKey)
+                      .mediaLink(s3KeyResolver.buildUrl(file.fileKey()))
+                      .mediaKey(file.fileKey())
                       .recordDate(recordDateTime)
                       .latitude(file.latitude())
                       .longitude(file.longitude())

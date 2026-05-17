@@ -94,6 +94,11 @@ public class Trip {
   }
 
   public void markImagesUploaded() {
+    // 동일 trip을 여러 번 시도해도 막히지 않도록 idempotent 처리.
+    // 이미 IMAGES_UPLOADED/CONFIRMED 상태라면 no-op (다시 DRAFT로 내려가지 않음).
+    if (this.status == TripStatus.IMAGES_UPLOADED || this.status == TripStatus.CONFIRMED) {
+      return;
+    }
     if (this.status != TripStatus.DRAFT) {
       throw new CustomException(ResultCode.INVALID_TRIP_STATE);
     }
@@ -101,6 +106,10 @@ public class Trip {
   }
 
   public void confirmTrip() {
+    // 동일하게 idempotent — 이미 CONFIRMED라면 no-op.
+    if (this.status == TripStatus.CONFIRMED) {
+      return;
+    }
     if (this.status != TripStatus.IMAGES_UPLOADED) {
       throw new CustomException(ResultCode.INVALID_TRIP_STATE);
     }
