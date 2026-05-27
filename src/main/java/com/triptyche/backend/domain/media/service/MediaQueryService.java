@@ -9,13 +9,16 @@ import com.triptyche.backend.domain.media.dto.MediaFileResponse;
 import com.triptyche.backend.domain.media.dto.TripMediaListResponse;
 import com.triptyche.backend.domain.media.dto.UnlocatedMediaResponse;
 import com.triptyche.backend.domain.media.dto.UnlocatedMediaResponse.MediaSummary;
+import com.triptyche.backend.domain.media.dto.UploadStatusResponse;
 import com.triptyche.backend.domain.media.model.MediaFile;
+import com.triptyche.backend.domain.media.model.ProcessingStatus;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.service.TripAccessGuard;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
+import com.triptyche.backend.global.s3.S3KeyResolver;
 import com.triptyche.backend.global.util.DateFormatter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,6 +39,7 @@ public class MediaQueryService {
   private final MediaFileRepository mediaFileRepository;
   private final TripAccessGuard tripAccessGuard;
   private final UnlocatedMediaCacheService unlocatedMediaCacheService;
+  private final S3KeyResolver s3KeyResolver;
 
   @Transactional(readOnly = true)
   public TripMediaListResponse getTripImages(User user, String tripKey) {
@@ -93,5 +97,24 @@ public class MediaQueryService {
   @Transactional(readOnly = true)
   public List<MediaFileSummary> findSummariesByTripAndDate(Long tripId, LocalDateTime start, LocalDateTime end) {
     return mediaFileRepository.findByTripTripIdAndRecordDate(tripId, start, end, DEFAULT_INVALID_DATE);
+  }
+
+  @Transactional(readOnly = true)
+  public UploadStatusResponse getUploadStatus(User user, String tripKey) {
+    Trip trip = tripAccessGuard.validateAccessibleTripByKey(tripKey, user);
+    List<MediaFile> rows = mediaFileRepository.findByTripTripIdWithPinPoint(trip.getTripId());
+
+    List<UploadStatusResponse.Item> items = rows.stream()
+        .map(mf -> new UploadStatusResponse.Item(
+            mf.getMediaFileId(),
+            mf.getTempKey() != null ? s3KeyResolver.buildUrl(mf.getTempKey()) : mf.getMediaLink(),
+            mf.getFinalKey() != null ? s3KeyResolver.buildUrl(mf.getFinalKey()) : mf.getMediaLink(),
+            mf.getProcessingStatus() != null ? mf.getProcessingStatus().name() : UploadStatusResponse.LEGACY_STATUS,
+            mf.getProcessedAt() != null ? mf.getProcessedAt().toString() : null,
+            mf.getProcessingStatus() == ProcessingStatus.FAILED ? mf.getFailureReason() : null
+        ))
+        .toList();
+
+    return new UploadStatusResponse(items);
   }
 }

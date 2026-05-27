@@ -39,6 +39,7 @@ OCI_BUCKET_NAME = os.environ["OCI_BUCKET_NAME"]
 
 STREAM_KEY = "image-processing-stream"
 DLQ_KEY = "image-processing-dlq"
+PROCESSED_STREAM_KEY = "media-processed-stream"
 CONSUMER_GROUP = "image-workers"
 CONSUMER_NAME = "worker-1"
 MAX_RETRY = 3
@@ -114,6 +115,12 @@ def move_to_dlq(r: redis.Redis, message_id: str, fields: dict, reason: str):
         r.xadd(DLQ_KEY, {**fields, "failed_reason": reason, "original_id": message_id})
         r.xack(STREAM_KEY, CONSUMER_GROUP, message_id)
         log.error("DLQ 이동 — mediaFileId: %s, reason: %s", fields.get("mediaFileId"), reason)
+
+        if fields.get("flow") == "v2" and "mediaFileId" in fields:
+            try:
+                publish_failed_result(r, int(fields["mediaFileId"]), reason)
+            except Exception as ex:
+                log.error("[v2] DLQ FAILED 결과 발행 실패 — error: %s", ex)
     except Exception as e:
         log.error("DLQ 이동 실패 — message_id: %s, error: %s", message_id, e)
 
@@ -161,6 +168,60 @@ def delete_original(s3, original_key: str):
         log.info("원본 삭제 완료 — key: %s", original_key)
     except Exception as e:
         log.warning("원본 삭제 실패 (무시) — key: %s, error: %s", original_key, e)
+
+
+def publish_processed_result(r: redis.Redis, media_file_id: int, final_key: str, processed_at: str):
+    try:
+        r.xadd(PROCESSED_STREAM_KEY, {
+            "mediaFileId": str(media_file_id),
+            "finalKey": final_key,
+            "processedAt": processed_at,
+        })
+        log.info("[v2] 결과 발행 완료 — mediaFileId: %d", media_file_id)
+    except Exception as e:
+        log.error("[v2] 결과 발행 실패 — mediaFileId: %d, error: %s", media_file_id, e)
+
+
+def publish_failed_result(r: redis.Redis, media_file_id: int, reason: str):
+    try:
+        r.xadd(PROCESSED_STREAM_KEY, {
+            "mediaFileId": str(media_file_id),
+            "status": "FAILED",
+            "reason": reason,
+        })
+        log.warning("[v2] 실패 결과 발행 — mediaFileId: %d, reason: %s", media_file_id, reason)
+    except Exception as e:
+        log.error("[v2] 실패 결과 발행 실패 — mediaFileId: %d, error: %s", media_file_id, e)
+
+
+def process_message_v2(s3, fields: dict) -> tuple:
+    """v2 흐름. 변환본 PUT만 수행 — DB/원본 삭제는 BE 위임.
+    반환: (media_file_id, final_key, processed_at_iso)
+    """
+    from datetime import datetime, timezone
+
+    media_file_id = int(fields["mediaFileId"])
+    temp_key = fields["tempKey"]
+    final_key = fields["finalKey"]
+
+    log.info("[v2] 처리 시작 — mediaFileId: %d, tempKey: %s", media_file_id, temp_key)
+
+    response = s3.get_object(Bucket=OCI_BUCKET_NAME, Key=temp_key)
+    image_bytes = response["Body"].read()
+    webp_bytes = resize_and_convert(image_bytes)
+
+    s3.put_object(
+        Bucket=OCI_BUCKET_NAME,
+        Key=final_key,
+        Body=webp_bytes,
+        ContentType="image/webp",
+        ContentLength=len(webp_bytes),
+    )
+
+    processed_at = datetime.now(timezone.utc).isoformat()
+
+    log.info("[v2] 변환 완료 — mediaFileId: %d, finalKey: %s", media_file_id, final_key)
+    return media_file_id, final_key, processed_at
 
 
 def process_message(s3, message_id: str, fields: dict):
@@ -228,10 +289,16 @@ def main():
                             continue
 
                         try:
-                            original_key = process_message(s3, message_id, fields)
-                            r.xack(STREAM_KEY, CONSUMER_GROUP, message_id)
-                            # XACK 이후 원본 삭제
-                            delete_original(s3, original_key)
+                            flow = fields.get("flow", "v1")
+                            if flow == "v2":
+                                media_file_id, final_key, processed_at = process_message_v2(s3, fields)
+                                r.xack(STREAM_KEY, CONSUMER_GROUP, message_id)
+                                publish_processed_result(r, media_file_id, final_key, processed_at)
+                            else:
+                                original_key = process_message(s3, message_id, fields)
+                                r.xack(STREAM_KEY, CONSUMER_GROUP, message_id)
+                                # XACK 이후 원본 삭제
+                                delete_original(s3, original_key)
 
                         except ClientError as e:
                             log.error("OCI 오류 — message_id: %s, error: %s", message_id, e)

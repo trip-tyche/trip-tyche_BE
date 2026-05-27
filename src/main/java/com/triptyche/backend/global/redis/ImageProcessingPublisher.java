@@ -24,12 +24,21 @@ public class ImageProcessingPublisher {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void publish(MediaFileRegisteredEvent event) {
     try {
-      redisTemplate.opsForStream().add(
-              MapRecord.create(STREAM_KEY, Map.of(
-                      "mediaFileId", String.valueOf(event.mediaFileId()),
-                      "originalKey", event.originalKey()
-              ))
-      );
+      Map<String, String> payload;
+      if ("v2".equals(event.flow())) {
+        payload = Map.of(
+                "mediaFileId", String.valueOf(event.mediaFileId()),
+                "tempKey", event.tempKey(),
+                "finalKey", event.finalKey(),
+                "flow", "v2"
+        );
+      } else {
+        payload = Map.of(
+                "mediaFileId", String.valueOf(event.mediaFileId()),
+                "originalKey", event.originalKey()
+        );
+      }
+      redisTemplate.opsForStream().add(MapRecord.create(STREAM_KEY, payload));
     } catch (Exception e) {
       log.error("Redis Stream XADD 실패 - mediaFileId: {}", event.mediaFileId(), e);
     }

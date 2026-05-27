@@ -75,6 +75,13 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
 
   List<MediaFile> findByTripTripId(Long tripId);
 
+  @Query("""
+          SELECT m FROM MediaFile m
+          LEFT JOIN FETCH m.pinPoint
+          WHERE m.trip.tripId = :tripId
+          """)
+  List<MediaFile> findByTripTripIdWithPinPoint(@Param("tripId") Long tripId);
+
   /**
    * 주어진 mediaKey 후보들 중 이미 해당 trip에 등록된 키만 반환.
    * 사용자가 같은 tripKey로 metadata POST를 반복했을 때 중복 INSERT를 막기 위한 사전 dedup 용도.
@@ -108,4 +115,11 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
   @Modifying(clearAutomatically = true)
   @Query("DELETE FROM MediaFile m WHERE m.trip IN :trips")
   void deleteAllByTripIn(@Param("trips") List<Trip> trips);
+
+  @Query("""
+          SELECT m FROM MediaFile m
+          WHERE m.processingStatus IS NULL
+            AND m.createdAt < :threshold
+          """)
+  List<MediaFile> findOrphans(@Param("threshold") LocalDateTime threshold);
 }

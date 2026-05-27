@@ -4,8 +4,11 @@ import com.triptyche.backend.domain.media.dto.MediaBatchDeleteRequest;
 import com.triptyche.backend.domain.media.dto.MediaBatchEditRequest;
 import com.triptyche.backend.domain.media.dto.MediaLocationEditRequest;
 import com.triptyche.backend.domain.media.dto.MediaUploadRequest;
+import com.triptyche.backend.domain.media.dto.MediaUploadedRequest;
+import com.triptyche.backend.domain.media.dto.MediaUploadedResponse;
 import com.triptyche.backend.domain.media.dto.TripMediaListResponse;
 import com.triptyche.backend.domain.media.dto.UnlocatedMediaResponse;
+import com.triptyche.backend.domain.media.dto.UploadStatusResponse;
 import com.triptyche.backend.domain.media.service.MediaCommandService;
 import com.triptyche.backend.domain.media.service.MediaQueryService;
 import com.triptyche.backend.domain.user.model.User;
@@ -106,5 +109,24 @@ public class MediaMetadataController {
           @Valid @RequestBody MediaLocationEditRequest updateMediaFileLocation) {
     mediaCommandService.updateImageLocation(user, tripKey, mediaFileId, updateMediaFileLocation);
     return RestResponse.success("이미지 위치 정보가 업데이트 되었습니다.");
+  }
+
+  @Tag(name = "3. 여행등록 페이지 API")
+  @Operation(summary = "이미지 업로드 완료 통보 — v2", description = "FE가 S3 PUT 완료 후 호출. UPLOADED 전이 + 워커 enqueue.")
+  @PostMapping("/images-uploaded")
+  public RestResponse<MediaUploadedResponse> markImagesUploaded(
+          @CurrentUser User user,
+          @PathVariable String tripKey,
+          @Valid @RequestBody MediaUploadedRequest request) {
+    return RestResponse.success(mediaCommandService.markUploadedAndEnqueue(user, tripKey, request));
+  }
+
+  @Tag(name = "3. 여행등록 페이지 API")
+  @Operation(summary = "업로드 상태 동기화", description = "페이지 진입/재진입 시 미처리 미디어 상태 일괄 조회. STOMP 손실 대비 안전망.")
+  @GetMapping("/upload-status")
+  public RestResponse<UploadStatusResponse> getUploadStatus(
+          @CurrentUser User user,
+          @PathVariable String tripKey) {
+    return RestResponse.success(mediaQueryService.getUploadStatus(user, tripKey));
   }
 }

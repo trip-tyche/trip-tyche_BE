@@ -137,17 +137,17 @@ class TripCommandServiceTest {
     }
 
     @Test
-    @DisplayName("DRAFT가 아닌 상태의 여행에 요청하면 INVALID_TRIP_STATE 예외가 발생한다")
-    void markImagesUploaded_givenNonDraftTrip_throwsInvalidTripState() {
+    @DisplayName("이미 IMAGES_UPLOADED 상태인 여행에 다시 요청해도 idempotent — 상태 유지")
+    void markImagesUploaded_givenAlreadyUploadedTrip_idempotent() {
       // given
       Trip trip = createTrip(TripStatus.IMAGES_UPLOADED, owner);
       given(tripAccessGuard.validateAccessibleTripByKey(TEST_TRIP_KEY, owner)).willReturn(trip);
 
-      // when & then
-      assertThatThrownBy(() -> tripCommandService.markImagesUploaded(owner, TEST_TRIP_KEY))
-              .isInstanceOf(CustomException.class)
-              .extracting(e -> ((CustomException) e).getResultCode())
-              .isEqualTo(ResultCode.INVALID_TRIP_STATE);
+      // when
+      tripCommandService.markImagesUploaded(owner, TEST_TRIP_KEY);
+
+      // then
+      assertThat(trip.getStatus()).isEqualTo(TripStatus.IMAGES_UPLOADED);
     }
 
     @Test

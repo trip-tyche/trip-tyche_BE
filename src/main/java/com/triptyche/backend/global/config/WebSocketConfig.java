@@ -1,6 +1,7 @@
 package com.triptyche.backend.global.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.triptyche.backend.global.websocket.StompTopicAuthInterceptor;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -8,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.converter.DefaultContentTypeResolver;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -23,6 +25,7 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   private final ObjectMapper objectMapper;
+  private final StompTopicAuthInterceptor stompTopicAuthInterceptor;
 
   @Override
   public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -56,6 +59,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     registration.setSendTimeLimit(15 * 1000)        // 메시지 전송 시간 제한 (15초)
                 .setSendBufferSizeLimit(512 * 1024) // 전송 버퍼 크기 제한 (512KB)
                 .setMessageSizeLimit(64 * 1024);    // 단일 메시지 크기 제한 (64KB)
+  }
+
+  @Override
+  public void configureClientInboundChannel(ChannelRegistration registration) {
+    registration.interceptors(stompTopicAuthInterceptor);
   }
 
   @Override

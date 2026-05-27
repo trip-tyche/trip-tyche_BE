@@ -49,6 +49,7 @@ public enum ResultCode {
   INVALID_DATE_FORMAT(HttpStatus.BAD_REQUEST, 4005, "잘못된 날짜 형식입니다. yyyy-MM-dd 형식으로 입력해주세요."),
   INVALID_COORDINATE(HttpStatus.BAD_REQUEST, 4006, "잘못된 좌표 형식입니다."),
   INVALID_TRIP_STATE(HttpStatus.BAD_REQUEST, 4007, "유효하지 않은 여행 상태입니다."),
+  INVALID_MEDIA_STATE(HttpStatus.BAD_REQUEST, 4008, "유효하지 않은 미디어 상태입니다."),
 
   // 파일 업로드 및 처리 관련 오류 코드 (5000번대)
   S3_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, 5000, "S3 업로드에 실패했습니다."),
