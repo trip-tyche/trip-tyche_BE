@@ -2,8 +2,12 @@ package com.triptyche.backend.domain.media.model;
 
 import com.triptyche.backend.domain.trip.model.PinPoint;
 import com.triptyche.backend.domain.trip.model.Trip;
+import com.triptyche.backend.global.common.ResultCode;
+import com.triptyche.backend.global.exception.CustomException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -64,6 +68,22 @@ public class MediaFile {
   @Column(nullable = false, length = 255)
   private String mediaKey;
 
+  @Column(length = 255)
+  private String tempKey;
+
+  @Column(length = 255)
+  private String finalKey;
+
+  @Enumerated(EnumType.STRING)
+  @Column(length = 20)
+  private ProcessingStatus processingStatus;
+
+  @Temporal(TemporalType.TIMESTAMP)
+  private LocalDateTime processedAt;
+
+  @Column(length = 500)
+  private String failureReason;
+
   public void updateLocation(Double latitude, Double longitude, PinPoint pinPoint) {
     this.latitude = latitude;
     this.longitude = longitude;
@@ -72,5 +92,36 @@ public class MediaFile {
 
   public void updateRecordDate(LocalDateTime recordDate) {
     this.recordDate = recordDate;
+  }
+
+  public void markUploaded() {
+    if (processingStatus != null) {
+      throw new CustomException(ResultCode.INVALID_MEDIA_STATE);
+    }
+    this.processingStatus = ProcessingStatus.UPLOADED;
+  }
+
+  public void markProcessing() {
+    if (processingStatus != ProcessingStatus.UPLOADED) {
+      throw new CustomException(ResultCode.INVALID_MEDIA_STATE);
+    }
+    this.processingStatus = ProcessingStatus.PROCESSING;
+  }
+
+  public void markProcessed(LocalDateTime processedAt) {
+    if (processingStatus != ProcessingStatus.UPLOADED && processingStatus != ProcessingStatus.PROCESSING) {
+      throw new CustomException(ResultCode.INVALID_MEDIA_STATE);
+    }
+    this.processingStatus = ProcessingStatus.PROCESSED;
+    this.processedAt = processedAt;
+    this.failureReason = null;
+  }
+
+  public void markFailed(String reason) {
+    if (processingStatus == ProcessingStatus.PROCESSED) {
+      throw new CustomException(ResultCode.INVALID_MEDIA_STATE);
+    }
+    this.processingStatus = ProcessingStatus.FAILED;
+    this.failureReason = reason;
   }
 }
