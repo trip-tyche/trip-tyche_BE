@@ -2,6 +2,7 @@ package com.triptyche.backend.domain.notification.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 import com.triptyche.backend.domain.notification.model.Notification;
@@ -9,6 +10,7 @@ import com.triptyche.backend.domain.notification.model.NotificationStatus;
 import com.triptyche.backend.domain.notification.model.NotificationType;
 import com.triptyche.backend.domain.notification.repository.NotificationRepository;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -33,9 +35,23 @@ class NotificationSenderTest {
 
   private static final Long RECIPIENT_ID = 1L;
   private static final Long REFERENCE_ID = 10L;
+  private static final Long NOTIFICATION_ID = 999L;
   private static final String SENDER_NICKNAME = "보내는사람";
   private static final NotificationType TYPE = NotificationType.SHARED_REQUEST;
   private static final Map<String, Object> PAYLOAD = Map.of("type", TYPE.name());
+
+  @BeforeEach
+  void stubSavedNotification() {
+    Notification saved = Notification.builder()
+            .notificationId(NOTIFICATION_ID)
+            .userId(RECIPIENT_ID)
+            .message(TYPE)
+            .status(NotificationStatus.UNREAD)
+            .referenceId(REFERENCE_ID)
+            .senderNickname(SENDER_NICKNAME)
+            .build();
+    given(notificationRepository.save(any(Notification.class))).willReturn(saved);
+  }
 
   @Nested
   @DisplayName("sendNotification()")
@@ -58,7 +74,7 @@ class NotificationSenderTest {
     }
 
     @Test
-    @DisplayName("sendNotification() 호출 시 NotificationSavedEvent가 올바른 필드로 발행된다")
+    @DisplayName("sendNotification() 호출 시 NotificationSavedEvent가 올바른 필드로 발행되고 payload에 notificationId가 주입된다")
     void sendNotification_givenValidParams_publishesNotificationSavedEventWithCorrectFields() {
       ArgumentCaptor<NotificationSavedEvent> captor = ArgumentCaptor.forClass(NotificationSavedEvent.class);
 
@@ -68,7 +84,9 @@ class NotificationSenderTest {
       NotificationSavedEvent event = captor.getValue();
       assertThat(event.recipientId()).isEqualTo(RECIPIENT_ID);
       assertThat(event.type()).isEqualTo(TYPE);
-      assertThat(event.payload()).isEqualTo(PAYLOAD);
+      assertThat(event.payload())
+              .containsEntry("type", TYPE.name())
+              .containsEntry("notificationId", NOTIFICATION_ID);
     }
 
     @Test

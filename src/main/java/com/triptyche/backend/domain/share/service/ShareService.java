@@ -117,6 +117,8 @@ public class ShareService {
       eventPublisher.publishEvent(new ShareApprovedEvent(
               share.getShareId(),
               trip.getTripId(),
+              trip.getTripKey(),
+              trip.getTripTitle(),
               ownerId,
               senderNickname
       ));
@@ -127,6 +129,7 @@ public class ShareService {
       eventPublisher.publishEvent(new ShareRejectedEvent(
               share.getShareId(),
               trip.getTripId(),
+              trip.getTripTitle(),
               ownerId,
               senderNickname
       ));

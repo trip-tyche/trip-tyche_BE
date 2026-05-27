@@ -25,6 +25,7 @@ public class ShareNotificationEventListener {
   public void handleShareCreated(ShareCreatedEvent event) {
     Map<String, Object> payload = Map.of(
             "referenceId", event.shareId(),
+            "shareId", event.shareId(),
             "type", NotificationType.SHARED_REQUEST.name(),
             "senderNickname", event.senderNickname() != null ? event.senderNickname() : "",
             "tripTitle", event.tripTitle() != null ? event.tripTitle() : ""
@@ -43,7 +44,11 @@ public class ShareNotificationEventListener {
   public void handleShareApproved(ShareApprovedEvent event) {
     Map<String, Object> payload = Map.of(
             "recipientId", event.ownerId(),
-            "type", NotificationType.SHARED_APPROVE.name()
+            "type", NotificationType.SHARED_APPROVE.name(),
+            "shareId", event.shareId(),
+            "senderNickname", event.senderNickname() != null ? event.senderNickname() : "",
+            "tripKey", event.tripKey() != null ? event.tripKey() : "",
+            "tripTitle", event.tripTitle() != null ? event.tripTitle() : ""
     );
     notificationSender.sendNotification(
             event.ownerId(),
@@ -59,7 +64,10 @@ public class ShareNotificationEventListener {
   public void handleShareRejected(ShareRejectedEvent event) {
     Map<String, Object> payload = Map.of(
             "recipientId", event.ownerId(),
-            "type", NotificationType.SHARED_REJECTED.name()
+            "type", NotificationType.SHARED_REJECTED.name(),
+            "shareId", event.shareId(),
+            "senderNickname", event.senderNickname() != null ? event.senderNickname() : "",
+            "tripTitle", event.tripTitle() != null ? event.tripTitle() : ""
     );
     notificationSender.sendNotification(
             event.ownerId(),

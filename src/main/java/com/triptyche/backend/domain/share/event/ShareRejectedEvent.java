@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public record ShareRejectedEvent(
     Long shareId,
     Long tripId,
+    String tripTitle,
     Long ownerId,
     String senderNickname
 ) {}
