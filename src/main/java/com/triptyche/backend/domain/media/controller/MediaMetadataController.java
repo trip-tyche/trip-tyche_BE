@@ -8,6 +8,7 @@ import com.triptyche.backend.domain.media.dto.MediaUploadedRequest;
 import com.triptyche.backend.domain.media.dto.MediaUploadedResponse;
 import com.triptyche.backend.domain.media.dto.TripMediaListResponse;
 import com.triptyche.backend.domain.media.dto.UnlocatedMediaResponse;
+import com.triptyche.backend.domain.media.dto.UploadStatusResponse;
 import com.triptyche.backend.domain.media.service.MediaCommandService;
 import com.triptyche.backend.domain.media.service.MediaQueryService;
 import com.triptyche.backend.domain.user.model.User;
@@ -118,5 +119,14 @@ public class MediaMetadataController {
           @PathVariable String tripKey,
           @Valid @RequestBody MediaUploadedRequest request) {
     return RestResponse.success(mediaCommandService.markUploadedAndEnqueue(user, tripKey, request));
+  }
+
+  @Tag(name = "3. 여행등록 페이지 API")
+  @Operation(summary = "업로드 상태 동기화", description = "페이지 진입/재진입 시 미처리 미디어 상태 일괄 조회. STOMP 손실 대비 안전망.")
+  @GetMapping("/upload-status")
+  public RestResponse<UploadStatusResponse> getUploadStatus(
+          @CurrentUser User user,
+          @PathVariable String tripKey) {
+    return RestResponse.success(mediaQueryService.getUploadStatus(user, tripKey));
   }
 }
