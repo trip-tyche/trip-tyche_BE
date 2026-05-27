@@ -33,12 +33,12 @@ class MediaProcessedStreamConsumerTest {
   class SuccessMessage {
 
     @Test
-    @DisplayName("finalKey/processedAt 필드를 포함한 메시지는 applyProcessedResult를 호출한다")
-    void onMessage_givenSuccessPayload_callsApplyProcessedResult() {
+    @DisplayName("UTC offset 포함 ISO-8601 processedAt을 LocalDateTime으로 정규화하여 applyProcessedResult를 호출한다")
+    void onMessage_givenSuccessPayloadWithUtcOffset_callsApplyProcessedResult() {
       MapRecord<String, String, String> record = MapRecord.create(STREAM_KEY, Map.of(
           "mediaFileId", "1",
           "finalKey", "processed/42/abc.webp",
-          "processedAt", "2024-06-01T12:00:00"
+          "processedAt", "2026-05-27T14:32:52.160586+00:00"
       ));
 
       consumer.onMessage(record);
@@ -46,8 +46,23 @@ class MediaProcessedStreamConsumerTest {
       verify(mediaProcessingService).applyProcessedResult(
           eq(1L),
           eq("processed/42/abc.webp"),
-          eq(LocalDateTime.of(2024, 6, 1, 12, 0, 0))
+          eq(LocalDateTime.of(2026, 5, 27, 14, 32, 52, 160_586_000))
       );
+      verify(mediaProcessingService, never()).applyFailedResult(any(), any());
+    }
+
+    @Test
+    @DisplayName("processedAt이 잘못된 형식이어도 예외가 onMessage 밖으로 새지 않는다")
+    void onMessage_givenMalformedProcessedAt_doesNotPropagateException() {
+      MapRecord<String, String, String> record = MapRecord.create(STREAM_KEY, Map.of(
+          "mediaFileId", "7",
+          "finalKey", "processed/42/abc.webp",
+          "processedAt", "not-a-timestamp"
+      ));
+
+      consumer.onMessage(record);
+
+      verify(mediaProcessingService, never()).applyProcessedResult(any(), any(), any());
       verify(mediaProcessingService, never()).applyFailedResult(any(), any());
     }
   }
@@ -124,7 +139,7 @@ class MediaProcessedStreamConsumerTest {
       MapRecord<String, String, String> record = MapRecord.create(STREAM_KEY, Map.of(
           "mediaFileId", "99",
           "finalKey", "processed/42/abc.webp",
-          "processedAt", "2024-06-01T12:00:00"
+          "processedAt", "2026-05-27T14:32:52.160586+00:00"
       ));
 
       org.mockito.Mockito.doThrow(new RuntimeException("DB 오류"))

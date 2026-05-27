@@ -2,6 +2,7 @@ package com.triptyche.backend.global.redis;
 
 import com.triptyche.backend.domain.media.service.MediaProcessingService;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,11 +34,14 @@ public class MediaProcessedStreamConsumer implements StreamListener<String, MapR
         mediaProcessingService.applyFailedResult(mediaFileId, reason);
       } else {
         String finalKey = fields.get("finalKey");
-        LocalDateTime processedAt = LocalDateTime.parse(fields.get("processedAt"));
+        LocalDateTime processedAt = OffsetDateTime
+            .parse(fields.get("processedAt"))
+            .toLocalDateTime();
         mediaProcessingService.applyProcessedResult(mediaFileId, finalKey, processedAt);
       }
     } catch (Exception e) {
-      log.warn("[media-processed-stream] 메시지 처리 실패 — mediaFileId: {}, fields: {}", mediaFileId, fields, e);
+      log.error("[media-processed-stream] 메시지 처리 실패 — mediaFileId: {}, errorType: {}, errorMsg: {}, fields: {}",
+          mediaFileId, e.getClass().getSimpleName(), e.getMessage(), fields, e);
     }
   }
 }
