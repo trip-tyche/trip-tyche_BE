@@ -259,3 +259,7 @@ CLAUDE.md
 .omc/
 
 /doc/**
+
+# Python (image-worker)
+__pycache__/
+*.pyc
