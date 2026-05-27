@@ -141,7 +141,7 @@ class MediaQueryServiceTest {
 
             assertThat(response.items()).hasSize(1);
             UploadStatusResponse.Item item = response.items().get(0);
-            assertThat(item.status()).isEqualTo("LEGACY");
+            assertThat(item.status()).isEqualTo(UploadStatusResponse.LEGACY_STATUS);
             assertThat(item.currentUrl()).isEqualTo("https://s3/bucket/legacy-link");
             assertThat(item.finalUrl()).isEqualTo("https://s3/bucket/legacy-link");
             assertThat(item.failureReason()).isNull();

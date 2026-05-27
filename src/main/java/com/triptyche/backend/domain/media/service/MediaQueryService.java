@@ -109,7 +109,7 @@ public class MediaQueryService {
             mf.getMediaFileId(),
             mf.getTempKey() != null ? s3KeyResolver.buildUrl(mf.getTempKey()) : mf.getMediaLink(),
             mf.getFinalKey() != null ? s3KeyResolver.buildUrl(mf.getFinalKey()) : mf.getMediaLink(),
-            mf.getProcessingStatus() != null ? mf.getProcessingStatus().name() : "LEGACY",
+            mf.getProcessingStatus() != null ? mf.getProcessingStatus().name() : UploadStatusResponse.LEGACY_STATUS,
             mf.getProcessedAt() != null ? mf.getProcessedAt().toString() : null,
             mf.getProcessingStatus() == ProcessingStatus.FAILED ? mf.getFailureReason() : null
         ))
