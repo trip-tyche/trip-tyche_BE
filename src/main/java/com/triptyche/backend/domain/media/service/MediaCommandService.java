@@ -4,6 +4,8 @@ import com.triptyche.backend.domain.media.dto.MediaBatchDeleteRequest;
 import com.triptyche.backend.domain.media.dto.MediaBatchEditRequest;
 import com.triptyche.backend.domain.media.dto.MediaLocationEditRequest;
 import com.triptyche.backend.domain.media.dto.MediaUploadRequest;
+import com.triptyche.backend.domain.media.dto.MediaUploadedRequest;
+import com.triptyche.backend.domain.media.dto.MediaUploadedResponse;
 import com.triptyche.backend.domain.media.event.MediaFileAddedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileDeletedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileLocationUpdatedEvent;
@@ -98,10 +100,8 @@ public class MediaCommandService {
     List<MediaFile> savedMediaFiles = mediaFileRepository.saveAll(mediaFiles);
 
     savedMediaFiles.forEach(mediaFile ->
-            eventPublisher.publishEvent(new MediaFileRegisteredEvent(
-                    mediaFile.getMediaFileId(),
-                    mediaFile.getMediaKey()
-            ))
+            eventPublisher.publishEvent(
+                    MediaFileRegisteredEvent.v1(mediaFile.getMediaFileId(), mediaFile.getMediaKey()))
     );
 
     // Redis 처리 (위치 0.0인 파일들만) — DB 커밋 완료 후 이벤트로 처리
@@ -237,6 +237,53 @@ public class MediaCommandService {
             actorId,
             actorNickname,
             isOwner));
+  }
+
+  @Transactional
+  public MediaUploadedResponse markUploadedAndEnqueue(User user, String tripKey, MediaUploadedRequest request) {
+    Trip trip = tripAccessGuard.validateAccessibleTripByKey(tripKey, user);
+
+    List<Long> ids = request.items().stream().map(MediaUploadedRequest.Item::mediaFileId).toList();
+    Map<Long, MediaFile> byId = mediaFileRepository.findAllById(ids).stream()
+            .collect(Collectors.toMap(MediaFile::getMediaFileId, mf -> mf));
+
+    if (byId.size() != ids.size()) {
+      throw new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND);
+    }
+
+    byId.values().forEach(mf -> {
+      if (!mf.getTrip().getTripId().equals(trip.getTripId())) {
+        throw new CustomException(ResultCode.ACCESS_DENIED);
+      }
+    });
+
+    List<PinPoint> existingPinPoints = pinPointService.findAllByTripId(trip.getTripId());
+
+    List<MediaUploadedResponse.Item> items = request.items().stream()
+            .map(reqItem -> {
+              MediaFile mf = byId.get(reqItem.mediaFileId());
+
+              LocalDateTime recordDate = DateFormatter.convertToLocalDateTime(reqItem.recordDate());
+              PinPoint pinPoint = pinPointService.assignPinPoint(
+                      existingPinPoints, trip, reqItem.latitude(), reqItem.longitude());
+              mf.updateRecordDate(recordDate);
+              mf.updateLocation(reqItem.latitude(), reqItem.longitude(), pinPoint);
+
+              String currentUrl = s3KeyResolver.buildUrl(mf.getTempKey());
+              mf.updateMediaLink(currentUrl);
+
+              mf.markUploaded();
+
+              eventPublisher.publishEvent(
+                      MediaFileRegisteredEvent.v2(mf.getMediaFileId(), mf.getTempKey(), mf.getFinalKey()));
+
+              String finalUrl = s3KeyResolver.buildUrl(mf.getFinalKey());
+              return new MediaUploadedResponse.Item(
+                      mf.getMediaFileId(), currentUrl, finalUrl, mf.getProcessingStatus().name());
+            })
+            .toList();
+
+    return new MediaUploadedResponse(items);
   }
 
 }
