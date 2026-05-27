@@ -37,14 +37,29 @@ class TripTest {
     }
 
     @Test
-    @DisplayName("DRAFT가 아닌 상태에서 호출하면 예외 발생")
-    void fail_when_not_draft() throws Exception {
+    @DisplayName("IMAGES_UPLOADED 상태에서 다시 호출해도 idempotent — 상태 유지")
+    void idempotent_when_already_uploaded() throws Exception {
       //given
       Trip trip = createTrip(TripStatus.IMAGES_UPLOADED);
 
-      //when & then
-      assertThatThrownBy(trip::markImagesUploaded)
-              .isInstanceOf(CustomException.class);
+      //when
+      trip.markImagesUploaded();
+
+      //then
+      assertThat(trip.getStatus()).isEqualTo(TripStatus.IMAGES_UPLOADED);
+    }
+
+    @Test
+    @DisplayName("CONFIRMED 상태에서 호출해도 idempotent — DRAFT로 강등되지 않음")
+    void idempotent_when_confirmed() throws Exception {
+      //given
+      Trip trip = createTrip(TripStatus.CONFIRMED);
+
+      //when
+      trip.markImagesUploaded();
+
+      //then
+      assertThat(trip.getStatus()).isEqualTo(TripStatus.CONFIRMED);
     }
   }
 
