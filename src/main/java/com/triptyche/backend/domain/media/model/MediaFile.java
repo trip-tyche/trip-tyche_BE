@@ -24,6 +24,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Getter
 @Entity
@@ -49,7 +50,7 @@ public class MediaFile {
   private Trip trip;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "pin_point_id", nullable = false)
+  @JoinColumn(name = "pin_point_id")
   private PinPoint pinPoint;
 
   @Column(length = 50)
@@ -83,6 +84,10 @@ public class MediaFile {
 
   @Column(length = 500)
   private String failureReason;
+
+  @CreationTimestamp
+  @Column(updatable = false)
+  private LocalDateTime createdAt;
 
   public void updateLocation(Double latitude, Double longitude, PinPoint pinPoint) {
     this.latitude = latitude;

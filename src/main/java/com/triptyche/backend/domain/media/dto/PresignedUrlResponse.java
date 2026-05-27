@@ -7,7 +7,10 @@ public record PresignedUrlResponse(
 ) {
 
   public record PresignedUrl(
+      Long mediaFileId,
       String fileKey,
+      String tempKey,
+      String finalKey,
       String presignedPutUrl
   ) {
 
