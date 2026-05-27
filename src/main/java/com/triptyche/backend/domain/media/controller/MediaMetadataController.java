@@ -4,8 +4,8 @@ import com.triptyche.backend.domain.media.dto.MediaBatchDeleteRequest;
 import com.triptyche.backend.domain.media.dto.MediaBatchEditRequest;
 import com.triptyche.backend.domain.media.dto.MediaLocationEditRequest;
 import com.triptyche.backend.domain.media.dto.MediaUploadRequest;
-import com.triptyche.backend.domain.media.dto.MediaUploadedRequest;
-import com.triptyche.backend.domain.media.dto.MediaUploadedResponse;
+import com.triptyche.backend.domain.media.dto.MediaProcessingRequest;
+import com.triptyche.backend.domain.media.dto.MediaProcessingResponse;
 import com.triptyche.backend.domain.media.dto.TripMediaListResponse;
 import com.triptyche.backend.domain.media.dto.UnlocatedMediaResponse;
 import com.triptyche.backend.domain.media.dto.UploadStatusResponse;
@@ -112,13 +112,13 @@ public class MediaMetadataController {
   }
 
   @Tag(name = "3. 여행등록 페이지 API")
-  @Operation(summary = "이미지 업로드 완료 통보 — v2", description = "FE가 S3 PUT 완료 후 호출. UPLOADED 전이 + 워커 enqueue.")
-  @PostMapping("/images-uploaded")
-  public RestResponse<MediaUploadedResponse> markImagesUploaded(
+  @Operation(summary = "미디어 처리 요청 — FE PUT 완료 후 워커 트리거", description = "사전 INSERT된 MediaFile을 UPLOADED 전이 + media-processing-stream에 enqueue.")
+  @PostMapping("/processing")
+  public RestResponse<MediaProcessingResponse> requestProcessing(
           @CurrentUser User user,
           @PathVariable String tripKey,
-          @Valid @RequestBody MediaUploadedRequest request) {
-    return RestResponse.success(mediaCommandService.markUploadedAndEnqueue(user, tripKey, request));
+          @Valid @RequestBody MediaProcessingRequest request) {
+    return RestResponse.success(mediaCommandService.requestProcessing(user, tripKey, request));
   }
 
   @Tag(name = "3. 여행등록 페이지 API")

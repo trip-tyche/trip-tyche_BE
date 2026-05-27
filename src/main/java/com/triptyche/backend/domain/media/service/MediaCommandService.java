@@ -4,8 +4,8 @@ import com.triptyche.backend.domain.media.dto.MediaBatchDeleteRequest;
 import com.triptyche.backend.domain.media.dto.MediaBatchEditRequest;
 import com.triptyche.backend.domain.media.dto.MediaLocationEditRequest;
 import com.triptyche.backend.domain.media.dto.MediaUploadRequest;
-import com.triptyche.backend.domain.media.dto.MediaUploadedRequest;
-import com.triptyche.backend.domain.media.dto.MediaUploadedResponse;
+import com.triptyche.backend.domain.media.dto.MediaProcessingRequest;
+import com.triptyche.backend.domain.media.dto.MediaProcessingResponse;
 import com.triptyche.backend.domain.media.event.MediaFileAddedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileDeletedEvent;
 import com.triptyche.backend.domain.media.event.MediaFileLocationUpdatedEvent;
@@ -240,10 +240,10 @@ public class MediaCommandService {
   }
 
   @Transactional
-  public MediaUploadedResponse markUploadedAndEnqueue(User user, String tripKey, MediaUploadedRequest request) {
+  public MediaProcessingResponse requestProcessing(User user, String tripKey, MediaProcessingRequest request) {
     Trip trip = tripAccessGuard.validateAccessibleTripByKey(tripKey, user);
 
-    List<Long> ids = request.items().stream().map(MediaUploadedRequest.Item::mediaFileId).toList();
+    List<Long> ids = request.items().stream().map(MediaProcessingRequest.Item::mediaFileId).toList();
     Map<Long, MediaFile> byId = mediaFileRepository.findAllById(ids).stream()
             .collect(Collectors.toMap(MediaFile::getMediaFileId, mf -> mf));
 
@@ -259,7 +259,7 @@ public class MediaCommandService {
 
     List<PinPoint> existingPinPoints = pinPointService.findAllByTripId(trip.getTripId());
 
-    List<MediaUploadedResponse.Item> items = request.items().stream()
+    List<MediaProcessingResponse.Item> items = request.items().stream()
             .map(reqItem -> {
               MediaFile mf = byId.get(reqItem.mediaFileId());
 
@@ -278,12 +278,12 @@ public class MediaCommandService {
                       MediaFileRegisteredEvent.v2(mf.getMediaFileId(), mf.getTempKey(), mf.getFinalKey()));
 
               String finalUrl = s3KeyResolver.buildUrl(mf.getFinalKey());
-              return new MediaUploadedResponse.Item(
+              return new MediaProcessingResponse.Item(
                       mf.getMediaFileId(), currentUrl, finalUrl, mf.getProcessingStatus().name());
             })
             .toList();
 
-    return new MediaUploadedResponse(items);
+    return new MediaProcessingResponse(items);
   }
 
 }

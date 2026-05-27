@@ -6,8 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
-import com.triptyche.backend.domain.media.dto.MediaUploadedRequest;
-import com.triptyche.backend.domain.media.dto.MediaUploadedResponse;
+import com.triptyche.backend.domain.media.dto.MediaProcessingRequest;
+import com.triptyche.backend.domain.media.dto.MediaProcessingResponse;
 import com.triptyche.backend.domain.media.event.MediaFileRegisteredEvent;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.model.ProcessingStatus;
@@ -76,7 +76,7 @@ class MediaCommandServiceTest {
     }
 
     @Nested
-    @DisplayName("markUploadedAndEnqueue()")
+    @DisplayName("requestProcessing()")
     class MarkUploadedAndEnqueue {
 
         @Test
@@ -119,24 +119,24 @@ class MediaCommandServiceTest {
             given(s3KeyResolver.buildUrl("temp/42/uuid2.jpg")).willReturn("https://s3.example.com/temp/42/uuid2.jpg");
             given(s3KeyResolver.buildUrl("processed/42/uuid2.webp")).willReturn("https://s3.example.com/processed/42/uuid2.webp");
 
-            MediaUploadedRequest request = new MediaUploadedRequest(List.of(
-                    new MediaUploadedRequest.Item(101L, "2024-01-01T12:00:00", 37.5, 127.0),
-                    new MediaUploadedRequest.Item(102L, "2024-01-01T13:00:00", 37.5, 127.0)
+            MediaProcessingRequest request = new MediaProcessingRequest(List.of(
+                    new MediaProcessingRequest.Item(101L, "2024-01-01T12:00:00", 37.5, 127.0),
+                    new MediaProcessingRequest.Item(102L, "2024-01-01T13:00:00", 37.5, 127.0)
             ));
 
             // when
-            MediaUploadedResponse response = mediaCommandService.markUploadedAndEnqueue(user, TRIP_KEY, request);
+            MediaProcessingResponse response = mediaCommandService.requestProcessing(user, TRIP_KEY, request);
 
             // then
             assertThat(response.items()).hasSize(2);
 
-            MediaUploadedResponse.Item item1 = response.items().get(0);
+            MediaProcessingResponse.Item item1 = response.items().get(0);
             assertThat(item1.mediaFileId()).isEqualTo(101L);
             assertThat(item1.currentUrl()).isEqualTo("https://s3.example.com/temp/42/uuid1.jpg");
             assertThat(item1.finalUrl()).isEqualTo("https://s3.example.com/processed/42/uuid1.webp");
             assertThat(item1.status()).isEqualTo(ProcessingStatus.UPLOADED.name());
 
-            MediaUploadedResponse.Item item2 = response.items().get(1);
+            MediaProcessingResponse.Item item2 = response.items().get(1);
             assertThat(item2.mediaFileId()).isEqualTo(102L);
             assertThat(item2.status()).isEqualTo(ProcessingStatus.UPLOADED.name());
         }
@@ -157,13 +157,13 @@ class MediaCommandServiceTest {
             given(mediaFileRepository.findAllById(List.of(101L, 999L)))
                     .willReturn(List.of(mf1));
 
-            MediaUploadedRequest request = new MediaUploadedRequest(List.of(
-                    new MediaUploadedRequest.Item(101L, "2024-01-01T12:00:00", 37.5, 127.0),
-                    new MediaUploadedRequest.Item(999L, "2024-01-01T13:00:00", 37.5, 127.0)
+            MediaProcessingRequest request = new MediaProcessingRequest(List.of(
+                    new MediaProcessingRequest.Item(101L, "2024-01-01T12:00:00", 37.5, 127.0),
+                    new MediaProcessingRequest.Item(999L, "2024-01-01T13:00:00", 37.5, 127.0)
             ));
 
             // when / then
-            assertThatThrownBy(() -> mediaCommandService.markUploadedAndEnqueue(user, TRIP_KEY, request))
+            assertThatThrownBy(() -> mediaCommandService.requestProcessing(user, TRIP_KEY, request))
                     .isInstanceOf(CustomException.class)
                     .extracting(e -> ((CustomException) e).getResultCode())
                     .isEqualTo(ResultCode.MEDIA_FILE_NOT_FOUND);
@@ -192,12 +192,12 @@ class MediaCommandServiceTest {
 
             given(mediaFileRepository.findAllById(List.of(101L))).willReturn(List.of(mf));
 
-            MediaUploadedRequest request = new MediaUploadedRequest(List.of(
-                    new MediaUploadedRequest.Item(101L, "2024-01-01T12:00:00", 37.5, 127.0)
+            MediaProcessingRequest request = new MediaProcessingRequest(List.of(
+                    new MediaProcessingRequest.Item(101L, "2024-01-01T12:00:00", 37.5, 127.0)
             ));
 
             // when / then
-            assertThatThrownBy(() -> mediaCommandService.markUploadedAndEnqueue(user, TRIP_KEY, request))
+            assertThatThrownBy(() -> mediaCommandService.requestProcessing(user, TRIP_KEY, request))
                     .isInstanceOf(CustomException.class)
                     .extracting(e -> ((CustomException) e).getResultCode())
                     .isEqualTo(ResultCode.ACCESS_DENIED);
@@ -230,12 +230,12 @@ class MediaCommandServiceTest {
             given(pinPointService.assignPinPoint(any(), any(), any(), any())).willReturn(pinPoint);
             given(s3KeyResolver.buildUrl(any())).willReturn("https://s3.example.com/any");
 
-            MediaUploadedRequest request = new MediaUploadedRequest(List.of(
-                    new MediaUploadedRequest.Item(101L, "2024-01-01T12:00:00", 37.5, 127.0)
+            MediaProcessingRequest request = new MediaProcessingRequest(List.of(
+                    new MediaProcessingRequest.Item(101L, "2024-01-01T12:00:00", 37.5, 127.0)
             ));
 
             // when
-            mediaCommandService.markUploadedAndEnqueue(user, TRIP_KEY, request);
+            mediaCommandService.requestProcessing(user, TRIP_KEY, request);
 
             // then
             ArgumentCaptor<MediaFileRegisteredEvent> captor =
