@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 
 import com.triptyche.backend.domain.media.model.MediaFile;
+import com.triptyche.backend.domain.media.model.ProcessingStatus;
 import com.triptyche.backend.domain.trip.model.PinPoint;
 import com.triptyche.backend.domain.trip.model.Trip;
 import com.triptyche.backend.domain.trip.model.TripStatus;
@@ -95,6 +96,69 @@ class MediaFileRepositoryTest {
         SessionFactory sf = emf.unwrap(SessionFactory.class);
         sf.getStatistics().setStatisticsEnabled(true);
         return sf.getStatistics();
+    }
+
+    @Nested
+    @DisplayName("findOrphans()")
+    class FindOrphans {
+
+        private MediaFile persistOrphan(String mediaKey, LocalDateTime createdAt, ProcessingStatus status) {
+            MediaFile mf = MediaFile.builder()
+                    .trip(trip)
+                    .mediaKey(mediaKey)
+                    .tempKey("temp/" + mediaKey)
+                    .mediaType("image/jpeg")
+                    .processingStatus(status)
+                    .build();
+            MediaFile persisted = tem.persist(mf);
+            // @CreationTimestamp는 JPA insert 시 자동 설정되므로 JPQL로 createdAt을 직접 덮어씀
+            tem.getEntityManager()
+                    .createQuery("UPDATE MediaFile m SET m.createdAt = :ts WHERE m.mediaFileId = :id")
+                    .setParameter("ts", createdAt)
+                    .setParameter("id", persisted.getMediaFileId())
+                    .executeUpdate();
+            return persisted;
+        }
+
+        @Test
+        @DisplayName("threshold 이전 + status null → orphan으로 포함")
+        void includesNullStatusBeforeThreshold() {
+            LocalDateTime threshold = LocalDateTime.now();
+            persistOrphan("old-null", threshold.minusHours(7), null);
+            tem.flush();
+            tem.clear();
+
+            List<MediaFile> result = mediaFileRepository.findOrphans(threshold);
+
+            assertThat(result).extracting(MediaFile::getMediaKey)
+                    .containsExactly("old-null");
+        }
+
+        @Test
+        @DisplayName("threshold 이후 + status null → 아직 orphan 아님, 제외")
+        void excludesNullStatusAfterThreshold() {
+            LocalDateTime threshold = LocalDateTime.now();
+            persistOrphan("new-null", threshold.plusHours(1), null);
+            tem.flush();
+            tem.clear();
+
+            List<MediaFile> result = mediaFileRepository.findOrphans(threshold);
+
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("threshold 이전 + status UPLOADED → 정상 흐름 진입, 제외")
+        void excludesUploadedStatusBeforeThreshold() {
+            LocalDateTime threshold = LocalDateTime.now();
+            persistOrphan("old-uploaded", threshold.minusHours(7), ProcessingStatus.UPLOADED);
+            tem.flush();
+            tem.clear();
+
+            List<MediaFile> result = mediaFileRepository.findOrphans(threshold);
+
+            assertThat(result).isEmpty();
+        }
     }
 
     @Nested
