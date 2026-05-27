@@ -124,4 +124,8 @@ public class MediaFile {
     this.processingStatus = ProcessingStatus.FAILED;
     this.failureReason = reason;
   }
+
+  public void updateMediaLink(String mediaLink) {
+    this.mediaLink = mediaLink;
+  }
 }
