@@ -119,6 +119,7 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
   @Query("""
           SELECT m FROM MediaFile m
           WHERE m.processingStatus IS NULL
+            AND m.tempKey IS NOT NULL
             AND m.createdAt < :threshold
           """)
   List<MediaFile> findOrphans(@Param("threshold") LocalDateTime threshold);

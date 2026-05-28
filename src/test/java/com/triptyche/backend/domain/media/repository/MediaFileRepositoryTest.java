@@ -103,10 +103,15 @@ class MediaFileRepositoryTest {
     class FindOrphans {
 
         private MediaFile persistOrphan(String mediaKey, LocalDateTime createdAt, ProcessingStatus status) {
+            return persistRow(mediaKey, "temp/" + mediaKey, createdAt, status);
+        }
+
+        private MediaFile persistRow(String mediaKey, String tempKey, LocalDateTime createdAt,
+                ProcessingStatus status) {
             MediaFile mf = MediaFile.builder()
                     .trip(trip)
                     .mediaKey(mediaKey)
-                    .tempKey("temp/" + mediaKey)
+                    .tempKey(tempKey)
                     .mediaType("image/jpeg")
                     .processingStatus(status)
                     .build();
@@ -118,6 +123,46 @@ class MediaFileRepositoryTest {
                     .setParameter("id", persisted.getMediaFileId())
                     .executeUpdate();
             return persisted;
+        }
+
+        @Test
+        @DisplayName("v1 legacy row(tempKey=null, status=LEGACY)는 cleanup 대상에서 제외")
+        void excludesLegacyStatusRowWithoutTempKey() {
+            LocalDateTime threshold = LocalDateTime.now();
+            persistRow("v1-legacy", null, threshold.minusHours(7), ProcessingStatus.LEGACY);
+            tem.flush();
+            tem.clear();
+
+            List<MediaFile> result = mediaFileRepository.findOrphans(threshold);
+
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("v1 row(tempKey=null, status=null)도 tempKey 가드로 제외 (Defense in Depth)")
+        void excludesNullStatusRowWithoutTempKey() {
+            LocalDateTime threshold = LocalDateTime.now();
+            persistRow("v1-null", null, threshold.minusHours(7), null);
+            tem.flush();
+            tem.clear();
+
+            List<MediaFile> result = mediaFileRepository.findOrphans(threshold);
+
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("v2 orphan(tempKey 채워짐, status=null, threshold 이전)은 cleanup 대상으로 포함")
+        void includesV2OrphanWithTempKey() {
+            LocalDateTime threshold = LocalDateTime.now();
+            persistRow("v2-orphan", "temp/v2-orphan", threshold.minusHours(7), null);
+            tem.flush();
+            tem.clear();
+
+            List<MediaFile> result = mediaFileRepository.findOrphans(threshold);
+
+            assertThat(result).extracting(MediaFile::getMediaKey)
+                    .containsExactly("v2-orphan");
         }
 
         @Test

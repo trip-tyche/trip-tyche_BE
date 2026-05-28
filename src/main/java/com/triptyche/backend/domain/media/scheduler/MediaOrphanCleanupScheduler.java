@@ -18,6 +18,9 @@ public class MediaOrphanCleanupScheduler {
       int deleted = executor.cleanup();
       if (deleted > 0) {
         log.info("[MEDIA_ORPHAN_CLEANUP] 삭제 완료 — count={}", deleted);
+        if (deleted > 50) {
+          log.warn("[MEDIA_ORPHAN_CLEANUP] 대량 삭제 감지 — count={} (anomaly threshold: 50)", deleted);
+        }
       }
     } catch (Exception e) {
       log.error("[MEDIA_ORPHAN_CLEANUP] 실패", e);
