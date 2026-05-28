@@ -125,12 +125,13 @@ class MediaQueryServiceTest {
         }
 
         @Test
-        @DisplayName("processingStatus null → status='LEGACY', currentUrl/finalUrl은 mediaLink 폴백")
-        void nullProcessingStatus_returnsLegacyStatus() {
+        @DisplayName("processingStatus LEGACY → status='LEGACY', currentUrl/finalUrl은 mediaLink 폴백")
+        void legacyProcessingStatus_returnsLegacyStatus() {
             MediaFile legacy = MediaFile.builder()
                     .mediaFileId(10L)
                     .trip(trip)
                     .mediaKey("legacy-key")
+                    .processingStatus(ProcessingStatus.LEGACY)
                     .mediaLink("https://s3/bucket/legacy-link")
                     .build();
 
@@ -208,6 +209,7 @@ class MediaQueryServiceTest {
                     .mediaFileId(40L)
                     .trip(trip)
                     .mediaKey("no-keys")
+                    .processingStatus(ProcessingStatus.LEGACY)
                     .mediaLink("https://s3/bucket/original-link")
                     .build();
 
