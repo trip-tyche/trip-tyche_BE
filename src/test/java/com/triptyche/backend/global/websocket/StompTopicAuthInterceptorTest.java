@@ -114,6 +114,91 @@ class StompTopicAuthInterceptorTest {
   }
 
   @Nested
+  @DisplayName("SUBSCRIBE /topic/share-notifications/{recipientId}")
+  class ShareNotificationSubscription {
+
+    @Test
+    @DisplayName("principal name의 email이 recipientId와 일치하면 통과한다")
+    void subscribe_givenMatchingRecipient_passes() {
+      // given
+      long recipientId = 42L;
+      String email = "user@example.com";
+      User user = User.builder()
+              .userId(recipientId)
+              .userName("testUser")
+              .userEmail(email)
+              .provider("kakao")
+              .build();
+      given(userRepository.findByUserEmail(email)).willReturn(Optional.of(user));
+      Message<?> message = buildMessage(StompCommand.SUBSCRIBE, "/topic/share-notifications/42", principalOf(email));
+
+      // when
+      Message<?> result = interceptor.preSend(message, null);
+
+      // then
+      assertThat(result).isNotNull();
+    }
+
+    @Test
+    @DisplayName("타인의 recipientId를 구독하면 MessageDeliveryException을 던진다")
+    void subscribe_givenOtherUsersRecipientId_throwsException() {
+      // given
+      String email = "attacker@example.com";
+      User attacker = User.builder()
+              .userId(7L)
+              .userName("attacker")
+              .userEmail(email)
+              .provider("kakao")
+              .build();
+      given(userRepository.findByUserEmail(email)).willReturn(Optional.of(attacker));
+      Message<?> message = buildMessage(StompCommand.SUBSCRIBE, "/topic/share-notifications/42", principalOf(email));
+
+      // when & then
+      assertThatThrownBy(() -> interceptor.preSend(message, null))
+              .isInstanceOf(MessageDeliveryException.class)
+              .hasMessage("forbidden topic subscription");
+    }
+
+    @Test
+    @DisplayName("principal이 null이면 MessageDeliveryException을 던진다")
+    void subscribe_givenNullPrincipal_throwsException() {
+      // given
+      Message<?> message = buildMessage(StompCommand.SUBSCRIBE, "/topic/share-notifications/42", null);
+
+      // when & then
+      assertThatThrownBy(() -> interceptor.preSend(message, null))
+              .isInstanceOf(MessageDeliveryException.class)
+              .hasMessage("forbidden topic subscription");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 사용자의 principal이면 MessageDeliveryException을 던진다")
+    void subscribe_givenUnknownUser_throwsException() {
+      // given
+      String email = "ghost@example.com";
+      given(userRepository.findByUserEmail(email)).willReturn(Optional.empty());
+      Message<?> message = buildMessage(StompCommand.SUBSCRIBE, "/topic/share-notifications/42", principalOf(email));
+
+      // when & then
+      assertThatThrownBy(() -> interceptor.preSend(message, null))
+              .isInstanceOf(MessageDeliveryException.class)
+              .hasMessage("forbidden topic subscription");
+    }
+
+    @Test
+    @DisplayName("destination의 recipientId가 숫자가 아니면 MessageDeliveryException을 던진다")
+    void subscribe_givenNonNumericRecipientId_throwsException() {
+      // given
+      Message<?> message = buildMessage(StompCommand.SUBSCRIBE, "/topic/share-notifications/abc", principalOf("user@example.com"));
+
+      // when & then
+      assertThatThrownBy(() -> interceptor.preSend(message, null))
+              .isInstanceOf(MessageDeliveryException.class)
+              .hasMessage("invalid topic");
+    }
+  }
+
+  @Nested
   @DisplayName("가드 대상이 아닌 토픽 또는 다른 커맨드는 검증 없이 통과한다")
   class UnguardedTopics {
 
