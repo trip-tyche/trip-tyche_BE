@@ -7,6 +7,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
