@@ -15,6 +15,7 @@ cors:
     - https://triptyche.cloud
     - https://www.triptyche.cloud
     - http://localhost:3000
+    - https://localhost          # Capacitor Android WebView (capacitor.config.ts의 androidScheme: https)
 
 triptyche:
   guest:
