@@ -32,3 +32,8 @@ cors:
 app-auth:
   allowed-redirects:
     - triptyche://auth/callback
+
+app:
+  min-supported-version: "1.0.0"
+  latest-version: "1.0.0"
+  update-url: "https://triptyche.cloud/download"
