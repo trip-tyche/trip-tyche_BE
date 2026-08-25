@@ -5,27 +5,28 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 // 인가 요청은 리다이렉트를 거치므로 시작 시점의 쿼리 파라미터가 콜백까지 살아남지 않는다.
 // state는 provider가 그대로 돌려주므로 여기에 표시를 실어 보낸다.
 @Component
+@Slf4j
 public class AppOAuth2AuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
 
   private static final String AUTHORIZATION_BASE_URI = "/oauth2/authorization";
   private static final String CLIENT_PARAMETER = "client";
   private static final String APP_CLIENT = "app";
-  private static final String APP_STATE_SUFFIX = ".app";
+  private static final String REDIRECT_URI_PARAMETER = "redirect_uri";
 
   private final OAuth2AuthorizationRequestResolver delegate;
+  private final AppAuthProperties appAuthProperties;
 
-  public AppOAuth2AuthorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository) {
+  public AppOAuth2AuthorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository,
+                                               AppAuthProperties appAuthProperties) {
     this.delegate = new DefaultOAuth2AuthorizationRequestResolver(
             clientRegistrationRepository, AUTHORIZATION_BASE_URI);
-  }
-
-  public static boolean isAppRequest(String state) {
-    return state != null && state.endsWith(APP_STATE_SUFFIX);
+    this.appAuthProperties = appAuthProperties;
   }
 
   @Override
@@ -44,8 +45,17 @@ public class AppOAuth2AuthorizationRequestResolver implements OAuth2Authorizatio
       return authorizationRequest;
     }
 
+    String redirectUri = request.getParameter(REDIRECT_URI_PARAMETER);
+    int redirectIndex = appAuthProperties.indexOf(redirectUri);
+
+    // 허용 목록에 없으면 표시를 남기지 않는다. 앱 분기를 타지 못하고 웹 흐름으로 끝난다.
+    if (redirectIndex < 0) {
+      log.warn("허용되지 않은 앱 redirect_uri: {}", redirectUri);
+      return authorizationRequest;
+    }
+
     return OAuth2AuthorizationRequest.from(authorizationRequest)
-            .state(authorizationRequest.getState() + APP_STATE_SUFFIX)
+            .state(AppAuthState.append(authorizationRequest.getState(), redirectIndex))
             .build();
   }
 }

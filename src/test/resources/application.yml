@@ -28,3 +28,7 @@ cors:
   allowed-origins:
     - https://triptyche.cloud
     - http://localhost:3000
+
+app-auth:
+  allowed-redirects:
+    - triptyche://auth/callback

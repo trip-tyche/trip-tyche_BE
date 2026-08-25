@@ -17,6 +17,11 @@ cors:
     - http://localhost:3000
     - https://localhost          # Capacitor 앱 WebView
 
+# 앱 딥링크 허용 목록. 여기 없는 redirect_uri는 앱 분기를 타지 못한다.
+app-auth:
+  allowed-redirects:
+    - triptyche://auth/callback
+
 triptyche:
   guest:
     template-email: "guest_template@triptyche.com"
