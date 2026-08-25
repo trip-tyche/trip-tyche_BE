@@ -58,7 +58,6 @@ public class DeviceService {
     }
   }
 
-  // 같은 토큰이 다른 계정으로 오면 매핑을 옮긴다. 남겨두면 이전 사용자의 알림이 새 사용자에게 간다.
   private void reassign(Device device, Long userId, DeviceRegisterRequest request) {
     if (!device.getUserId().equals(userId)) {
       log.info("디바이스 소유권 이동: device={}, {} -> {}", device.getDeviceId(), device.getUserId(), userId);
