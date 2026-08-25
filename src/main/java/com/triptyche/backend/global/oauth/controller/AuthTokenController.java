@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// 앱 전용 경로. 웹이 쓰는 /v1/auth/refresh 는 그대로 둔다.
 @Tag(name = "0. 로그인&인증관련 API")
 @RestController
 @RequestMapping("/v1/auth/token")

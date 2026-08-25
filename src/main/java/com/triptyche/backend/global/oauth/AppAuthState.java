@@ -1,6 +1,5 @@
 package com.triptyche.backend.global.oauth;
 
-// provider 로그에 남는 값이라 주소 자체는 싣지 않고 허용 목록의 인덱스만 싣는다.
 final class AppAuthState {
 
   private static final String SEPARATOR = ".app";

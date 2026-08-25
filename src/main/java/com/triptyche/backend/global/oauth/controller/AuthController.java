@@ -61,7 +61,6 @@ public class AuthController {
       if (refreshToken != null) {
         logoutService.logout(refreshToken);
       } else {
-        // 앱은 쿠키를 쓰지 않는다. access 토큰의 sid가 같은 세션을 가리킨다.
         String bearerToken = resolveBearerToken(request);
 
         if (bearerToken != null) {

@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class TokenRefreshService {
 
-  // FE 인터셉터가 401 하나에 갱신을 두 번 태울 수 있어, 회전 후에도 이전 토큰을 잠시 살려둔다.
   private static final long ROTATION_GRACE_SECONDS = 10;
 
   private final JwtTokenProvider jwtTokenProvider;

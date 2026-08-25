@@ -10,9 +10,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
-// JWTAuthenticationFilter를 일부러 등록하지 않는다.
-// 그 필터는 검증에 실패한 토큰이 있으면 401을 쓰고 체인을 끊으므로,
-// 만료된 access 토큰을 헤더에 달고 온 갱신 요청이 컨트롤러에 닿지 못한다.
 @Configuration
 @RequiredArgsConstructor
 public class AppTokenSecurityConfig {

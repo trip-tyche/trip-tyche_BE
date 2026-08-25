@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
-// 딥링크 URL은 OS 로그와 다른 앱의 인텐트 기록에 남는다. 30일짜리 토큰 대신 60초짜리 code만 싣는다.
 @Repository
 @RequiredArgsConstructor
 @Slf4j
@@ -38,7 +37,6 @@ public class OneTimeCodeRepository {
     }
   }
 
-  // GETDEL로 조회와 삭제를 한 번에 처리해 동시에 두 번 교환되는 것을 막는다.
   public OneTimeCodePayload consume(String code) {
     if (code == null || code.isBlank()) {
       return null;

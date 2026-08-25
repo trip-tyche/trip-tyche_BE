@@ -8,7 +8,6 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequ
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-// 인가 요청은 리다이렉트를 거쳐서 시작 시점의 쿼리 파라미터가 콜백까지 살아남지 않는다.
 @Component
 @Slf4j
 public class AppOAuth2AuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {

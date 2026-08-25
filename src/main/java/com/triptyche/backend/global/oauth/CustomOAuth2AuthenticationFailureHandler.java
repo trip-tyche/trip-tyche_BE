@@ -46,7 +46,6 @@ public class CustomOAuth2AuthenticationFailureHandler implements AuthenticationF
 
     String encodedError = URLEncoder.encode(errorCode, StandardCharsets.UTF_8);
 
-    // 웹 주소로 보내면 인앱 브라우저가 남아 앱이 계속 기다린다.
     String appRedirect = appAuthProperties.redirectAt(
         AppAuthState.redirectIndex(request.getParameter("state")));
     if (appRedirect != null) {

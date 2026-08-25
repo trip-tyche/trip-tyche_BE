@@ -3,7 +3,6 @@ package com.triptyche.backend.global.oauth;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-// 임의 스킴을 허용하면 인증 결과가 공격자 앱으로 간다.
 @ConfigurationProperties(prefix = "app-auth")
 public record AppAuthProperties(List<String> allowedRedirects) {
 
@@ -14,7 +13,6 @@ public record AppAuthProperties(List<String> allowedRedirects) {
     allowedRedirects = List.copyOf(allowedRedirects);
   }
 
-  // List.of(...).indexOf(null)은 NPE를 던진다.
   public int indexOf(String redirectUri) {
     return redirectUri == null ? -1 : allowedRedirects.indexOf(redirectUri);
   }
