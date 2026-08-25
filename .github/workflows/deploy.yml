@@ -69,6 +69,9 @@ jobs:
             docker compose pull app
             docker compose build image-worker
             docker compose up -d --wait
-            docker compose exec -T nginx nginx -t && docker compose exec -T nginx nginx -s reload
+            # nginx.conf는 단일 파일 바인드 마운트라 scp로 교체되면 inode가 바뀐다.
+            # 컨테이너는 삭제된 옛 inode를 계속 보므로 reload만으로는 반영되지 않는다.
+            docker compose up -d --force-recreate nginx
+            docker compose exec -T nginx nginx -t
             docker image prune -f
 
