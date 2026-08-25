@@ -57,12 +57,10 @@ dependencies {
     // SWS S3 SDK 의존성
     implementation 'software.amazon.awssdk:s3:2.20.17'
 
-    // Jackson Databind 의존성 추가
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.0'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.15.0'
-
-    // Optional, JDK8 관련 타입 지원
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0'
+    // Jackson 관련 의존성 추가 (버전은 Spring Boot BOM 관리)
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
     // Prometheus와 Actuator 모니터링을 위한 의존성
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
