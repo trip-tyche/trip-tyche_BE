@@ -69,7 +69,6 @@ jobs:
             docker compose pull app
             docker compose build image-worker
             docker compose up -d --wait
-            docker compose exec -T nginx nginx -t
-            docker compose exec -T nginx nginx -s reload
+            docker compose exec -T nginx nginx -t && docker compose exec -T nginx nginx -s reload
             docker image prune -f
 
