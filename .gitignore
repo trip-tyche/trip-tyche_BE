@@ -263,3 +263,7 @@ CLAUDE.md
 # Python (image-worker)
 __pycache__/
 *.pyc
+
+### firebase / service account keys
+secrets/
+*firebase-adminsdk*.json
