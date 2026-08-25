@@ -28,6 +28,20 @@ public class AsyncConfig implements AsyncConfigurer {
     return executor;
   }
 
+  // FCM은 외부 네트워크 I/O라 응답이 느릴 수 있다. taskExecutor를 같이 쓰면 미디어 처리와 STOMP 발행이 밀린다.
+  @Bean(name = "pushTaskExecutor")
+  public Executor pushTaskExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(2);
+    executor.setMaxPoolSize(5);
+    executor.setQueueCapacity(500);
+    executor.setThreadNamePrefix("async-push-");
+    executor.setWaitForTasksToCompleteOnShutdown(true);
+    executor.setAwaitTerminationSeconds(30);
+    executor.initialize();
+    return executor;
+  }
+
   @Override
   public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
     return (ex, method, params) ->
