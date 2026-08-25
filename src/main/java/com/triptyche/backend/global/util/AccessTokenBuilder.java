@@ -17,9 +17,16 @@ public class AccessTokenBuilder {
     private final JwtProperties jwtProperties;
 
     public String build(String email, List<String> roles, String provider) {
+        return build(email, roles, provider, null);
+    }
+
+    public String build(String email, List<String> roles, String provider, String sessionId) {
         Claims claims = Jwts.claims().setSubject(email);
         claims.put("roles", roles);
         claims.put("provider", provider);
+        if (sessionId != null) {
+            claims.put("sid", sessionId);
+        }
 
         Date now = new Date();
         Date validity = new Date(now.getTime() + jwtProperties.accessTokenExpirySeconds() * 1000);

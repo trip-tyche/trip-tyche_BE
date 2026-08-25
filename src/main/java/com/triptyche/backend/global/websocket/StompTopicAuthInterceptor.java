@@ -3,6 +3,7 @@ package com.triptyche.backend.global.websocket;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
 import java.security.Principal;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
@@ -18,7 +19,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class StompTopicAuthInterceptor implements ChannelInterceptor {
 
-  private static final String MEDIA_PROCESSED_PREFIX = "/topic/media-processed/";
+  // 사용자별 토픽을 새로 만들면 여기에 등록해야 가드가 걸린다.
+  private static final List<String> USER_SCOPED_PREFIXES = List.of(
+          "/topic/media-processed/",
+          "/topic/share-notifications/"
+  );
 
   private final UserRepository userRepository;
 
@@ -31,11 +36,26 @@ public class StompTopicAuthInterceptor implements ChannelInterceptor {
     }
 
     String destination = accessor.getDestination();
-    if (destination == null || !destination.startsWith(MEDIA_PROCESSED_PREFIX)) {
+    String prefix = matchedPrefix(destination);
+    if (prefix == null) {
       return message;
     }
 
-    String pathUserId = destination.substring(MEDIA_PROCESSED_PREFIX.length());
+    verifyOwner(destination, destination.substring(prefix.length()), accessor.getUser());
+    return message;
+  }
+
+  private String matchedPrefix(String destination) {
+    if (destination == null) {
+      return null;
+    }
+    return USER_SCOPED_PREFIXES.stream()
+            .filter(destination::startsWith)
+            .findFirst()
+            .orElse(null);
+  }
+
+  private void verifyOwner(String destination, String pathUserId, Principal principal) {
     long requestedUserId;
     try {
       requestedUserId = Long.parseLong(pathUserId);
@@ -44,7 +64,6 @@ public class StompTopicAuthInterceptor implements ChannelInterceptor {
       throw new MessageDeliveryException("invalid topic");
     }
 
-    Principal principal = accessor.getUser();
     if (principal == null) {
       log.warn("STOMP SUBSCRIBE 거부 — 인증되지 않은 사용자: destination={}", destination);
       throw new MessageDeliveryException("forbidden topic subscription");
@@ -53,10 +72,9 @@ public class StompTopicAuthInterceptor implements ChannelInterceptor {
     String userEmail = principal.getName();
     User user = userRepository.findByUserEmail(userEmail).orElse(null);
     if (user == null || !user.getUserId().equals(requestedUserId)) {
-      log.warn("STOMP SUBSCRIBE 거부 — 권한 없음: email={}, requestedUserId={}", userEmail, requestedUserId);
+      log.warn("STOMP SUBSCRIBE 거부 — 권한 없음: email={}, requestedUserId={}, destination={}",
+              userEmail, requestedUserId, destination);
       throw new MessageDeliveryException("forbidden topic subscription");
     }
-
-    return message;
   }
 }

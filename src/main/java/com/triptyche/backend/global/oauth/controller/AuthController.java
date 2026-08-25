@@ -24,6 +24,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class AuthController {
 
+  private static final String BEARER_PREFIX = "Bearer ";
+
   private final TokenRefreshService tokenRefreshService;
   private final CookieUtil cookieUtil;
   private final LogoutService logoutService;
@@ -59,12 +61,23 @@ public class AuthController {
       if (refreshToken != null) {
         logoutService.logout(refreshToken);
       } else {
-        log.warn("로그아웃 시, refresh_token 쿠키가 존재하지 않음");
+        String bearerToken = resolveBearerToken(request);
+
+        if (bearerToken != null) {
+          logoutService.logout(bearerToken);
+        } else {
+          log.warn("로그아웃 시, refresh_token 쿠키와 Authorization 헤더가 모두 없음");
+        }
       }
     } finally {
       cookieUtil.deleteCookie(response, "access_token");
       cookieUtil.deleteCookie(response, "refresh_token");
     }
     return RestResponse.success("성공적으로 로그아웃되었습니다.");
+  }
+
+  private String resolveBearerToken(HttpServletRequest request) {
+    String header = request.getHeader("Authorization");
+    return header != null && header.startsWith(BEARER_PREFIX) ? header.substring(BEARER_PREFIX.length()) : null;
   }
 }

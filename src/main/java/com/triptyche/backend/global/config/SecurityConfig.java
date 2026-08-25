@@ -1,6 +1,7 @@
 package com.triptyche.backend.global.config;
 
 import com.triptyche.backend.global.exception.CustomAuthenticationEntryPoint;
+import com.triptyche.backend.global.oauth.AppOAuth2AuthorizationRequestResolver;
 import com.triptyche.backend.global.oauth.CustomOAuth2AuthenticationFailureHandler;
 import com.triptyche.backend.global.oauth.OAuth2LoginSuccessHandler;
 import com.triptyche.backend.global.oauth.service.OAuth2Service;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -29,8 +31,11 @@ public class SecurityConfig {
   private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
   private final CustomOAuth2AuthenticationFailureHandler customOAuth2AuthenticationFailureHandler;
   private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+  private final CorsProperties corsProperties;
+  private final AppOAuth2AuthorizationRequestResolver appOAuth2AuthorizationRequestResolver;
 
   @Bean
+  @Order(2)
   public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtTokenProvider jwtTokenProvider)
           throws Exception {
     http
@@ -74,7 +79,8 @@ public class SecurityConfig {
                     .successHandler(oAuth2LoginSuccessHandler)
                     .failureHandler(customOAuth2AuthenticationFailureHandler)
                     .authorizationEndpoint(authorization -> authorization
-                            .baseUri("/oauth2/authorization"))  // 인증 시작 경로
+                            .baseUri("/oauth2/authorization")   // 인증 시작 경로
+                            .authorizationRequestResolver(appOAuth2AuthorizationRequestResolver))
                     .redirectionEndpoint(redirection -> redirection
                             .baseUri("/signin/oauth2/code/*"))  // 인증 콜백 경로
             )
@@ -90,12 +96,7 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-//    configuration.setAllowedOriginPatterns(List.of("*")); // ⭐ 여기 변경
-    configuration.setAllowedOrigins(List.of(
-            "https://triptyche.cloud",
-            "https://www.triptyche.cloud",
-            "http://localhost:3000"
-    ));
+    configuration.setAllowedOrigins(corsProperties.allowedOrigins());
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     configuration.setAllowedHeaders(List.of("*"));
     configuration.setAllowCredentials(true);

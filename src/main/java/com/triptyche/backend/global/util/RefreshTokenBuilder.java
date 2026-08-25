@@ -15,9 +15,10 @@ public class RefreshTokenBuilder {
     private final JwtSecretKeyManager jwtSecretKeyManager;
     private final JwtProperties jwtProperties;
 
-    public String build(String email, String provider) {
+    public String build(String email, String provider, String sessionId) {
         Claims claims = Jwts.claims().setSubject(email);
         claims.put("provider", provider);
+        claims.setId(sessionId);
 
         Date now = new Date();
         Date validity = new Date(now.getTime() + jwtProperties.refreshTokenExpirySeconds() * 1000);

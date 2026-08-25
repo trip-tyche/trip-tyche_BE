@@ -9,6 +9,19 @@ jwt:
   refresh-token-expiry-seconds: 2592000   # 30일
   guest-token-expiry-seconds: 14400       # 4시간
 
+# SecurityConfig(REST)와 WebSocketConfig(STOMP)가 함께 읽는다.
+cors:
+  allowed-origins:
+    - https://triptyche.cloud
+    - https://www.triptyche.cloud
+    - http://localhost:3000
+    - https://localhost          # Capacitor 앱 WebView
+
+# 앱 딥링크 허용 목록. 여기 없는 redirect_uri는 앱 분기를 타지 못한다.
+app-auth:
+  allowed-redirects:
+    - triptyche://auth/callback
+
 triptyche:
   guest:
     template-email: "guest_template@triptyche.com"

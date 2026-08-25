@@ -1,13 +1,18 @@
 package com.triptyche.backend.global.oauth;
 
 import com.triptyche.backend.global.config.JwtProperties;
+import com.triptyche.backend.global.oauth.dto.OneTimeCodePayload;
+import com.triptyche.backend.global.oauth.repository.OneTimeCodeRepository;
 import com.triptyche.backend.global.oauth.repository.RefreshTokenRepository;
 import com.triptyche.backend.global.util.CookieUtil;
 import com.triptyche.backend.global.util.JwtTokenProvider;
+import com.triptyche.backend.global.util.SessionIdGenerator;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import com.triptyche.backend.domain.user.model.UserRole;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +36,9 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
   private final JwtProperties jwtProperties;
   private final JwtTokenProvider jwtTokenProvider;
   private final RefreshTokenRepository refreshTokenRepository;
+  private final SessionIdGenerator sessionIdGenerator;
+  private final OneTimeCodeRepository oneTimeCodeRepository;
+  private final AppAuthProperties appAuthProperties;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -48,14 +56,35 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
       return;
     }
 
+    int redirectIndex = AppAuthState.redirectIndex(request.getParameter("state"));
+    if (redirectIndex >= 0) {
+      redirectToApp(response, email, provider, redirectIndex);
+      return;
+    }
+
     List<String> roles = List.of(UserRole.USER.authority());
-    String accessToken = jwtTokenProvider.createAccessToken(email, roles, provider);
-    String refreshToken = jwtTokenProvider.createRefreshToken(email, provider);
-    refreshTokenRepository.save(email, refreshToken, jwtProperties.refreshTokenExpirySeconds());
+    String sessionId = sessionIdGenerator.generate();
+    String accessToken = jwtTokenProvider.createAccessToken(email, roles, provider, sessionId);
+    String refreshToken = jwtTokenProvider.createRefreshToken(email, provider, sessionId);
+    refreshTokenRepository.save(email, sessionId, refreshToken, jwtProperties.refreshTokenExpirySeconds());
 
     cookieUtil.setCookie(response, "access_token", accessToken, (int) jwtProperties.accessTokenExpirySeconds());
     cookieUtil.setCookie(response, "refresh_token", refreshToken, (int) jwtProperties.refreshTokenExpirySeconds());
 
     response.sendRedirect(redirectUrl);
+  }
+
+  private void redirectToApp(HttpServletResponse response, String email, String provider, int redirectIndex)
+          throws IOException {
+    String appRedirect = appAuthProperties.redirectAt(redirectIndex);
+    String code = oneTimeCodeRepository.issue(new OneTimeCodePayload(email, provider));
+
+    if (appRedirect == null || code == null) {
+      log.error("앱 딥링크 발급 실패: email={}, redirectIndex={}", email, redirectIndex);
+      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "로그인 처리에 실패했습니다.");
+      return;
+    }
+
+    response.sendRedirect(appRedirect + "?code=" + URLEncoder.encode(code, StandardCharsets.UTF_8));
   }
 }

@@ -15,11 +15,15 @@ public class RefreshTokenRepository {
   private final RedisTemplate<String, Object> redisTemplate;
   private static final String KEY_PREFIX = "refresh_token:";
 
-  public boolean save(String userEmail, String refreshToken, long expirationSeconds) {
-    String key = KEY_PREFIX + userEmail;
+  private String key(String userEmail, String sessionId) {
+    return KEY_PREFIX + userEmail + ":" + sessionId;
+  }
+
+  public boolean save(String userEmail, String sessionId, String refreshToken, long expirationSeconds) {
     try {
-      redisTemplate.opsForValue().set(key, refreshToken, Duration.ofSeconds(expirationSeconds));
-      log.debug("Redis에 RefreshToken 저장 성공: user={}", userEmail);
+      redisTemplate.opsForValue()
+              .set(key(userEmail, sessionId), refreshToken, Duration.ofSeconds(expirationSeconds));
+      log.debug("Redis에 RefreshToken 저장 성공: user={}, session={}", userEmail, sessionId);
       return true;
     } catch (RedisConnectionFailureException e) {
       log.error("Redis 연결 실패로 RefreshToken 저장 실패: user={}, error={}", userEmail, e.getMessage());
@@ -30,18 +34,14 @@ public class RefreshTokenRepository {
     }
   }
 
-  public String findByUserEmail(String userEmail) {
-    String key = KEY_PREFIX + userEmail;
+  public String find(String userEmail, String sessionId) {
     try {
-      log.debug("Redis에서 RefreshToken 조회 시도: user={}", userEmail);
-      Object token = redisTemplate.opsForValue().get(key);
+      Object token = redisTemplate.opsForValue().get(key(userEmail, sessionId));
 
       if (token == null) {
-        log.debug("Redis에서 RefreshToken 조회 결과 없음: user={}", userEmail);
+        log.debug("Redis에서 RefreshToken 조회 결과 없음: user={}, session={}", userEmail, sessionId);
         return null;
       }
-
-      log.debug("Redis에서 RefreshToken 조회 성공: user={}", userEmail);
       return token.toString();
     } catch (RedisConnectionFailureException e) {
       log.error("Redis 연결 실패로 RefreshToken 조회 실패: user={}, error={}", userEmail, e.getMessage());
@@ -52,24 +52,34 @@ public class RefreshTokenRepository {
     }
   }
 
-  public boolean delete(String userEmail) {
-    String key = KEY_PREFIX + userEmail;
+  public boolean delete(String userEmail, String sessionId) {
     try {
-      log.debug("Redis에서 RefreshToken 삭제 시도: user={}", userEmail);
-      Boolean result = redisTemplate.delete(key);
+      boolean deleted = Boolean.TRUE.equals(redisTemplate.delete(key(userEmail, sessionId)));
 
-      if (result) {
-        log.debug("Redis에서 RefreshToken 삭제 성공: user={}", userEmail);
-        return true;
+      if (deleted) {
+        log.debug("Redis에서 RefreshToken 삭제 성공: user={}, session={}", userEmail, sessionId);
       } else {
-        log.warn("Redis에서 RefreshToken 삭제 실패 (키가 존재하지 않음): user={}", userEmail);
-        return false;
+        log.warn("Redis에서 RefreshToken 삭제 실패 (키가 존재하지 않음): user={}, session={}", userEmail, sessionId);
       }
+      return deleted;
     } catch (RedisConnectionFailureException e) {
       log.error("Redis 연결 실패로 RefreshToken 삭제 실패: user={}, error={}", userEmail, e.getMessage());
       return false;
     } catch (Exception e) {
       log.error("RefreshToken 삭제 중 예상치 못한 오류 발생: user={}, error={}", userEmail, e.getMessage());
+      return false;
+    }
+  }
+
+  public boolean expireIn(String userEmail, String sessionId, long graceSeconds) {
+    try {
+      return Boolean.TRUE.equals(
+              redisTemplate.expire(key(userEmail, sessionId), Duration.ofSeconds(graceSeconds)));
+    } catch (RedisConnectionFailureException e) {
+      log.error("Redis 연결 실패로 RefreshToken 유예 설정 실패: user={}, error={}", userEmail, e.getMessage());
+      return false;
+    } catch (Exception e) {
+      log.error("RefreshToken 유예 설정 중 예상치 못한 오류 발생: user={}, error={}", userEmail, e.getMessage());
       return false;
     }
   }
