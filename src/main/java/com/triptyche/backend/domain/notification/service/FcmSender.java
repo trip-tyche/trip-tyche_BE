@@ -44,7 +44,6 @@ public class FcmSender {
     }
   }
 
-  // FCM은 data 값이 문자열이 아니면 발송을 거부한다.
   private Map<String, String> data(PushMessage message) {
     Map<String, String> data = new HashMap<>();
     data.put("type", message.type());
@@ -58,12 +57,18 @@ public class FcmSender {
     return data;
   }
 
-  private List<String> invalidTokens(List<String> tokens, BatchResponse response) {
+  List<String> invalidTokens(List<String> tokens, BatchResponse response) {
     if (response.getFailureCount() == 0) {
       return List.of();
     }
 
     List<SendResponse> responses = response.getResponses();
+
+    if (responses.size() > 1 && responses.stream().allMatch(FcmSender::isInvalidArgument)) {
+      log.error("배치 전체 INVALID_ARGUMENT — 메시지 payload 문제로 판단, 토큰 삭제 생략");
+      return List.of();
+    }
+
     List<String> invalid = new ArrayList<>();
 
     for (int i = 0; i < responses.size(); i++) {
@@ -79,5 +84,11 @@ public class FcmSender {
       }
     }
     return invalid;
+  }
+
+  private static boolean isInvalidArgument(SendResponse response) {
+    return !response.isSuccessful()
+            && response.getException() != null
+            && response.getException().getMessagingErrorCode() == MessagingErrorCode.INVALID_ARGUMENT;
   }
 }
