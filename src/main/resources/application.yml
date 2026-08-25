@@ -27,6 +27,10 @@ app:
   latest-version: "1.0.0"
   update-url: "https://triptyche.cloud/download"
 
+logging:
+  pattern:
+    level: "%5p [%X{client:-unknown} %X{appVersion:-unknown}]"
+
 triptyche:
   guest:
     template-email: "guest_template@triptyche.com"
