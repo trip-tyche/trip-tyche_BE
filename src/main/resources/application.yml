@@ -9,13 +9,13 @@ jwt:
   refresh-token-expiry-seconds: 2592000   # 30일
   guest-token-expiry-seconds: 14400       # 4시간
 
-# REST(SecurityConfig)와 STOMP(WebSocketConfig)가 함께 읽는다. 여기만 고치면 된다.
+# SecurityConfig(REST)와 WebSocketConfig(STOMP)가 함께 읽는다.
 cors:
   allowed-origins:
     - https://triptyche.cloud
     - https://www.triptyche.cloud
     - http://localhost:3000
-    - https://localhost          # Capacitor Android WebView (capacitor.config.ts의 androidScheme: https)
+    - https://localhost          # Capacitor 앱 WebView
 
 triptyche:
   guest:

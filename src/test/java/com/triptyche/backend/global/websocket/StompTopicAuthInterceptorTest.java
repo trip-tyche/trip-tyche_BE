@@ -114,14 +114,14 @@ class StompTopicAuthInterceptorTest {
   }
 
   @Nested
-  @DisplayName("다른 토픽 또는 다른 커맨드는 검증 없이 통과한다")
-  class NonMediaProcessedTopics {
+  @DisplayName("가드 대상이 아닌 토픽 또는 다른 커맨드는 검증 없이 통과한다")
+  class UnguardedTopics {
 
     @Test
-    @DisplayName("SUBSCRIBE /topic/share-notifications/{userId} — prefix가 달라 검증 생략, 통과")
-    void subscribe_givenShareNotificationsTopic_passes() {
+    @DisplayName("SUBSCRIBE /topic/unknown/{userId} — 가드 대상 prefix가 아니라 검증 생략, 통과")
+    void subscribe_givenUnguardedTopic_passes() {
       // given — principal/userRepository 설정 없이도 통과해야 함
-      Message<?> message = buildMessage(StompCommand.SUBSCRIBE, "/topic/share-notifications/42", principalOf("user@example.com"));
+      Message<?> message = buildMessage(StompCommand.SUBSCRIBE, "/topic/unknown/42", principalOf("user@example.com"));
 
       // when
       Message<?> result = interceptor.preSend(message, null);
