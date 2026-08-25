@@ -29,6 +29,7 @@ public class SecurityConfig {
   private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
   private final CustomOAuth2AuthenticationFailureHandler customOAuth2AuthenticationFailureHandler;
   private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+  private final CorsProperties corsProperties;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtTokenProvider jwtTokenProvider)
@@ -90,12 +91,7 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-//    configuration.setAllowedOriginPatterns(List.of("*")); // ⭐ 여기 변경
-    configuration.setAllowedOrigins(List.of(
-            "https://triptyche.cloud",
-            "https://www.triptyche.cloud",
-            "http://localhost:3000"
-    ));
+    configuration.setAllowedOrigins(corsProperties.allowedOrigins());
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     configuration.setAllowedHeaders(List.of("*"));
     configuration.setAllowCredentials(true);

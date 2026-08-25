@@ -23,3 +23,8 @@ triptyche:
     share-target-trip-title: "뉴욕 가을 여행"
     share-delay-seconds: 15
     share-poll-cron: "0/10 * * * * *"
+
+cors:
+  allowed-origins:
+    - https://triptyche.cloud
+    - http://localhost:3000

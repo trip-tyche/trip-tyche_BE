@@ -26,6 +26,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   private final ObjectMapper objectMapper;
   private final StompTopicAuthInterceptor stompTopicAuthInterceptor;
+  private final CorsProperties corsProperties;
 
   @Override
   public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -47,11 +48,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
   @Override
   public void registerStompEndpoints(StompEndpointRegistry registry) {
     registry.addEndpoint("/ws")
-            .setAllowedOrigins(
-                    "https://triptyche.cloud",
-                    "https://www.triptyche.cloud",
-                    "http://localhost:3000"
-            );
+            .setAllowedOrigins(corsProperties.toArray());
   }
 
   @Override
