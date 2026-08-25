@@ -27,6 +27,13 @@ public class DeviceService {
                     () -> create(userId, request));
   }
 
+  @Transactional
+  public void unregister(Long userId, String token) {
+    deviceRepository.findByToken(token)
+            .filter(device -> device.getUserId().equals(userId))
+            .ifPresent(deviceRepository::delete);
+  }
+
   private void validate(DeviceRegisterRequest request) {
     if (request.token() == null || request.token().isBlank() || request.platform() == null) {
       throw new CustomException(ResultCode.INVALID_REQUEST);
