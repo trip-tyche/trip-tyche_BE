@@ -5,6 +5,7 @@ import com.triptyche.backend.global.config.JwtProperties;
 import com.triptyche.backend.global.exception.CustomException;
 import com.triptyche.backend.global.oauth.repository.RefreshTokenRepository;
 import com.triptyche.backend.global.util.JwtTokenProvider;
+import com.triptyche.backend.global.util.SessionIdGenerator;
 import com.triptyche.backend.domain.user.model.UserRole;
 import java.util.List;
 import java.util.Map;
@@ -17,9 +18,13 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class TokenRefreshService {
 
+  // FE 인터셉터가 401 하나에 갱신을 두 번 태울 수 있어, 회전 후에도 이전 토큰을 잠시 살려둔다.
+  private static final long ROTATION_GRACE_SECONDS = 10;
+
   private final JwtTokenProvider jwtTokenProvider;
   private final RefreshTokenRepository refreshTokenRepository;
   private final JwtProperties jwtProperties;
+  private final SessionIdGenerator sessionIdGenerator;
 
   public Map<String, String> refreshToken(String refreshToken) {
     if (refreshToken == null || refreshToken.isEmpty()) {
@@ -43,42 +48,49 @@ public class TokenRefreshService {
 
       log.info("토큰 갱신 시도: 사용자={}, 제공자={}", userEmail, provider);
 
-      // 4. Redis에 저장된 Refresh Token과 클라이언트가 보낸 토큰을 비교
-      String storedRefreshToken = refreshTokenRepository.findByUserEmail(userEmail);
-      log.info("저장된 refreshToken (Redis): {}",
-              storedRefreshToken != null ? "토큰 존재" : "토큰 없음");
-
-      // 5. 저장된 토큰 확인 및 비교
-      if (storedRefreshToken == null) {
-        log.warn("Redis에 저장된 Refresh Token이 없음 (만료 또는 로그아웃): 사용자={}", userEmail);
+      // 4. 세션 식별자가 없으면 도입 이전 토큰이므로 재로그인시킨다
+      String sessionId = jwtTokenProvider.extractSessionId(refreshToken);
+      if (sessionId == null) {
+        log.warn("세션 식별자가 없는 Refresh Token (구버전): 사용자={}", userEmail);
         throw new CustomException(ResultCode.REFRESH_TOKEN_EXPIRED);
       }
 
-      // 저장된 토큰과 전달된 토큰이 일치하지 않는 경우
+      // 5. 해당 세션만 조회한다. 다른 기기의 세션은 건드리지 않는다
+      String storedRefreshToken = refreshTokenRepository.find(userEmail, sessionId);
+      if (storedRefreshToken == null) {
+        log.warn("Redis에 저장된 Refresh Token이 없음 (만료 또는 로그아웃): 사용자={}, 세션={}",
+                userEmail, sessionId);
+        throw new CustomException(ResultCode.REFRESH_TOKEN_EXPIRED);
+      }
+
       if (!storedRefreshToken.equals(refreshToken)) {
-        log.warn("Refresh token 불일치 감지: 사용자={}", userEmail);
+        log.warn("Refresh token 불일치 감지: 사용자={}, 세션={}", userEmail, sessionId);
         throw new CustomException(ResultCode.INVALID_JWT);
       }
 
-      // 6. 새로운 토큰 발급
+      // 6. 새 세션으로 회전
       List<String> roles = List.of(UserRole.USER.authority());
-      String newAccessToken = jwtTokenProvider.createAccessToken(userEmail, roles, provider);
-      String newRefreshToken = jwtTokenProvider.createRefreshToken(userEmail, provider);
+      String newSessionId = sessionIdGenerator.generate();
+      String newRefreshToken = jwtTokenProvider.createRefreshToken(userEmail, provider, newSessionId);
 
-      // 7. Redis에 새 Refresh Token 저장 (기존 토큰을 대체)
       boolean saveSuccess = refreshTokenRepository.save(
-              userEmail, newRefreshToken, jwtProperties.refreshTokenExpirySeconds());
+              userEmail, newSessionId, newRefreshToken, jwtProperties.refreshTokenExpirySeconds());
 
       if (!saveSuccess) {
-        log.error("새 Refresh Token Redis 저장 실패 - 기존 토큰 유지");
-        // Redis 저장 실패 시 기존 Access Token만 갱신하고 Refresh Token은 유지
-        return Map.of("accessToken", newAccessToken, "refreshToken", refreshToken);
+        log.error("새 Refresh Token Redis 저장 실패 - 기존 세션 유지");
+        return Map.of(
+                "accessToken", jwtTokenProvider.createAccessToken(userEmail, roles, provider, sessionId),
+                "refreshToken", refreshToken);
       }
 
-      log.info("토큰 갱신 성공: 사용자={}", userEmail);
+      // 7. 이전 토큰은 지우지 않고 유예만 준다
+      refreshTokenRepository.expireIn(userEmail, sessionId, ROTATION_GRACE_SECONDS);
 
-      // 토큰 반환
-      return Map.of("accessToken", newAccessToken, "refreshToken", newRefreshToken);
+      log.info("토큰 갱신 성공: 사용자={}, 세션={} -> {}", userEmail, sessionId, newSessionId);
+
+      return Map.of(
+              "accessToken", jwtTokenProvider.createAccessToken(userEmail, roles, provider, newSessionId),
+              "refreshToken", newRefreshToken);
 
     } catch (CustomException e) {
       // 이미 처리된 예외는 그대로 전파

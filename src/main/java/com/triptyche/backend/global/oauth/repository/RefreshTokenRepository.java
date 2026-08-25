@@ -7,12 +7,7 @@ import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
-/**
- * refresh 토큰 저장소.
- * <p>
- * 키는 {@code refresh_token:{userEmail}:{sessionId}} 다. 세션 식별자를 키에 넣기 전에는
- * 사용자당 슬롯이 하나뿐이어서, 같은 계정으로 웹과 앱에 동시 로그인하면 나중 것이 앞의 것을 덮어썼다.
- */
+// 키에 세션 식별자가 없던 시절에는 슬롯이 사용자당 하나여서 웹·앱 동시 로그인이 불가능했다.
 @Repository
 @RequiredArgsConstructor
 @Slf4j
@@ -77,10 +72,6 @@ public class RefreshTokenRepository {
     }
   }
 
-  /**
-   * 회전 시 이전 토큰을 즉시 지우지 않고 수명만 짧게 줄인다.
-   * FE 인터셉터가 401을 받고 동시에 두 번 갱신을 시도해도 뒤의 요청이 실패하지 않게 하기 위한 유예다.
-   */
   public boolean expireIn(String userEmail, String sessionId, long graceSeconds) {
     try {
       return Boolean.TRUE.equals(
@@ -108,7 +99,7 @@ public class RefreshTokenRepository {
     }
   }
 
-  // --- 세션 식별자 도입 이전 경로. 호출부를 옮긴 뒤 제거한다. ---
+  // 세션 식별자 도입 이전 경로. 호출부를 옮긴 뒤 제거한다.
 
   public boolean save(String userEmail, String refreshToken, long expirationSeconds) {
     try {

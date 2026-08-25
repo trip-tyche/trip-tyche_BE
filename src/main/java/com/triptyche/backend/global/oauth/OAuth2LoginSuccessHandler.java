@@ -4,6 +4,7 @@ import com.triptyche.backend.global.config.JwtProperties;
 import com.triptyche.backend.global.oauth.repository.RefreshTokenRepository;
 import com.triptyche.backend.global.util.CookieUtil;
 import com.triptyche.backend.global.util.JwtTokenProvider;
+import com.triptyche.backend.global.util.SessionIdGenerator;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,6 +32,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
   private final JwtProperties jwtProperties;
   private final JwtTokenProvider jwtTokenProvider;
   private final RefreshTokenRepository refreshTokenRepository;
+  private final SessionIdGenerator sessionIdGenerator;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -49,9 +51,10 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     }
 
     List<String> roles = List.of(UserRole.USER.authority());
-    String accessToken = jwtTokenProvider.createAccessToken(email, roles, provider);
-    String refreshToken = jwtTokenProvider.createRefreshToken(email, provider);
-    refreshTokenRepository.save(email, refreshToken, jwtProperties.refreshTokenExpirySeconds());
+    String sessionId = sessionIdGenerator.generate();
+    String accessToken = jwtTokenProvider.createAccessToken(email, roles, provider, sessionId);
+    String refreshToken = jwtTokenProvider.createRefreshToken(email, provider, sessionId);
+    refreshTokenRepository.save(email, sessionId, refreshToken, jwtProperties.refreshTokenExpirySeconds());
 
     cookieUtil.setCookie(response, "access_token", accessToken, (int) jwtProperties.accessTokenExpirySeconds());
     cookieUtil.setCookie(response, "refresh_token", refreshToken, (int) jwtProperties.refreshTokenExpirySeconds());

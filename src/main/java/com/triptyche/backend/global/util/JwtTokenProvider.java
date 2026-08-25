@@ -91,10 +91,7 @@ public class JwtTokenProvider {
       throw new CustomException(ResultCode.JWT_CLAIM_ERROR);
     }
   }
-  /**
-   * 세션 식별자 추출. refresh 토큰은 jti에, access 토큰은 sid에 같은 값을 싣는다.
-   * 세션 식별자가 없는 구버전 토큰이면 null을 돌려준다.
-   */
+  // refresh 토큰은 jti에, access 토큰은 sid에 싣는다. 구버전 토큰이면 null.
   public String extractSessionId(String token) {
     try {
       String provider = extractProviderFromToken(token);
