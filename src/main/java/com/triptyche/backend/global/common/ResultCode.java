@@ -33,6 +33,7 @@ public enum ResultCode {
   INVALID_PROVIDER(HttpStatus.BAD_REQUEST, 2007, "유효하지 않은 OAuth 제공자입니다."),
   REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, 2008, "Refresh Token이 만료되었거나 유효하지 않습니다."),
   ACCESS_DENIED(HttpStatus.FORBIDDEN, 2009, "해당 리소스에 대한 접근 권한이 없습니다."),
+  INVALID_AUTH_CODE(HttpStatus.UNAUTHORIZED, 2010, "유효하지 않은 인증 코드입니다. 다시 로그인해 주세요."),
 
 
   // 사용자 관련 오류 코드 (3000번대)
