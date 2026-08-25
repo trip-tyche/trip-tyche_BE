@@ -55,7 +55,7 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ubuntu
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "docker-compose.yml,database,image-worker"
+          source: "docker-compose.yml,database,image-worker,nginx/nginx.conf"
           target: "~/triptyche/"
 
       - name: Deploy to Oracle VM
@@ -69,6 +69,7 @@ jobs:
             docker compose pull app
             docker compose build image-worker
             docker compose up -d --wait
+            docker compose exec -T nginx nginx -t
             docker compose exec -T nginx nginx -s reload
             docker image prune -f
 
