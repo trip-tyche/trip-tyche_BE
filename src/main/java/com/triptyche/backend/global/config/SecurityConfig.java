@@ -1,6 +1,7 @@
 package com.triptyche.backend.global.config;
 
 import com.triptyche.backend.global.exception.CustomAuthenticationEntryPoint;
+import com.triptyche.backend.global.oauth.AppOAuth2AuthorizationRequestResolver;
 import com.triptyche.backend.global.oauth.CustomOAuth2AuthenticationFailureHandler;
 import com.triptyche.backend.global.oauth.OAuth2LoginSuccessHandler;
 import com.triptyche.backend.global.oauth.service.OAuth2Service;
@@ -30,6 +31,7 @@ public class SecurityConfig {
   private final CustomOAuth2AuthenticationFailureHandler customOAuth2AuthenticationFailureHandler;
   private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
   private final CorsProperties corsProperties;
+  private final AppOAuth2AuthorizationRequestResolver appOAuth2AuthorizationRequestResolver;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtTokenProvider jwtTokenProvider)
@@ -75,7 +77,8 @@ public class SecurityConfig {
                     .successHandler(oAuth2LoginSuccessHandler)
                     .failureHandler(customOAuth2AuthenticationFailureHandler)
                     .authorizationEndpoint(authorization -> authorization
-                            .baseUri("/oauth2/authorization"))  // 인증 시작 경로
+                            .baseUri("/oauth2/authorization")   // 인증 시작 경로
+                            .authorizationRequestResolver(appOAuth2AuthorizationRequestResolver))
                     .redirectionEndpoint(redirection -> redirection
                             .baseUri("/signin/oauth2/code/*"))  // 인증 콜백 경로
             )
