@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "6. 푸시 알림 API")
+@Tag(name = "11. 푸시 알림 API")
 @RestController
 @RequestMapping("/v1/devices")
 @RequiredArgsConstructor
