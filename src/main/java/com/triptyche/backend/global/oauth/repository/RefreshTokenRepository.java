@@ -98,36 +98,4 @@ public class RefreshTokenRepository {
       return false;
     }
   }
-
-  // 세션 식별자 도입 이전 경로. 호출부를 옮긴 뒤 제거한다.
-
-  public boolean save(String userEmail, String refreshToken, long expirationSeconds) {
-    try {
-      redisTemplate.opsForValue()
-              .set(KEY_PREFIX + userEmail, refreshToken, Duration.ofSeconds(expirationSeconds));
-      return true;
-    } catch (Exception e) {
-      log.error("RefreshToken 저장 실패: user={}, error={}", userEmail, e.getMessage());
-      return false;
-    }
-  }
-
-  public String findByUserEmail(String userEmail) {
-    try {
-      Object token = redisTemplate.opsForValue().get(KEY_PREFIX + userEmail);
-      return token == null ? null : token.toString();
-    } catch (Exception e) {
-      log.error("RefreshToken 조회 실패: user={}, error={}", userEmail, e.getMessage());
-      return null;
-    }
-  }
-
-  public boolean delete(String userEmail) {
-    try {
-      return Boolean.TRUE.equals(redisTemplate.delete(KEY_PREFIX + userEmail));
-    } catch (Exception e) {
-      log.error("RefreshToken 삭제 실패: user={}, error={}", userEmail, e.getMessage());
-      return false;
-    }
-  }
 }
