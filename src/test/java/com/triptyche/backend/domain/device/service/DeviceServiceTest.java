@@ -13,6 +13,7 @@ import com.triptyche.backend.domain.device.model.DevicePlatform;
 import com.triptyche.backend.domain.device.repository.DeviceRepository;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -118,6 +119,34 @@ class DeviceServiceTest {
               new DeviceRegisterRequest(TOKEN, null, "1.0.0")))
               .isInstanceOf(CustomException.class)
               .hasFieldOrPropertyWithValue("resultCode", ResultCode.INVALID_REQUEST);
+    }
+  }
+
+  @Nested
+  @DisplayName("무효 토큰 정리")
+  class RemoveInvalidTokens {
+
+    @Test
+    @DisplayName("전달된 토큰만 일괄 삭제한다")
+    void removeInvalidTokens_givenTokens_deletesThem() {
+      // given
+      List<String> dead = List.of("DEAD_1", "DEAD_2");
+
+      // when
+      deviceService.removeInvalidTokens(dead);
+
+      // then
+      verify(deviceRepository).deleteByTokenIn(dead);
+    }
+
+    @Test
+    @DisplayName("정리할 토큰이 없으면 DB를 건드리지 않는다")
+    void removeInvalidTokens_givenEmpty_skipsDelete() {
+      // when
+      deviceService.removeInvalidTokens(List.of());
+
+      // then
+      verify(deviceRepository, never()).deleteByTokenIn(any());
     }
   }
 
