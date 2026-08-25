@@ -14,8 +14,9 @@ public record AppAuthProperties(List<String> allowedRedirects) {
     allowedRedirects = List.copyOf(allowedRedirects);
   }
 
+  // List.of(...).indexOf(null)은 NPE를 던진다.
   public int indexOf(String redirectUri) {
-    return allowedRedirects.indexOf(redirectUri);
+    return redirectUri == null ? -1 : allowedRedirects.indexOf(redirectUri);
   }
 
   public String redirectAt(int index) {
