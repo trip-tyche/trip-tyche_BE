@@ -47,7 +47,6 @@ public class AuthController {
     cookieUtil.setCookie(response, "access_token", tokenMap.get("accessToken"), (int) jwtProperties.accessTokenExpirySeconds());
     cookieUtil.setCookie(response, "refresh_token", tokenMap.get("refreshToken"), (int) jwtProperties.refreshTokenExpirySeconds());
 
-    log.debug("발급된 access_token: {}", tokenMap.get("accessToken"));
     return RestResponse.success("성공적으로 토큰을 갱신했습니다.");
   }
 
