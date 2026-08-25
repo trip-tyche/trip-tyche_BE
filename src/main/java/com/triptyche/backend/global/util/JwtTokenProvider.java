@@ -28,12 +28,19 @@ public class JwtTokenProvider {
   private final AccessTokenBuilder accessTokenBuilder;
   private final RefreshTokenBuilder refreshTokenBuilder;
   private final GuestTokenBuilder guestTokenBuilder;
+  private final SessionIdGenerator sessionIdGenerator;
 
   public String createAccessToken(String userEmail, List<String> roles, String provider) {
     return accessTokenBuilder.build(userEmail, roles, provider);
   }
+  public String createAccessToken(String userEmail, List<String> roles, String provider, String sessionId) {
+    return accessTokenBuilder.build(userEmail, roles, provider, sessionId);
+  }
   public String createRefreshToken(String userEmail, String provider) {
-    return refreshTokenBuilder.build(userEmail, provider);
+    return refreshTokenBuilder.build(userEmail, provider, sessionIdGenerator.generate());
+  }
+  public String createRefreshToken(String userEmail, String provider, String sessionId) {
+    return refreshTokenBuilder.build(userEmail, provider, sessionId);
   }
   public String createGuestToken(String userEmail, String provider) {
     return guestTokenBuilder.build(userEmail, provider);
@@ -84,6 +91,30 @@ public class JwtTokenProvider {
       throw new CustomException(ResultCode.JWT_CLAIM_ERROR);
     }
   }
+  /**
+   * 세션 식별자 추출. refresh 토큰은 jti에, access 토큰은 sid에 같은 값을 싣는다.
+   * 세션 식별자가 없는 구버전 토큰이면 null을 돌려준다.
+   */
+  public String extractSessionId(String token) {
+    try {
+      String provider = extractProviderFromToken(token);
+      Key secretKey = jwtSecretKeyManager.getSecretKey(provider);
+      Claims claims = Jwts.parserBuilder().setSigningKey(secretKey).build()
+              .parseClaimsJws(token).getBody();
+
+      if (claims.getId() != null) {
+        return claims.getId();
+      }
+      Object sid = claims.get("sid");
+      return sid != null ? sid.toString() : null;
+    } catch (CustomException e) {
+      throw e;
+    } catch (Exception e) {
+      log.error("JWT에서 세션 식별자 추출 중 오류 발생: {}", e.getMessage());
+      throw new CustomException(ResultCode.JWT_CLAIM_ERROR);
+    }
+  }
+
   public String extractProviderFromToken(String token) {
     try {
       String[] chunks = token.split("\\.");
