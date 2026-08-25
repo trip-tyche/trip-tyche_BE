@@ -38,6 +38,26 @@ public class OneTimeCodeRepository {
     }
   }
 
+  // GETDEL로 조회와 삭제를 한 번에 처리해 동시에 두 번 교환되는 것을 막는다.
+  public OneTimeCodePayload consume(String code) {
+    if (code == null || code.isBlank()) {
+      return null;
+    }
+
+    try {
+      Object stored = redisTemplate.opsForValue().getAndDelete(KEY_PREFIX + code);
+
+      if (stored == null) {
+        log.warn("1회용 code 소비 실패 (만료·미존재·이미 사용됨)");
+        return null;
+      }
+      return objectMapper.readValue(stored.toString(), OneTimeCodePayload.class);
+    } catch (Exception e) {
+      log.error("1회용 code 소비 중 오류 발생: {}", e.getMessage());
+      return null;
+    }
+  }
+
   private String generateCode() {
     byte[] bytes = new byte[CODE_BYTE_LENGTH];
     secureRandom.nextBytes(bytes);
