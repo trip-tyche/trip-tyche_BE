@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
@@ -13,11 +14,14 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class CustomOAuth2AuthenticationFailureHandler implements AuthenticationFailureHandler {
 
   @Value("${spring.redirect.failure-url}")
   private String failureRedirectUrl;
+
+  private final AppAuthProperties appAuthProperties;
 
   @Override
   public void onAuthenticationFailure(
@@ -40,8 +44,17 @@ public class CustomOAuth2AuthenticationFailureHandler implements AuthenticationF
       errorCode = "server_error";
     }
 
-    String redirectTarget = failureRedirectUrl + "?error="
-        + URLEncoder.encode(errorCode, StandardCharsets.UTF_8);
+    String encodedError = URLEncoder.encode(errorCode, StandardCharsets.UTF_8);
+
+    // 웹 주소로 보내면 인앱 브라우저가 남아 앱이 계속 기다린다.
+    String appRedirect = appAuthProperties.redirectAt(
+        AppAuthState.redirectIndex(request.getParameter("state")));
+    if (appRedirect != null) {
+      response.sendRedirect(appRedirect + "?error=" + encodedError);
+      return;
+    }
+
+    String redirectTarget = failureRedirectUrl + "?error=" + encodedError;
     response.sendRedirect(redirectTarget);
   }
 }
