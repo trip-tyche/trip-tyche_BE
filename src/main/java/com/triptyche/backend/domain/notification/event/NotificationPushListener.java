@@ -1,7 +1,6 @@
 package com.triptyche.backend.domain.notification.event;
 
-import com.triptyche.backend.domain.device.model.Device;
-import com.triptyche.backend.domain.device.repository.DeviceRepository;
+import com.triptyche.backend.domain.device.service.DeviceService;
 import com.triptyche.backend.domain.notification.dto.PushMessage;
 import com.triptyche.backend.domain.notification.service.FcmSender;
 import com.triptyche.backend.domain.notification.service.NotificationPushMapper;
@@ -18,7 +17,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 public class NotificationPushListener {
 
-  private final DeviceRepository deviceRepository;
+  private final DeviceService deviceService;
   private final NotificationPushMapper pushMapper;
   private final FcmSender fcmSender;
 
@@ -26,16 +25,14 @@ public class NotificationPushListener {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onNotificationSaved(NotificationSavedEvent event) {
     try {
-      List<String> tokens = deviceRepository.findAllByUserId(event.recipientId()).stream()
-              .map(Device::getToken)
-              .toList();
+      List<String> tokens = deviceService.findTokens(event.recipientId());
 
       if (tokens.isEmpty()) {
         return;
       }
 
       PushMessage message = pushMapper.toPushMessage(event.type(), event.payload());
-      fcmSender.send(tokens, message);
+      deviceService.removeInvalidTokens(fcmSender.send(tokens, message));
     } catch (Exception e) {
       log.error("[{}] 푸시 발송 실패: recipient={}", event.type(), event.recipientId(), e);
     }
