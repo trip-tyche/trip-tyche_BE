@@ -1,6 +1,8 @@
 package com.triptyche.backend.global.oauth;
 
 import com.triptyche.backend.global.config.JwtProperties;
+import com.triptyche.backend.global.oauth.dto.OneTimeCodePayload;
+import com.triptyche.backend.global.oauth.repository.OneTimeCodeRepository;
 import com.triptyche.backend.global.oauth.repository.RefreshTokenRepository;
 import com.triptyche.backend.global.util.CookieUtil;
 import com.triptyche.backend.global.util.JwtTokenProvider;
@@ -9,6 +11,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import com.triptyche.backend.domain.user.model.UserRole;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +37,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
   private final JwtTokenProvider jwtTokenProvider;
   private final RefreshTokenRepository refreshTokenRepository;
   private final SessionIdGenerator sessionIdGenerator;
+  private final OneTimeCodeRepository oneTimeCodeRepository;
+  private final AppAuthProperties appAuthProperties;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -50,6 +56,12 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
       return;
     }
 
+    int redirectIndex = AppAuthState.redirectIndex(request.getParameter("state"));
+    if (redirectIndex >= 0) {
+      redirectToApp(response, email, provider, redirectIndex);
+      return;
+    }
+
     List<String> roles = List.of(UserRole.USER.authority());
     String sessionId = sessionIdGenerator.generate();
     String accessToken = jwtTokenProvider.createAccessToken(email, roles, provider, sessionId);
@@ -60,5 +72,20 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     cookieUtil.setCookie(response, "refresh_token", refreshToken, (int) jwtProperties.refreshTokenExpirySeconds());
 
     response.sendRedirect(redirectUrl);
+  }
+
+  // 앱에는 토큰 대신 60초짜리 code만 넘긴다. 딥링크 URL은 OS 로그에 남는다.
+  private void redirectToApp(HttpServletResponse response, String email, String provider, int redirectIndex)
+          throws IOException {
+    String appRedirect = appAuthProperties.redirectAt(redirectIndex);
+    String code = oneTimeCodeRepository.issue(new OneTimeCodePayload(email, provider));
+
+    if (appRedirect == null || code == null) {
+      log.error("앱 딥링크 발급 실패: email={}, redirectIndex={}", email, redirectIndex);
+      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "로그인 처리에 실패했습니다.");
+      return;
+    }
+
+    response.sendRedirect(appRedirect + "?code=" + URLEncoder.encode(code, StandardCharsets.UTF_8));
   }
 }
