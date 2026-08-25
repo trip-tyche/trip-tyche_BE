@@ -4,7 +4,6 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import org.springframework.stereotype.Component;
 
-// 같은 값이 refresh 토큰의 jti와 access 토큰의 sid에 함께 실린다.
 @Component
 public class SessionIdGenerator {
 

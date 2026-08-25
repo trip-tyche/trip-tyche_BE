@@ -74,7 +74,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     response.sendRedirect(redirectUrl);
   }
 
-  // 앱에는 토큰 대신 60초짜리 code만 넘긴다. 딥링크 URL은 OS 로그에 남는다.
   private void redirectToApp(HttpServletResponse response, String email, String provider, int redirectIndex)
           throws IOException {
     String appRedirect = appAuthProperties.redirectAt(redirectIndex);

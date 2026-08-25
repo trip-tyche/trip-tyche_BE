@@ -8,8 +8,7 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequ
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-// 인가 요청은 리다이렉트를 거치므로 시작 시점의 쿼리 파라미터가 콜백까지 살아남지 않는다.
-// state는 provider가 그대로 돌려주므로 여기에 표시를 실어 보낸다.
+// 인가 요청은 리다이렉트를 거쳐서 시작 시점의 쿼리 파라미터가 콜백까지 살아남지 않는다.
 @Component
 @Slf4j
 public class AppOAuth2AuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
@@ -48,7 +47,6 @@ public class AppOAuth2AuthorizationRequestResolver implements OAuth2Authorizatio
     String redirectUri = request.getParameter(REDIRECT_URI_PARAMETER);
     int redirectIndex = appAuthProperties.indexOf(redirectUri);
 
-    // 허용 목록에 없으면 표시를 남기지 않는다. 앱 분기를 타지 못하고 웹 흐름으로 끝난다.
     if (redirectIndex < 0) {
       log.warn("허용되지 않은 앱 redirect_uri: {}", redirectUri);
       return authorizationRequest;

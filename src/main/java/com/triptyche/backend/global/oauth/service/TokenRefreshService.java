@@ -55,7 +55,7 @@ public class TokenRefreshService {
         throw new CustomException(ResultCode.REFRESH_TOKEN_EXPIRED);
       }
 
-      // 5. 해당 세션만 조회한다. 다른 기기의 세션은 건드리지 않는다
+      // 5. 해당 세션만 조회한다
       String storedRefreshToken = refreshTokenRepository.find(userEmail, sessionId);
       if (storedRefreshToken == null) {
         log.warn("Redis에 저장된 Refresh Token이 없음 (만료 또는 로그아웃): 사용자={}, 세션={}",
@@ -68,7 +68,6 @@ public class TokenRefreshService {
         throw new CustomException(ResultCode.INVALID_JWT);
       }
 
-      // 6. 새 세션으로 회전
       List<String> roles = List.of(UserRole.USER.authority());
       String newSessionId = sessionIdGenerator.generate();
       String newRefreshToken = jwtTokenProvider.createRefreshToken(userEmail, provider, newSessionId);
@@ -83,7 +82,6 @@ public class TokenRefreshService {
                 "refreshToken", refreshToken);
       }
 
-      // 7. 이전 토큰은 지우지 않고 유예만 준다
       refreshTokenRepository.expireIn(userEmail, sessionId, ROTATION_GRACE_SECONDS);
 
       log.info("토큰 갱신 성공: 사용자={}, 세션={} -> {}", userEmail, sessionId, newSessionId);

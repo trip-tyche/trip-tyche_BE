@@ -7,7 +7,6 @@ import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
-// 키에 세션 식별자가 없던 시절에는 슬롯이 사용자당 하나여서 웹·앱 동시 로그인이 불가능했다.
 @Repository
 @RequiredArgsConstructor
 @Slf4j
