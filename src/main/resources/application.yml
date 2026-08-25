@@ -22,10 +22,14 @@ app-auth:
   allowed-redirects:
     - triptyche://auth/callback
 
+# 값을 바꿀 때 이미지 재빌드가 필요하지 않도록 환경변수로 덮어쓸 수 있게 둔다.
+# 치명적 버그로 구버전을 급히 막아야 할 때 배포 파이프라인 전체를 타면 늦는다.
+# ⚠️ update-url은 실제로 APK를 내려받을 수 있는 주소여야 한다.
+#    현재 기본값은 자리표시자다 — 배포 경로가 정해지면 VM의 .env에서 APP_UPDATE_URL로 지정할 것.
 app:
-  min-supported-version: "1.0.0"
-  latest-version: "1.0.0"
-  update-url: "https://triptyche.cloud/download"
+  min-supported-version: ${APP_MIN_SUPPORTED_VERSION:1.0.0}
+  latest-version: ${APP_LATEST_VERSION:1.0.0}
+  update-url: ${APP_UPDATE_URL:https://triptyche.cloud}
 
 logging:
   pattern:
