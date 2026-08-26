@@ -156,7 +156,8 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://db:3306/trip_tyche
+    # flyway와 같은 이유로 필요하다 — 아래 주석 참조(docker-compose.yml의 flyway 서비스).
+    url: jdbc:mysql://db:3306/trip_tyche?allowPublicKeyRetrieval=true
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
 

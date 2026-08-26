@@ -84,7 +84,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: -url=jdbc:mysql://db:3306/${MYSQL_DATABASE} -user=${MYSQL_USER} -password=${MYSQL_PASSWORD} -connectRetries=5 migrate
+    # MySQL 8 기본 인증(caching_sha2_password)은 평문 연결에서 서버 공개키가 필요하다.
+    # db 컨테이너가 재시작되면 서버측 비밀번호 캐시가 비어 첫 인증이 이 지점에서 막힌다.
+    # (실제로 이것 때문에 flyway가 실패했고, app이 의존하고 있어 API 전체가 내려갔다)
+    command: -url=jdbc:mysql://db:3306/${MYSQL_DATABASE}?allowPublicKeyRetrieval=true -user=${MYSQL_USER} -password=${MYSQL_PASSWORD} -connectRetries=5 migrate
     volumes:
       - ./database/migration:/flyway/sql
     networks:
