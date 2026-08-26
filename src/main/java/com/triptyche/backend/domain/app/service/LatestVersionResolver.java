@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -46,6 +47,8 @@ public class LatestVersionResolver {
   private final Clock clock;
   private final AtomicReference<CachedVersion> cache = new AtomicReference<>();
 
+  // 생성자가 둘이라 Spring이 스스로 고르지 못한다. 지정하지 않으면 기본 생성자를 찾다 기동에 실패한다.
+  @Autowired
   public LatestVersionResolver(AppConfigProperties properties, RestClient.Builder builder) {
     this(properties, builder.requestFactory(timeoutRequestFactory()), Clock.systemUTC());
   }

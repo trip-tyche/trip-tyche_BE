@@ -8,6 +8,9 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
@@ -112,6 +115,21 @@ class LatestVersionResolverTest {
         assertThat(resolver.resolve()).isEqualTo(CONFIGURED_FALLBACK);
 
         server.verify();
+    }
+
+    @Test
+    void 스프링이_빈으로_생성할_수_있다() {
+        /*
+         * 단위 테스트는 생성자를 직접 부르고 컨트롤러 테스트는 이 빈을 목으로 대체하므로,
+         * '스프링이 이 클래스를 만들 수 있는가'는 어느 쪽도 검증하지 않는다.
+         * 실제로 생성자가 둘인 채 @Autowired가 없어 운영 기동이 실패했다.
+         */
+        new ApplicationContextRunner()
+                .withConfiguration(AutoConfigurations.of(RestClientAutoConfiguration.class))
+                .withBean(AppConfigProperties.class, () ->
+                        new AppConfigProperties("1.0.0", CONFIGURED_FALLBACK, "https://triptyche.cloud", ""))
+                .withUserConfiguration(LatestVersionResolver.class)
+                .run(context -> assertThat(context).hasSingleBean(LatestVersionResolver.class));
     }
 
     private static final class MutableClock extends Clock {
