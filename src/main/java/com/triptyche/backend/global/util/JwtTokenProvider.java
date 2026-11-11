@@ -46,24 +46,26 @@ public class JwtTokenProvider {
     return guestTokenBuilder.build(userEmail, provider);
   }
 
+  // 여기서 잡는 예외는 모두 클라이언트가 보낸 토큰의 문제(만료·변조·형식 오류)이므로 warn으로 남긴다.
+  // error로 남기면 Sentry 이벤트와 5xx 알림이 되어 실제 서버 장애와 구분되지 않는다.
   public void validateToken(String token) {
     try {
       String provider = extractProviderFromToken(token);
       Jwts.parserBuilder().setSigningKey(jwtSecretKeyManager.getSecretKey(provider)).build().parseClaimsJws(token);
     } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-      log.error("JWT 서명 오류 또는 변조된 토큰: {}", e.getMessage());
+      log.warn("JWT 서명 오류 또는 변조된 토큰: {}", e.getMessage());
       throw new CustomException(ResultCode.INVALID_JWT);
     } catch (ExpiredJwtException e) {
-      log.error("토큰 만료: {}", e.getMessage());
+      log.warn("토큰 만료: {}", e.getMessage());
       throw new CustomException(ResultCode.EXPIRED_JWT);
     } catch (UnsupportedJwtException e) {
-      log.error("지원되지 않는 JWT 토큰: {}", e.getMessage());
+      log.warn("지원되지 않는 JWT 토큰: {}", e.getMessage());
       throw new CustomException(ResultCode.INVALID_JWT);
     } catch (IllegalArgumentException e) {
-      log.error("잘못된 JWT 토큰: {}", e.getMessage());
+      log.warn("잘못된 JWT 토큰: {}", e.getMessage());
       throw new CustomException(ResultCode.INVALID_JWT);
     } catch (Exception e) {
-      log.error("JWT 파싱 오류 발생: {}", e.getMessage());
+      log.warn("JWT 파싱 오류 발생: {}", e.getMessage());
       throw new CustomException(ResultCode.JWT_PARSING_ERROR);
     }
   }
@@ -120,7 +122,7 @@ public class JwtTokenProvider {
       String payload = new String(Base64.getDecoder().decode(chunks[1]), StandardCharsets.UTF_8);
       return objectMapper.readTree(payload).get("provider").asText();
     } catch (Exception e) {
-      log.error("JWT에서 provider 추출 중 오류 발생: {}", e.getMessage());
+      log.warn("JWT에서 provider 추출 중 오류 발생: {}", e.getMessage());
       throw new CustomException(ResultCode.JWT_PARSING_ERROR);
     }
   }
