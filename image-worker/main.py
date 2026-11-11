@@ -1,6 +1,7 @@
 import io
 import logging
 import os
+import re
 import signal
 import sys
 import time
@@ -8,6 +9,7 @@ import time
 import boto3
 import pymysql
 import redis
+import sentry_sdk
 from botocore.config import Config
 from botocore.exceptions import ClientError
 from PIL import Image, ImageOps
@@ -21,6 +23,45 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)],
 )
 log = logging.getLogger(__name__)
+
+EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+
+
+def _mask(text):
+    return EMAIL_RE.sub("[email]", text) if isinstance(text, str) else text
+
+
+def _scrub(event, hint):
+    if event.get("message"):
+        event["message"] = _mask(event["message"])
+    logentry = event.get("logentry")
+    if logentry:
+        logentry["message"] = _mask(logentry.get("message"))
+        params = logentry.get("params")
+        if isinstance(params, (list, tuple)):
+            logentry["params"] = [_mask(p) for p in params]
+        elif isinstance(params, dict):
+            logentry["params"] = {k: _mask(v) for k, v in params.items()}
+    for exc in event.get("exception", {}).get("values", []):
+        exc["value"] = _mask(exc.get("value"))
+    return event
+
+
+def _scrub_breadcrumb(crumb, hint):
+    if crumb.get("message"):
+        crumb["message"] = _mask(crumb["message"])
+    return crumb
+
+
+sentry_sdk.init(
+    dsn=os.environ.get("SENTRY_DSN") or None,
+    environment="prod",
+    release=os.environ.get("APP_VERSION"),
+    send_default_pii=False,
+    traces_sample_rate=0,
+    before_send=_scrub,
+    before_breadcrumb=_scrub_breadcrumb,
+)
 
 REDIS_HOST = os.environ["REDIS_HOST"]
 REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
@@ -120,14 +161,13 @@ def move_to_dlq(r: redis.Redis, message_id: str, fields: dict, reason: str):
             try:
                 publish_failed_result(r, int(fields["mediaFileId"]), reason)
             except Exception as ex:
-                log.error("[v2] DLQ FAILED 결과 발행 실패 — error: %s", ex)
+                log.error("[v2] DLQ FAILED 결과 발행 실패 — error: %s", ex, exc_info=True)
     except Exception as e:
-        log.error("DLQ 이동 실패 — message_id: %s, error: %s", message_id, e)
+        log.error("DLQ 이동 실패 — message_id: %s, error: %s", message_id, e, exc_info=True)
 
 
 def resize_and_convert(image_bytes: bytes) -> bytes:
     with Image.open(io.BytesIO(image_bytes)) as img:
-        # EXIF orientation 적용
         img = ImageOps.exif_transpose(img)
         img = img.convert("RGB")
         w, h = img.size
@@ -179,7 +219,7 @@ def publish_processed_result(r: redis.Redis, media_file_id: int, final_key: str,
         })
         log.info("[v2] 결과 발행 완료 — mediaFileId: %d", media_file_id)
     except Exception as e:
-        log.error("[v2] 결과 발행 실패 — mediaFileId: %d, error: %s", media_file_id, e)
+        log.error("[v2] 결과 발행 실패 — mediaFileId: %d, error: %s", media_file_id, e, exc_info=True)
 
 
 def publish_failed_result(r: redis.Redis, media_file_id: int, reason: str):
@@ -191,7 +231,7 @@ def publish_failed_result(r: redis.Redis, media_file_id: int, reason: str):
         })
         log.warning("[v2] 실패 결과 발행 — mediaFileId: %d, reason: %s", media_file_id, reason)
     except Exception as e:
-        log.error("[v2] 실패 결과 발행 실패 — mediaFileId: %d, error: %s", media_file_id, e)
+        log.error("[v2] 실패 결과 발행 실패 — mediaFileId: %d, error: %s", media_file_id, e, exc_info=True)
 
 
 def process_message_v2(s3, fields: dict) -> tuple:
@@ -230,14 +270,11 @@ def process_message(s3, message_id: str, fields: dict):
 
     log.info("처리 시작 — mediaFileId: %d, key: %s", media_file_id, original_key)
 
-    # 1. 원본 다운로드
     response = s3.get_object(Bucket=OCI_BUCKET_NAME, Key=original_key)
     image_bytes = response["Body"].read()
 
-    # 2. 리사이징 + WebP 변환
     webp_bytes = resize_and_convert(image_bytes)
 
-    # 3. 변환본 업로드
     webp_key = build_webp_key(original_key)
     s3.put_object(
         Bucket=OCI_BUCKET_NAME,
@@ -247,7 +284,6 @@ def process_message(s3, message_id: str, fields: dict):
         ContentLength=len(webp_bytes),
     )
 
-    # 4. DB UPDATE
     webp_url = f"{OCI_S3_ENDPOINT}/{OCI_BUCKET_NAME}/{webp_key}"
     update_media_link(media_file_id, webp_url)
 
@@ -301,17 +337,17 @@ def main():
                                 delete_original(s3, original_key)
 
                         except ClientError as e:
-                            log.error("OCI 오류 — message_id: %s, error: %s", message_id, e)
+                            log.error("OCI 오류 — message_id: %s, error: %s", message_id, e, exc_info=True)
                         except pymysql.Error as e:
-                            log.error("DB 오류 — message_id: %s, error: %s", message_id, e)
+                            log.error("DB 오류 — message_id: %s, error: %s", message_id, e, exc_info=True)
                         except Exception as e:
-                            log.error("처리 실패 — message_id: %s, error: %s", message_id, e)
+                            log.error("처리 실패 — message_id: %s, error: %s", message_id, e, exc_info=True)
 
         except redis.exceptions.ConnectionError as e:
-            log.error("Redis 연결 오류: %s — 5초 후 재연결", e)
+            log.error("Redis 연결 오류: %s — 5초 후 재연결", e, exc_info=True)
             time.sleep(5)
         except Exception as e:
-            log.error("예상치 못한 오류: %s — 5초 후 재시작", e)
+            log.error("예상치 못한 오류: %s — 5초 후 재시작", e, exc_info=True)
             time.sleep(5)
 
     log.info("Image Worker 종료")

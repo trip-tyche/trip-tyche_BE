@@ -12,7 +12,8 @@ RUN pip install --no-cache-dir \
     boto3 \
     Pillow \
     pillow-heif \
-    pymysql
+    pymysql \
+    sentry-sdk==2.74.0
 
 COPY main.py .
 
