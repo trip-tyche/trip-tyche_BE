@@ -43,6 +43,7 @@ public class UserService {
         return userRepository.save(user);
       }
       User newUser = userRepository.save(userProfile.toEntity());
+      log.info("회원 생성: userId={}, provider={}", newUser.getUserId(), newUser.getProvider());
       eventPublisher.publishEvent(new UserRegisteredEvent(newUser.getUserId(), newUser.getProvider(), false));
       return newUser;
     } catch (DataIntegrityViolationException e) {
@@ -66,6 +67,7 @@ public class UserService {
             .role(UserRole.GUEST)
             .build();
     User savedGuest = userRepository.save(guestUser);
+    log.info("회원 생성: userId={}, provider={}", savedGuest.getUserId(), savedGuest.getProvider());
     eventPublisher.publishEvent(new UserRegisteredEvent(savedGuest.getUserId(), savedGuest.getProvider(), true));
     return savedGuest;
   }

@@ -36,7 +36,6 @@ public class GuestOnboardingService {
         cookieUtil.setCookie(response, "access_token", accessToken,
                 (int) jwtProperties.guestTokenExpirySeconds());
 
-        log.info("게스트 계정 생성: {}", guestEmail);
         return accessToken;
     }
 }
