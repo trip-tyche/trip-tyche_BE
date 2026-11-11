@@ -744,7 +744,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 30,
+        "y": 38,
         "w": 24,
         "h": 12
       },
@@ -767,6 +767,71 @@
         "enableLogDetails": true,
         "dedupStrategy": "none",
         "sortOrder": "Descending"
+      }
+    },
+    {
+      "id": 10,
+      "type": "barchart",
+      "title": "일별 신규 가입 / 게스트 입장",
+      "description": "Loki 로그 기반(보관 7일). 앱 로그 '회원 생성: userId=…, provider=…'를 일 단위로 센다.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 24,
+        "h": 8
+      },
+      "interval": "1d",
+      "timeFrom": "7d",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "queryType": "range",
+          "expr": "sum(count_over_time({container=\"triptyche-api\"} |= \"회원 생성\" |~ \"provider=(kakao|google)\" [1d]))",
+          "legendFormat": "신규 가입",
+          "step": "1d"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "queryType": "range",
+          "expr": "sum(count_over_time({container=\"triptyche-api\"} |= \"회원 생성\" |~ \"provider=guest\" [1d]))",
+          "legendFormat": "게스트 입장",
+          "step": "1d"
+        }
+      ],
+      "options": {
+        "xTickLabelRotation": 0,
+        "showValue": "auto",
+        "stacking": "none",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
       }
     }
   ]
