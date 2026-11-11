@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import com.triptyche.backend.domain.notification.repository.NotificationRepository;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.user.dto.OAuthUserInfo;
+import com.triptyche.backend.domain.user.event.UserRegisteredEvent;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.model.UserRole;
 import com.triptyche.backend.domain.user.repository.UserRepository;
@@ -25,6 +26,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,6 +40,9 @@ class UserServiceTest {
 
     @Mock
     private NotificationRepository notificationRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private UserService userService;
@@ -176,6 +181,54 @@ class UserServiceTest {
         }
 
         @Test
+        @DisplayName("신규 사용자가 가입하면 UserRegisteredEvent(guest=false)가 발행된다")
+        void getOrCreateFromOAuth_givenNewUser_publishesUserRegisteredEvent() {
+            // given
+            User savedUser = User.builder()
+                    .userId(2L)
+                    .userName(newUserInfo.userName())
+                    .userEmail(newUserInfo.userEmail())
+                    .provider(newUserInfo.provider())
+                    .build();
+
+            given(userRepository.findUserByUserEmailAndProvider(
+                    newUserInfo.userEmail(), newUserInfo.provider()))
+                    .willReturn(Optional.empty());
+            given(userRepository.save(any(User.class))).willReturn(savedUser);
+
+            // when
+            userService.getOrCreateFromOAuth(newUserInfo);
+
+            // then
+            ArgumentCaptor<UserRegisteredEvent> captor = ArgumentCaptor.forClass(UserRegisteredEvent.class);
+            verify(eventPublisher).publishEvent(captor.capture());
+            assertThat(captor.getValue()).isEqualTo(new UserRegisteredEvent(2L, "google", false));
+        }
+
+        @Test
+        @DisplayName("이미 가입된 사용자가 다시 로그인하면 이벤트를 발행하지 않는다")
+        void getOrCreateFromOAuth_givenExistingUser_doesNotPublishEvent() {
+            // given
+            User existingUser = User.builder()
+                    .userId(1L)
+                    .userName("기존이름")
+                    .userEmail("existing@example.com")
+                    .provider("google")
+                    .build();
+
+            given(userRepository.findUserByUserEmailAndProvider(
+                    existingUserInfo.userEmail(), existingUserInfo.provider()))
+                    .willReturn(Optional.of(existingUser));
+            given(userRepository.save(existingUser)).willReturn(existingUser);
+
+            // when
+            userService.getOrCreateFromOAuth(existingUserInfo);
+
+            // then
+            verify(eventPublisher, never()).publishEvent(any(UserRegisteredEvent.class));
+        }
+
+        @Test
         @DisplayName("save 중 DataIntegrityViolationException 발생 시 USER_SAVE_FAILURE 예외로 변환된다")
         void getOrCreateFromOAuth_givenDataIntegrityViolation_throwsUserSaveFailure() {
             // given
@@ -271,6 +324,30 @@ class UserServiceTest {
             User savedUser = captor.getValue();
             assertThat(savedUser.getRole()).isEqualTo(UserRole.GUEST);
             assertThat(savedUser.getProvider()).isEqualTo("guest");
+        }
+
+        @Test
+        @DisplayName("게스트 사용자를 생성하면 UserRegisteredEvent(guest=true)가 발행된다")
+        void createGuestUser_givenCall_publishesGuestRegisteredEvent() {
+            // given
+            given(userRepository.save(any(User.class))).willAnswer(invocation -> {
+                User user = invocation.getArgument(0);
+                return User.builder()
+                        .userId(3L)
+                        .userName(user.getUserName())
+                        .userEmail(user.getUserEmail())
+                        .provider(user.getProvider())
+                        .role(user.getRole())
+                        .build();
+            });
+
+            // when
+            userService.createGuestUser();
+
+            // then
+            ArgumentCaptor<UserRegisteredEvent> captor = ArgumentCaptor.forClass(UserRegisteredEvent.class);
+            verify(eventPublisher).publishEvent(captor.capture());
+            assertThat(captor.getValue()).isEqualTo(new UserRegisteredEvent(3L, "guest", true));
         }
     }
 }

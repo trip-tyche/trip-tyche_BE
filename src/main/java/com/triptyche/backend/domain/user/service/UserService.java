@@ -7,6 +7,7 @@ import com.triptyche.backend.domain.trip.repository.TripRepository;
 import com.triptyche.backend.domain.user.dto.OAuthUserInfo;
 import com.triptyche.backend.domain.user.dto.UserSearchResponse;
 import com.triptyche.backend.domain.user.dto.UserSummaryResponse;
+import com.triptyche.backend.domain.user.event.UserRegisteredEvent;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.model.UserRole;
 import com.triptyche.backend.domain.user.repository.UserRepository;
@@ -16,6 +17,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,7 @@ public class UserService {
   private final UserRepository userRepository;
   private final TripRepository tripRepository;
   private final NotificationRepository notificationRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
   public User getOrCreateFromOAuth(OAuthUserInfo userProfile) {
@@ -39,7 +42,9 @@ public class UserService {
         user.updateUser(userProfile.userName(), userProfile.userEmail());
         return userRepository.save(user);
       }
-      return userRepository.save(userProfile.toEntity());
+      User newUser = userRepository.save(userProfile.toEntity());
+      eventPublisher.publishEvent(new UserRegisteredEvent(newUser.getUserId(), newUser.getProvider(), false));
+      return newUser;
     } catch (DataIntegrityViolationException e) {
       log.error("이메일 중복으로 사용자 저장 실패: {}", e.getMessage());
       throw new CustomException(ResultCode.USER_SAVE_FAILURE, e);
@@ -60,7 +65,9 @@ public class UserService {
             .provider("guest")
             .role(UserRole.GUEST)
             .build();
-    return userRepository.save(guestUser);
+    User savedGuest = userRepository.save(guestUser);
+    eventPublisher.publishEvent(new UserRegisteredEvent(savedGuest.getUserId(), savedGuest.getProvider(), true));
+    return savedGuest;
   }
 
   @Transactional

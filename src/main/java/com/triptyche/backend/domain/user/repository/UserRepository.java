@@ -23,6 +23,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   List<User> findByRoleAndCreatedAtBefore(UserRole role, LocalDateTime threshold);
 
+  long countByRole(UserRole role);
+
+  long countByRoleAndCreatedAtGreaterThanEqual(UserRole role, LocalDateTime from);
+
   @Transactional
   @Modifying(clearAutomatically = true)
   @Query("DELETE FROM User u WHERE u.userId IN :userIds")
