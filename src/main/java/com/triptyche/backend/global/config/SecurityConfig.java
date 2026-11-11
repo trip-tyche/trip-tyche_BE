@@ -1,5 +1,6 @@
 package com.triptyche.backend.global.config;
 
+import com.triptyche.backend.global.exception.CustomAccessDeniedHandler;
 import com.triptyche.backend.global.exception.CustomAuthenticationEntryPoint;
 import com.triptyche.backend.global.oauth.AppOAuth2AuthorizationRequestResolver;
 import com.triptyche.backend.global.oauth.CustomOAuth2AuthenticationFailureHandler;
@@ -31,6 +32,7 @@ public class SecurityConfig {
   private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
   private final CustomOAuth2AuthenticationFailureHandler customOAuth2AuthenticationFailureHandler;
   private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+  private final CustomAccessDeniedHandler customAccessDeniedHandler;
   private final CorsProperties corsProperties;
   private final AppOAuth2AuthorizationRequestResolver appOAuth2AuthorizationRequestResolver;
 
@@ -64,7 +66,9 @@ public class SecurityConfig {
                             "/v1/auth/guest",
                             "/v1/app/config",
                             "/ws/**",
-                            "/ws-test.html"  // WebSocket 로컬 테스트 페이지
+                            "/ws-test.html",  // WebSocket 로컬 테스트 페이지
+                            // sendError 후의 /error 재요청이 인증 실패로 처리돼 원래 상태코드가 401로 덮이지 않게 한다.
+                            "/error"
                     )
                     .permitAll()
                     .requestMatchers(HttpMethod.GET,   "/v1/users/*/notifications", "/v1/notifications/**").hasAnyRole("USER", "GUEST")
@@ -90,7 +94,8 @@ public class SecurityConfig {
             )
             .exceptionHandling(exceptionHandling ->
                     exceptionHandling
-                            .authenticationEntryPoint(customAuthenticationEntryPoint))
+                            .authenticationEntryPoint(customAuthenticationEntryPoint)
+                            .accessDeniedHandler(customAccessDeniedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(new JWTAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
 
