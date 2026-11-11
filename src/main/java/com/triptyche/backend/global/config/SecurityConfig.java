@@ -54,7 +54,10 @@ public class SecurityConfig {
                             "/upload/**",
                             "/oauth2/success",
                             "/oauth2/authorization/**",
-                            "/actuator/**",
+                            "/actuator/health",
+                            "/actuator/health/**",
+                            "/actuator/info",
+                            "/actuator/prometheus",
                             "/v1/auth/refresh",
                             "/v1/auth/logout",
                             "/v1/auth/test-token",
@@ -103,7 +106,6 @@ public class SecurityConfig {
     configuration.setAllowCredentials(true);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/actuator/**", configuration);
     source.registerCorsConfiguration("/**", configuration);
     source.registerCorsConfiguration("/ws/**", configuration); // WebSocket 경로 허용
     return source;

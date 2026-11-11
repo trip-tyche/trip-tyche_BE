@@ -225,14 +225,18 @@ spring:
     url: https://triptyche.cloud
     failure-url: https://triptyche.cloud
 
+# actuator는 앱 포트(8080)와 분리된 관리 포트(8081)로만 연다.
+# nginx는 8080만 프록시하므로 외부에서는 닿지 않고, compose 네트워크 안의 healthcheck·Prometheus만 접근한다.
 management:
+  server:
+    port: 8081
   endpoints:
     web:
       exposure:
-        include: "health,info,prometheus,metrics,loggers"
+        include: "health,info,prometheus"
   endpoint:
     health:
-      show-details: always
+      show-details: never
     prometheus:
       enabled: true
   metrics:
