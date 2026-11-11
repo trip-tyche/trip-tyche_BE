@@ -1,0 +1,34 @@
+discovery.docker "containers" {
+	host = "tcp://docker-proxy:2375"
+	// 배포로 컨테이너가 재생성되면 기동 직후 로그를 놓치지 않도록 짧게 잡는다.
+	refresh_interval = "5s"
+}
+
+discovery.relabel "containers" {
+	targets = []
+
+	// /triptyche-api → triptyche-api
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "/(.*)"
+		target_label  = "container"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+		target_label  = "service"
+	}
+}
+
+loki.source.docker "containers" {
+	host          = "tcp://docker-proxy:2375"
+	targets       = discovery.docker.containers.targets
+	relabel_rules = discovery.relabel.containers.rules
+	forward_to    = [loki.write.default.receiver]
+}
+
+loki.write "default" {
+	endpoint {
+		url = "http://loki:3100/loki/api/v1/push"
+	}
+}

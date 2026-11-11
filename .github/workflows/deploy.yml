@@ -55,7 +55,7 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ubuntu
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "docker-compose.yml,database,image-worker,nginx/nginx.conf"
+          source: "docker-compose.yml,database,image-worker,monitoring,nginx/nginx.conf"
           target: "~/triptyche/"
 
       - name: Deploy to Oracle VM
@@ -74,6 +74,10 @@ jobs:
             # compose가 ${APP_VERSION}를 치환해 app과 image-worker의 Sentry release로 넘긴다.
             export APP_VERSION=${{ github.sha }}
 
+            # monitoring/ 설정 파일은 디렉터리 마운트라 내용이 바뀌어도 compose는 변경을 알 수 없다.
+            # 내용 해시를 라벨로 넘겨, 설정이 바뀐 때만 모니터링 컨테이너가 재생성되게 한다.
+            MONITORING_CONFIG_HASH=$(find monitoring -type f | LC_ALL=C sort | xargs sha256sum | sha256sum | cut -c1-16)
+            export MONITORING_CONFIG_HASH
 
             docker compose pull app
             docker compose build image-worker
@@ -87,6 +91,10 @@ jobs:
                 docker compose logs --tail=120 flyway || true
                 echo "----- app -----"
                 docker compose logs --tail=60 app || true
+                for svc in prometheus grafana loki alloy docker-proxy; do
+                    echo "----- $svc -----"
+                    docker compose logs --tail=40 "$svc" || true
+                done
                 exit 1
             fi
 
