@@ -3,6 +3,7 @@ package com.triptyche.backend.global.config;
 import com.triptyche.backend.global.util.SensitiveDataMasker;
 import io.sentry.Breadcrumb;
 import io.sentry.CustomSamplingContext;
+import io.sentry.SentryBaseEvent;
 import io.sentry.SentryEvent;
 import io.sentry.SentryOptions;
 import io.sentry.protocol.Message;
@@ -28,14 +29,30 @@ public class SentryConfig {
   static final String SAMPLING_REQUEST_KEY = "request";
 
   private static final String ACTUATOR_PATH_PREFIX = "/actuator";
-  // k6 부하 테스트의 기본 User-Agent는 "k6/<version> (https://k6.io/)"
-  private static final String LOAD_TEST_USER_AGENT_MARKER = "k6";
+  // k6 기본 User-Agent는 "k6/<version> (https://k6.io/)". 슬래시까지 맞춰야 "Redmi K60" 같은 기기명이 걸리지 않는다.
+  private static final String LOAD_TEST_USER_AGENT_MARKER = "k6/";
 
   @Bean
   public SentryOptions.BeforeSendCallback sentryBeforeSendCallback() {
     return (event, hint) -> {
       scrubEvent(event);
       return event;
+    };
+  }
+
+  /**
+   * JWTAuthenticationFilter가 WebSocket 핸드셰이크의 ?token= 을 받으므로 트랜잭션의 request도 이벤트와 똑같이 걸러야 한다.
+   * SentryTransaction에는 이름 setter가 없어 이메일이 든 이름은 마스킹하지 못하고, 해당 트랜잭션을 버린다.
+   */
+  @Bean
+  public SentryOptions.BeforeSendTransactionCallback sentryBeforeSendTransactionCallback() {
+    return (transaction, hint) -> {
+      String name = transaction.getTransaction();
+      if (name != null && !name.equals(SensitiveDataMasker.maskEmails(name))) {
+        return null;
+      }
+      scrubBaseEvent(transaction);
+      return transaction;
     };
   }
 
@@ -93,6 +110,10 @@ public class SentryConfig {
       exceptions.forEach(e -> e.setValue(SensitiveDataMasker.maskEmails(e.getValue())));
     }
 
+    scrubBaseEvent(event);
+  }
+
+  private static void scrubBaseEvent(SentryBaseEvent event) {
     maskExtras(event);
     maskContexts(event);
     maskTags(event);
@@ -106,7 +127,7 @@ public class SentryConfig {
         .forEach(entry -> breadcrumb.setData(entry.getKey(), SensitiveDataMasker.maskValue(entry.getValue())));
   }
 
-  private static void maskExtras(SentryEvent event) {
+  private static void maskExtras(SentryBaseEvent event) {
     Map<String, Object> extras = event.getExtras();
     if (extras == null) {
       return;
@@ -116,12 +137,12 @@ public class SentryConfig {
   }
 
   // Contexts에는 App · Device 같은 타입 객체도 들어 있으므로 문자열과 Map 값만 건드린다.
-  private static void maskContexts(SentryEvent event) {
+  private static void maskContexts(SentryBaseEvent event) {
     new ArrayList<>(event.getContexts().entrySet())
         .forEach(entry -> event.getContexts().set(entry.getKey(), SensitiveDataMasker.maskValue(entry.getValue())));
   }
 
-  private static void maskTags(SentryEvent event) {
+  private static void maskTags(SentryBaseEvent event) {
     Map<String, String> tags = event.getTags();
     if (tags == null) {
       return;

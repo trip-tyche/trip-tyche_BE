@@ -8,10 +8,13 @@ import io.sentry.Hint;
 import io.sentry.SamplingContext;
 import io.sentry.SentryEvent;
 import io.sentry.SentryOptions;
+import io.sentry.SpanContext;
 import io.sentry.TransactionContext;
 import io.sentry.protocol.Message;
 import io.sentry.protocol.Request;
 import io.sentry.protocol.SentryException;
+import io.sentry.protocol.SentryTransaction;
+import io.sentry.protocol.TransactionInfo;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +76,13 @@ class SentryConfigTest {
     void sample_givenK6UserAgent_returnsZero() {
       assertThat(sampler.sample(samplingContextWith(request("/v1/trips", "k6/0.50.0 (https://k6.io/)")))).isEqualTo(0.0);
       assertThat(sampler.sample(samplingContextWith(request("/v1/trips", "K6/0.50.0")))).isEqualTo(0.0);
+    }
+
+    @Test
+    @DisplayName("k6가 아닌 기기명(Redmi K60, LM-K610)이 든 User-Agent는 수집한다")
+    void sample_givenDeviceNameContainingK6_returnsOne() {
+      assertThat(sampler.sample(samplingContextWith(request("/v1/trips", "Mozilla/5.0 (Linux; Android 13; Redmi K60)")))).isEqualTo(1.0);
+      assertThat(sampler.sample(samplingContextWith(request("/v1/trips", "Mozilla/5.0 (Linux; Android 9; LM-K610)")))).isEqualTo(1.0);
     }
 
     @Test
@@ -177,6 +187,82 @@ class SentryConfigTest {
       SentryEvent event = new SentryEvent();
 
       assertThat(beforeSend.execute(event, new Hint())).isSameAs(event);
+    }
+  }
+
+  @Nested
+  @DisplayName("beforeSendTransaction 마스킹")
+  class BeforeSendTransaction {
+
+    private final SentryOptions.BeforeSendTransactionCallback beforeSendTransaction =
+            config.sentryBeforeSendTransactionCallback();
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> asMap(Object value) {
+      return (Map<String, Object>) value;
+    }
+
+    private SentryTransaction transaction(String name) {
+      return new SentryTransaction(name, 0.0, 1.0, List.of(), Map.of(), new TransactionInfo("route"));
+    }
+
+    @Test
+    @DisplayName("WebSocket 핸드셰이크의 ?token= 과 URL의 이메일을 제거한다")
+    void execute_givenTokenInRequest_scrubsRequest() {
+      SentryTransaction transaction = transaction("GET /ws");
+      Request request = new Request();
+      request.setUrl("https://triptyche.cloud/ws/test@example.com/a%40b.com");
+      request.setQueryString("token=eyJhbGciOi.payload.sig&room=1&owner=test%40example.com");
+      Map<String, String> headers = new HashMap<>();
+      headers.put("Authorization", "Bearer secret");
+      headers.put("User-Agent", "Mozilla/5.0");
+      request.setHeaders(headers);
+      request.setCookies("access_token=secret");
+      transaction.setRequest(request);
+
+      SentryTransaction result = beforeSendTransaction.execute(transaction, new Hint());
+
+      assertThat(result).isNotNull();
+      assertThat(result.getRequest().getUrl()).isEqualTo("https://triptyche.cloud/ws/[EMAIL]/[EMAIL]");
+      assertThat(result.getRequest().getQueryString()).isEqualTo("room=1&owner=[EMAIL]");
+      assertThat(result.getRequest().getHeaders()).containsOnlyKeys("User-Agent");
+      assertThat(result.getRequest().getCookies()).isNull();
+    }
+
+    @Test
+    @DisplayName("extra · contexts · tags의 이메일을 마스킹하고 trace 컨텍스트는 보존한다")
+    void execute_givenEmailInExtrasContextsTags_masksThemAndKeepsTrace() {
+      SentryTransaction transaction = transaction("GET /v1/trips");
+      SpanContext trace = new SpanContext("http.server");
+      transaction.getContexts().setTrace(trace);
+      transaction.setExtra("user", "test@example.com");
+      transaction.getContexts().set("custom", new HashMap<>(Map.of("owner", "owner@example.com")));
+      transaction.setTag("note", "from test@example.com");
+
+      SentryTransaction result = beforeSendTransaction.execute(transaction, new Hint());
+
+      assertThat(result.getExtra("user")).isEqualTo("[EMAIL]");
+      assertThat(asMap(result.getContexts().get("custom"))).containsEntry("owner", "[EMAIL]");
+      assertThat(result.getTag("note")).isEqualTo("from [EMAIL]");
+      assertThat(result.getContexts().getTrace()).isSameAs(trace);
+    }
+
+    @Test
+    @DisplayName("이름에 이메일이 든 트랜잭션은 버리고, 라우트 패턴 이름은 통과시킨다")
+    void execute_givenEmailInTransactionName_dropsTransaction() {
+      assertThat(beforeSendTransaction.execute(transaction("GET /v1/users/test@example.com"), new Hint())).isNull();
+      assertThat(beforeSendTransaction.execute(transaction("GET /v1/users/test%40example.com"), new Hint())).isNull();
+
+      SentryTransaction templated = transaction("GET /v1/users/{id}");
+      assertThat(beforeSendTransaction.execute(templated, new Hint())).isSameAs(templated);
+    }
+
+    @Test
+    @DisplayName("요청이 없는 트랜잭션도 그대로 통과시킨다")
+    void execute_givenTransactionWithoutRequest_returnsTransaction() {
+      SentryTransaction transaction = transaction("job");
+
+      assertThat(beforeSendTransaction.execute(transaction, new Hint())).isSameAs(transaction);
     }
   }
 
