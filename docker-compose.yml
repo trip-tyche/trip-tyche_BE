@@ -32,12 +32,13 @@ services:
       - ./secrets/firebase-service-account.json:/run/secrets/firebase.json:ro
     expose:
       - "8080"
+      - "8081"
     deploy:
       resources:
         limits:
           memory: 1024M
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 6
