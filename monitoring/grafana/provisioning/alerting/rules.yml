@@ -3,7 +3,8 @@ apiVersion: 1
 # http 쿼리는 헬스체크·봇 경로를 제외한다. 실제 API 트래픽이 하루 20건 수준이라 제외하지 않으면 비율이 의미를 잃는다.
 
 groups:
-  # 서버 다운은 10초마다 평가한다. 스크랩(최대 15초) + 평가(최대 10초) + for 1m + group_wait 10초 ≈ 1분 40초 안에 알림이 간다.
+  # 스크랩(최대 15초) + 평가(최대 10초) + for 2m + group_wait 10초 ≈ 2분 40초 안에 알림이 간다.
+  # for 1m은 배포 때 JVM 기동 시간과 겹쳐 배포마다 알림이 울린다.
   # 평가 주기는 Grafana 스케줄러 간격(10초)의 배수여야 한다. 15초로 두면 Grafana가 기동하지 못한다.
   - orgId: 1
     name: availability
@@ -13,7 +14,7 @@ groups:
       - uid: triptyche-api-down
         title: API 서버 다운
         condition: C
-        for: 1m
+        for: 2m
         # 스크랩이 실패하면 up=0 시계열이 생기므로 평소에는 NoData가 나올 일이 없다.
         # up 시계열 자체가 사라지거나(수집 대상 설정 오류) Prometheus에 질의할 수 없으면
         # 앱이 살았는지 알 수 없으므로 마찬가지로 알린다.
@@ -21,7 +22,7 @@ groups:
         execErrState: Alerting
         annotations:
           summary: triptyche-api 스크랩 실패 (up == 0)
-          description: app:8081 메트릭 수집이 1분 넘게 실패했습니다. 앱이 내려갔거나 Prometheus가 앱에 닿지 못합니다. Prometheus 자체 장애일 수도 있습니다.
+          description: app:8081 메트릭 수집이 2분 넘게 실패했습니다. 앱이 내려갔거나 Prometheus가 앱에 닿지 못합니다. Prometheus 자체 장애일 수도 있습니다.
         labels:
           severity: critical
         data:
@@ -68,8 +69,8 @@ groups:
         for: 5m
         # 트래픽이 적을 때(시계열이 없거나 요청 수가 모자랄 때)는 정상이다. NoData를 알림으로 취급하지 않는다.
         noDataState: OK
-        # Prometheus 장애는 'API 서버 다운' 규칙이 알린다. 같은 원인으로 알림이 겹치지 않게 한다.
-        execErrState: OK
+        # 쿼리가 깨져도 조용히 OK로 남지 않게 한다.
+        execErrState: Error
         annotations:
           summary: 5xx 비율 5% 초과 (5분간 요청 20건 이상)
           description: 노이즈(actuator, 봇, 존재하지 않는 경로)를 제외한 최근 5분 5xx 비율이 5%를 넘었고 요청 수가 20건 이상입니다.
@@ -140,13 +141,60 @@ groups:
                     type: gt
                     params: [0]
 
+      # 비율 규칙은 요청 20건 이상일 때만 판단하므로 평소 트래픽(하루 20건)에서는 울리지 않는다.
+      # DB·Redis 장애로 프로세스는 살아 있는데 API만 실패하는 경우를 건수로 잡는다.
+      - uid: triptyche-api-5xx-count
+        title: 5xx 에러 발생
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        annotations:
+          summary: 최근 10분 5xx 3건 이상
+          description: 헬스체크·봇 경로를 제외한 최근 10분간 5xx 응답이 3건 이상입니다. DB·Redis 등 의존 서비스 장애를 확인하세요.
+        labels:
+          severity: warning
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: |-
+                sum(increase(http_server_requests_seconds_count{job="triptyche-api",uri!~"/actuator.*|UNKNOWN|/\\*\\*",status=~"5.."}[10m])) or vector(0)
+              instant: true
+              range: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [2.5]
+
       - uid: triptyche-api-hikari-pending
         title: DB 커넥션 풀 고갈
         condition: C
         for: 2m
         # 앱이 내려가면 메트릭이 사라진다. 그 경우는 'API 서버 다운'이 알린다.
         noDataState: OK
-        execErrState: OK
+        execErrState: Error
         annotations:
           summary: HikariCP 대기 커넥션 > 0 (2분 지속)
           description: DB 커넥션을 얻으려고 대기 중인 스레드가 2분 넘게 있습니다. 풀이 고갈됐거나 DB 응답이 느립니다.
