@@ -56,7 +56,11 @@ class TokenExchangeServiceTest {
   private TokenExchangeService tokenExchangeService;
 
   private void givenConsumableCode() {
-    given(oneTimeCodeRepository.consume(CODE)).willReturn(new OneTimeCodePayload(EMAIL, PROVIDER));
+    givenConsumableCode(false);
+  }
+
+  private void givenConsumableCode(boolean newUser) {
+    given(oneTimeCodeRepository.consume(CODE)).willReturn(new OneTimeCodePayload(EMAIL, PROVIDER, newUser));
     given(sessionIdGenerator.generate()).willReturn(SESSION_ID);
     given(jwtTokenProvider.createAccessToken(eq(EMAIL), anyList(), eq(PROVIDER), eq(SESSION_ID)))
             .willReturn("access.token");
@@ -83,7 +87,23 @@ class TokenExchangeServiceTest {
       assertThat(response.accessToken()).isEqualTo("access.token");
       assertThat(response.refreshToken()).isEqualTo("refresh.token");
       assertThat(response.expiresIn()).isEqualTo(ACCESS_TTL);
+      assertThat(response.newUser()).isFalse();
       verify(refreshTokenRepository).save(EMAIL, SESSION_ID, "refresh.token", REFRESH_TTL);
+    }
+
+    @Test
+    @DisplayName("신규 가입으로 발급된 code를 교환하면 newUser=true를 돌려준다")
+    void exchange_givenNewUserCode_returnsNewUserTrue() {
+      // given
+      givenConsumableCode(true);
+      given(refreshTokenRepository.save(EMAIL, SESSION_ID, "refresh.token", REFRESH_TTL)).willReturn(true);
+      given(jwtProperties.accessTokenExpirySeconds()).willReturn(ACCESS_TTL);
+
+      // when
+      TokenIssueResponse response = tokenExchangeService.exchange(CODE);
+
+      // then
+      assertThat(response.newUser()).isTrue();
     }
   }
 

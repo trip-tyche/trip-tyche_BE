@@ -51,6 +51,7 @@ public class TokenExchangeService {
     }
 
     log.info("토큰 교환 성공: 사용자={}, 세션={}", userEmail, sessionId);
-    return new TokenIssueResponse(accessToken, refreshToken, jwtProperties.accessTokenExpirySeconds());
+    return new TokenIssueResponse(accessToken, refreshToken, jwtProperties.accessTokenExpirySeconds(),
+            payload.newUser());
   }
 }

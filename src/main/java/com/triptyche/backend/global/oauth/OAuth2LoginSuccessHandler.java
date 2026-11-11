@@ -23,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 @RequiredArgsConstructor
@@ -56,9 +57,11 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
       return;
     }
 
+    boolean newUser = Boolean.TRUE.equals(attributes.get("newUser"));
+
     int redirectIndex = AppAuthState.redirectIndex(request.getParameter("state"));
     if (redirectIndex >= 0) {
-      redirectToApp(response, email, provider, redirectIndex);
+      redirectToApp(response, email, provider, newUser, redirectIndex);
       return;
     }
 
@@ -71,13 +74,16 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     cookieUtil.setCookie(response, "access_token", accessToken, (int) jwtProperties.accessTokenExpirySeconds());
     cookieUtil.setCookie(response, "refresh_token", refreshToken, (int) jwtProperties.refreshTokenExpirySeconds());
 
-    response.sendRedirect(redirectUrl);
+    String target = newUser
+            ? UriComponentsBuilder.fromUriString(redirectUrl).queryParam("signup", "true").build().toUriString()
+            : redirectUrl;
+    response.sendRedirect(target);
   }
 
-  private void redirectToApp(HttpServletResponse response, String email, String provider, int redirectIndex)
-          throws IOException {
+  private void redirectToApp(HttpServletResponse response, String email, String provider, boolean newUser,
+                             int redirectIndex) throws IOException {
     String appRedirect = appAuthProperties.redirectAt(redirectIndex);
-    String code = oneTimeCodeRepository.issue(new OneTimeCodePayload(email, provider));
+    String code = oneTimeCodeRepository.issue(new OneTimeCodePayload(email, provider, newUser));
 
     if (appRedirect == null || code == null) {
       log.error("앱 딥링크 발급 실패: email={}, redirectIndex={}", email, redirectIndex);

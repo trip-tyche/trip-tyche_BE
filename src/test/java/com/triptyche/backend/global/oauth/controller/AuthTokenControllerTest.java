@@ -52,11 +52,11 @@ class AuthTokenControllerTest {
   class Exchange {
 
     @Test
-    @DisplayName("성공하면 data에 accessToken·refreshToken·expiresIn을 담아 준다")
+    @DisplayName("성공하면 data에 accessToken·refreshToken·expiresIn·newUser를 담아 준다")
     void exchange_givenValidCode_returnsTokenPair() throws Exception {
       // given
       given(tokenExchangeService.exchange("CODE"))
-              .willReturn(new TokenIssueResponse("access.token", "refresh.token", 3600L));
+              .willReturn(new TokenIssueResponse("access.token", "refresh.token", 3600L, true));
 
       // when & then
       mockMvc.perform(post("/v1/auth/token/exchange")
@@ -65,7 +65,8 @@ class AuthTokenControllerTest {
               .andExpect(status().isOk())
               .andExpect(jsonPath("$.data.accessToken").value("access.token"))
               .andExpect(jsonPath("$.data.refreshToken").value("refresh.token"))
-              .andExpect(jsonPath("$.data.expiresIn").value(3600));
+              .andExpect(jsonPath("$.data.expiresIn").value(3600))
+              .andExpect(jsonPath("$.data.newUser").value(true));
     }
 
     @Test
@@ -103,7 +104,8 @@ class AuthTokenControllerTest {
               .andExpect(status().isOk())
               .andExpect(jsonPath("$.data.accessToken").value("new.access"))
               .andExpect(jsonPath("$.data.refreshToken").value("new.refresh"))
-              .andExpect(jsonPath("$.data.expiresIn").value(3600));
+              .andExpect(jsonPath("$.data.expiresIn").value(3600))
+              .andExpect(jsonPath("$.data.newUser").value(false));
     }
 
     @Test

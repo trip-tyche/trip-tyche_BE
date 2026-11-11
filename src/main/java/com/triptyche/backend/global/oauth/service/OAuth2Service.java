@@ -1,7 +1,7 @@
 package com.triptyche.backend.global.oauth.service;
 
+import com.triptyche.backend.domain.user.dto.OAuthLoginResult;
 import com.triptyche.backend.domain.user.dto.OAuthUserInfo;
-import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.service.UserService;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
@@ -43,12 +43,13 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
       Map<String, Object> attributes = oAuth2User.getAttributes();
       OAuthUserInfo userProfile = OAuthAttributes.extract(registrationId, attributes);
 
-      User user = userService.getOrCreateFromOAuth(userProfile);
-      Long userId = user.getUserId();
+      OAuthLoginResult result = userService.getOrCreateFromOAuth(userProfile);
+      Long userId = result.user().getUserId();
 
       Map<String, Object> customAttribute = getCustomAttribute(registrationId, userNameAttributeName, attributes,
               userProfile);
       customAttribute.put("userId", userId);
+      customAttribute.put("newUser", result.newUser());
 
       return new DefaultOAuth2User(
               Collections.singleton(new SimpleGrantedAuthority("USER")),

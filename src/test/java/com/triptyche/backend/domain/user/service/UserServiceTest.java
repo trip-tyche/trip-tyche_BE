@@ -10,13 +10,16 @@ import static org.mockito.Mockito.verify;
 
 import com.triptyche.backend.domain.notification.repository.NotificationRepository;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
+import com.triptyche.backend.domain.user.dto.OAuthLoginResult;
 import com.triptyche.backend.domain.user.dto.OAuthUserInfo;
+import com.triptyche.backend.domain.user.dto.UserSummaryResponse;
 import com.triptyche.backend.domain.user.event.UserRegisteredEvent;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.model.UserRole;
 import com.triptyche.backend.domain.user.repository.UserRepository;
 import com.triptyche.backend.global.common.ResultCode;
 import com.triptyche.backend.global.exception.CustomException;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -132,7 +135,7 @@ class UserServiceTest {
                 new OAuthUserInfo("업데이트된이름", "existing@example.com", "google");
 
         @Test
-        @DisplayName("이미 가입된 사용자가 OAuth 로그인하면 updateUser()가 호출된 뒤 save된 User를 반환한다")
+        @DisplayName("이미 가입된 사용자가 OAuth 로그인하면 updateUser()가 호출된 뒤 save된 User를 newUser=false로 반환한다")
         void getOrCreateFromOAuth_givenExistingUser_updatesAndReturnsUser() {
             // given
             User existingUser = User.builder()
@@ -148,15 +151,16 @@ class UserServiceTest {
             given(userRepository.save(existingUser)).willReturn(existingUser);
 
             // when
-            User result = userService.getOrCreateFromOAuth(existingUserInfo);
+            OAuthLoginResult result = userService.getOrCreateFromOAuth(existingUserInfo);
 
             // then
-            assertThat(result.getUserName()).isEqualTo("업데이트된이름");
+            assertThat(result.user().getUserName()).isEqualTo("업데이트된이름");
+            assertThat(result.newUser()).isFalse();
             verify(userRepository).save(existingUser);
         }
 
         @Test
-        @DisplayName("신규 사용자가 OAuth 로그인하면 toEntity()로 생성된 User가 save되어 반환된다")
+        @DisplayName("신규 사용자가 OAuth 로그인하면 toEntity()로 생성된 User가 save되어 newUser=true로 반환된다")
         void getOrCreateFromOAuth_givenNewUser_savesAndReturnsNewUser() {
             // given
             User savedUser = User.builder()
@@ -172,11 +176,12 @@ class UserServiceTest {
             given(userRepository.save(any(User.class))).willReturn(savedUser);
 
             // when
-            User result = userService.getOrCreateFromOAuth(newUserInfo);
+            OAuthLoginResult result = userService.getOrCreateFromOAuth(newUserInfo);
 
             // then
-            assertThat(result.getUserEmail()).isEqualTo("new@example.com");
-            assertThat(result.getProvider()).isEqualTo("google");
+            assertThat(result.user().getUserEmail()).isEqualTo("new@example.com");
+            assertThat(result.user().getProvider()).isEqualTo("google");
+            assertThat(result.newUser()).isTrue();
             verify(userRepository).save(any(User.class));
         }
 
@@ -260,6 +265,35 @@ class UserServiceTest {
                     .isInstanceOf(CustomException.class)
                     .extracting(e -> ((CustomException) e).getResultCode())
                     .isEqualTo(ResultCode.USER_SAVE_FAILURE);
+        }
+    }
+
+
+    @Nested
+    @DisplayName("getUserSummary()")
+    class GetUserSummary {
+
+        @Test
+        @DisplayName("사용자의 가입 시각을 createdAt으로 담아 준다")
+        void getUserSummary_givenUser_includesCreatedAt() {
+            // given
+            LocalDateTime createdAt = LocalDateTime.of(2026, 11, 1, 9, 30);
+            User user = User.builder()
+                    .userId(1L)
+                    .userName("유저")
+                    .userNickName("닉네임")
+                    .userEmail("user@example.com")
+                    .provider("google")
+                    .createdAt(createdAt)
+                    .build();
+
+            // when
+            UserSummaryResponse summary = userService.getUserSummary(user);
+
+            // then
+            assertThat(summary.createdAt()).isEqualTo(createdAt);
+            assertThat(summary.userId()).isEqualTo(1L);
+            assertThat(summary.role()).isEqualTo(UserRole.USER);
         }
     }
 

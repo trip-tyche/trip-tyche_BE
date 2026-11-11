@@ -4,6 +4,7 @@ import com.triptyche.backend.domain.notification.model.NotificationStatus;
 import com.triptyche.backend.domain.notification.repository.NotificationRepository;
 import com.triptyche.backend.domain.trip.model.TripStatus;
 import com.triptyche.backend.domain.trip.repository.TripRepository;
+import com.triptyche.backend.domain.user.dto.OAuthLoginResult;
 import com.triptyche.backend.domain.user.dto.OAuthUserInfo;
 import com.triptyche.backend.domain.user.dto.UserSearchResponse;
 import com.triptyche.backend.domain.user.dto.UserSummaryResponse;
@@ -33,19 +34,19 @@ public class UserService {
   private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
-  public User getOrCreateFromOAuth(OAuthUserInfo userProfile) {
+  public OAuthLoginResult getOrCreateFromOAuth(OAuthUserInfo userProfile) {
     try {
       Optional<User> existingUser = userRepository.findUserByUserEmailAndProvider(
               userProfile.userEmail(), userProfile.provider());
       if (existingUser.isPresent()) {
         User user = existingUser.get();
         user.updateUser(userProfile.userName(), userProfile.userEmail());
-        return userRepository.save(user);
+        return new OAuthLoginResult(userRepository.save(user), false);
       }
       User newUser = userRepository.save(userProfile.toEntity());
       log.info("회원 생성: userId={}, provider={}", newUser.getUserId(), newUser.getProvider());
       eventPublisher.publishEvent(new UserRegisteredEvent(newUser.getUserId(), newUser.getProvider(), false));
-      return newUser;
+      return new OAuthLoginResult(newUser, true);
     } catch (DataIntegrityViolationException e) {
       log.error("이메일 중복으로 사용자 저장 실패: {}", e.getMessage());
       throw new CustomException(ResultCode.USER_SAVE_FAILURE, e);

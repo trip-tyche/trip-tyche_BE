@@ -40,6 +40,7 @@ public class AuthTokenController {
     return RestResponse.success(new TokenIssueResponse(
             tokens.get("accessToken"),
             tokens.get("refreshToken"),
-            jwtProperties.accessTokenExpirySeconds()));
+            jwtProperties.accessTokenExpirySeconds(),
+            false));
   }
 }

@@ -70,6 +70,15 @@ class OAuth2LoginSuccessHandlerTest {
   private MockHttpServletResponse response;
   private Authentication authentication;
 
+  private Authentication authenticationOf(boolean newUser) {
+    return new UsernamePasswordAuthenticationToken(
+            new DefaultOAuth2User(
+                    List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                    Map.of("id", "1", "userId", 1L, "email", EMAIL, "provider", PROVIDER, "newUser", newUser),
+                    "id"),
+            null);
+  }
+
   @BeforeEach
   void setUp() {
     handler = new OAuth2LoginSuccessHandler(cookieUtil, jwtProperties, jwtTokenProvider,
@@ -114,6 +123,47 @@ class OAuth2LoginSuccessHandlerTest {
       verify(refreshTokenRepository).save(EMAIL, SESSION_ID, "refresh.token", 2_592_000L);
       verify(oneTimeCodeRepository, never()).issue(any());
     }
+
+    @Test
+    @DisplayName("신규 가입이면 웹 도메인에 signup=true 쿼리를 붙여 리다이렉트한다")
+    void onAuthenticationSuccess_givenNewUser_appendsSignupQuery() throws Exception {
+      // given
+      request.addParameter("state", "PLAIN_STATE");
+
+      // when
+      handler.onAuthenticationSuccess(request, response, authenticationOf(true));
+
+      // then
+      assertThat(response.getRedirectedUrl()).isEqualTo(WEB_REDIRECT + "?signup=true");
+      verify(cookieUtil).setCookie(response, "access_token", "access.token", 3600);
+    }
+
+    @Test
+    @DisplayName("리다이렉트 URL에 이미 쿼리가 있으면 &로 이어 붙인다")
+    void onAuthenticationSuccess_givenNewUserAndExistingQuery_appendsWithAmpersand() throws Exception {
+      // given
+      ReflectionTestUtils.setField(handler, "redirectUrl", WEB_REDIRECT + "/home?lang=ko");
+      request.addParameter("state", "PLAIN_STATE");
+
+      // when
+      handler.onAuthenticationSuccess(request, response, authenticationOf(true));
+
+      // then
+      assertThat(response.getRedirectedUrl()).isEqualTo(WEB_REDIRECT + "/home?lang=ko&signup=true");
+    }
+
+    @Test
+    @DisplayName("기존 사용자면 리다이렉트 URL을 바꾸지 않는다")
+    void onAuthenticationSuccess_givenExistingUser_keepsRedirectUrl() throws Exception {
+      // given
+      request.addParameter("state", "PLAIN_STATE");
+
+      // when
+      handler.onAuthenticationSuccess(request, response, authenticationOf(false));
+
+      // then
+      assertThat(response.getRedirectedUrl()).isEqualTo(WEB_REDIRECT);
+    }
   }
 
   @Nested
@@ -125,7 +175,7 @@ class OAuth2LoginSuccessHandlerTest {
     void onAuthenticationSuccess_givenAppState_redirectsToDeepLink() throws Exception {
       // given
       request.addParameter("state", "PLAIN_STATE.app0");
-      given(oneTimeCodeRepository.issue(new OneTimeCodePayload(EMAIL, PROVIDER))).willReturn("ONE_TIME_CODE");
+      given(oneTimeCodeRepository.issue(new OneTimeCodePayload(EMAIL, PROVIDER, false))).willReturn("ONE_TIME_CODE");
 
       // when
       handler.onAuthenticationSuccess(request, response, authentication);
@@ -134,6 +184,20 @@ class OAuth2LoginSuccessHandlerTest {
       assertThat(response.getRedirectedUrl()).isEqualTo(APP_REDIRECT + "?code=ONE_TIME_CODE");
       verify(cookieUtil, never()).setCookie(any(), anyString(), anyString(), anyInt());
       verify(refreshTokenRepository, never()).save(anyString(), anyString(), anyString(), anyLong());
+    }
+
+    @Test
+    @DisplayName("신규 가입이면 newUser=true를 담은 payload로 code를 발급하고 딥링크 형식은 그대로다")
+    void onAuthenticationSuccess_givenNewUserAppState_issuesCodeWithNewUserFlag() throws Exception {
+      // given
+      request.addParameter("state", "PLAIN_STATE.app0");
+      given(oneTimeCodeRepository.issue(new OneTimeCodePayload(EMAIL, PROVIDER, true))).willReturn("ONE_TIME_CODE");
+
+      // when
+      handler.onAuthenticationSuccess(request, response, authenticationOf(true));
+
+      // then
+      assertThat(response.getRedirectedUrl()).isEqualTo(APP_REDIRECT + "?code=ONE_TIME_CODE");
     }
 
     @Test

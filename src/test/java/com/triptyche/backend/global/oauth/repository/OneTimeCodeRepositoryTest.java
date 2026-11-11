@@ -31,7 +31,9 @@ class OneTimeCodeRepositoryTest {
 
   private static final String EMAIL = "user@triptyche.com";
   private static final String PROVIDER = "kakao";
-  private static final String STORED_JSON = "{\"userEmail\":\"user@triptyche.com\",\"provider\":\"kakao\"}";
+  private static final String STORED_JSON =
+          "{\"userEmail\":\"user@triptyche.com\",\"provider\":\"kakao\",\"newUser\":false}";
+  private static final String LEGACY_STORED_JSON = "{\"userEmail\":\"user@triptyche.com\",\"provider\":\"kakao\"}";
 
   @Mock
   private RedisTemplate<String, Object> redisTemplate;
@@ -59,7 +61,7 @@ class OneTimeCodeRepositoryTest {
       ArgumentCaptor<Object> valueCaptor = ArgumentCaptor.forClass(Object.class);
 
       // when
-      String code = oneTimeCodeRepository.issue(new OneTimeCodePayload(EMAIL, PROVIDER));
+      String code = oneTimeCodeRepository.issue(new OneTimeCodePayload(EMAIL, PROVIDER, false));
 
       // then
       verify(valueOperations).set(keyCaptor.capture(), valueCaptor.capture(), eq(Duration.ofSeconds(60)));
@@ -75,7 +77,7 @@ class OneTimeCodeRepositoryTest {
 
       // when
       for (int i = 0; i < 500; i++) {
-        codes.add(oneTimeCodeRepository.issue(new OneTimeCodePayload(EMAIL, PROVIDER)));
+        codes.add(oneTimeCodeRepository.issue(new OneTimeCodePayload(EMAIL, PROVIDER, false)));
       }
 
       // then
@@ -98,7 +100,34 @@ class OneTimeCodeRepositoryTest {
       OneTimeCodePayload payload = oneTimeCodeRepository.consume("CODE");
 
       // then
-      assertThat(payload).isEqualTo(new OneTimeCodePayload(EMAIL, PROVIDER));
+      assertThat(payload).isEqualTo(new OneTimeCodePayload(EMAIL, PROVIDER, false));
+    }
+
+    @Test
+    @DisplayName("newUser 필드가 없는 기존 형식 payload도 newUser=false로 읽는다")
+    void consume_givenLegacyPayloadWithoutNewUser_returnsNewUserFalse() {
+      // given
+      given(valueOperations.getAndDelete("oauth:code:CODE")).willReturn(LEGACY_STORED_JSON);
+
+      // when
+      OneTimeCodePayload payload = oneTimeCodeRepository.consume("CODE");
+
+      // then
+      assertThat(payload).isEqualTo(new OneTimeCodePayload(EMAIL, PROVIDER, false));
+    }
+
+    @Test
+    @DisplayName("newUser=true로 저장된 payload는 그대로 복원된다")
+    void consume_givenNewUserPayload_returnsNewUserTrue() {
+      // given
+      given(valueOperations.getAndDelete("oauth:code:CODE"))
+              .willReturn("{\"userEmail\":\"user@triptyche.com\",\"provider\":\"kakao\",\"newUser\":true}");
+
+      // when
+      OneTimeCodePayload payload = oneTimeCodeRepository.consume("CODE");
+
+      // then
+      assertThat(payload).isEqualTo(new OneTimeCodePayload(EMAIL, PROVIDER, true));
     }
 
     @Test
