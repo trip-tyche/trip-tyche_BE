@@ -42,9 +42,6 @@ class UserServiceTest {
     @InjectMocks
     private UserService userService;
 
-    // -------------------------------------------------------------------------
-    // validateAndCheckNickname()
-    // -------------------------------------------------------------------------
 
     @Nested
     @DisplayName("validateAndCheckNickname()")
@@ -118,9 +115,6 @@ class UserServiceTest {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // getOrCreateFromOAuth()
-    // -------------------------------------------------------------------------
 
     @Nested
     @DisplayName("getOrCreateFromOAuth()")
@@ -216,9 +210,6 @@ class UserServiceTest {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // createGuestUser()
-    // -------------------------------------------------------------------------
 
     @Nested
     @DisplayName("createGuestUser()")

@@ -69,12 +69,6 @@ public class UserService {
     userRepository.save(user);
   }
 
-  /**
-   * 닉네임 중복 확인
-   *
-   * @param userNickName
-   *         확인할 닉네임
-   */
   public void validateAndCheckNickname(String userNickName) {
     if (userNickName == null || userNickName.trim().isEmpty()) {
       throw new CustomException(ResultCode.INVALID_USER_NICKNAME);
@@ -85,14 +79,6 @@ public class UserService {
       throw new CustomException(ResultCode.USER_NICKNAME_DUPLICATED);
     }
   }
-
-  /**
-   * 닉네임으로 사용자 검색
-   *
-   * @param nickname
-   *         검색할 사용자 닉네임
-   * @return User 사용자 객체
-   */
 
   public UserSearchResponse getUserByNickName(String nickname) {
     User user = userRepository.findByUserNickName(nickname.trim())

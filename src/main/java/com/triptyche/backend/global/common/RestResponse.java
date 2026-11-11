@@ -16,7 +16,6 @@ public class RestResponse<T> {
   private String message;
   private T data;
 
-  // 성공 응답 생성 메서드
   public static <T> RestResponse<T> success(T data) {
     return RestResponse.<T>builder()
         .status(HttpStatus.OK.value())
@@ -26,7 +25,6 @@ public class RestResponse<T> {
         .build();
   }
 
-  // 오류 응답 생성 메서드 (데이터가 없는 경우)
   public static <T> RestResponse<T> error(ResultCode resultCode) {
     return RestResponse.<T>builder()
         .status(resultCode.getHttpStatus().value())
@@ -36,7 +34,6 @@ public class RestResponse<T> {
         .build();
   }
 
-  // 오류 응답 생성 메서드 (데이터가 있는 경우)
   public static <T> RestResponse<T> error(ResultCode resultCode, T data) {
     return RestResponse.<T>builder()
         .status(resultCode.getHttpStatus().value())
@@ -46,7 +43,6 @@ public class RestResponse<T> {
         .build();
   }
 
-  // ResultCode의 HttpStatus를 직접 반환하는 메서드
   public HttpStatus getHttpStatus() {
     return HttpStatus.valueOf(this.status);
   }

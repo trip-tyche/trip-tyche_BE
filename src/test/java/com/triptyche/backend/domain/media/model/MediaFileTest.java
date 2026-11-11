@@ -21,7 +21,6 @@ class MediaFileTest {
         .build();
   }
 
-  // ── markUploaded ──────────────────────────────────────────────────────────
 
   @Test
   @DisplayName("markUploaded: 최초 호출 시 processingStatus가 UPLOADED로 설정된다")
@@ -42,7 +41,6 @@ class MediaFileTest {
             .isEqualTo(ResultCode.INVALID_MEDIA_STATE));
   }
 
-  // ── markProcessing ────────────────────────────────────────────────────────
 
   @Test
   @DisplayName("markProcessing: UPLOADED → PROCESSING 전이 성공")
@@ -62,7 +60,6 @@ class MediaFileTest {
             .isEqualTo(ResultCode.INVALID_MEDIA_STATE));
   }
 
-  // ── markProcessed ─────────────────────────────────────────────────────────
 
   @Test
   @DisplayName("markProcessed: UPLOADED 상태에서 직접 성공 (processedAt 세팅)")
@@ -103,7 +100,6 @@ class MediaFileTest {
   @Test
   @DisplayName("markProcessed: 이전 failureReason을 null로 리셋한다")
   void markProcessed_resetsFailureReason() {
-    // Builder로 UPLOADED 상태 + failureReason이 미리 세팅된 파일을 만든다
     MediaFile mf = MediaFile.builder()
         .mediaKey("test-key-2")
         .processingStatus(ProcessingStatus.UPLOADED)
@@ -117,7 +113,6 @@ class MediaFileTest {
     assertThat(mf.getProcessingStatus()).isEqualTo(ProcessingStatus.PROCESSED);
   }
 
-  // ── markFailed ────────────────────────────────────────────────────────────
 
   @Test
   @DisplayName("markFailed: null 상태에서 호출 가능하고 reason이 저장된다")

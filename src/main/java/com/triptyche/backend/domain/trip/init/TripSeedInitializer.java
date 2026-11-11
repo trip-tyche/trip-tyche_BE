@@ -52,8 +52,6 @@ public class TripSeedInitializer implements ApplicationRunner {
   private final PinPointService pinPointService;
   private final S3KeyResolver s3KeyResolver;
 
-  // ── Trip seed data ─────────────────────────────────────────────────────────
-
   private record TripData(
       String title,
       String country,
@@ -108,8 +106,6 @@ public class TripSeedInitializer implements ApplicationRunner {
       )
   );
 
-  // ── Media seed data ────────────────────────────────────────────────────────
-
   private record SeedMedia(
       String folder,
       String filename,
@@ -142,8 +138,6 @@ public class TripSeedInitializer implements ApplicationRunner {
       )
   );
 
-  // ── Runner ─────────────────────────────────────────────────────────────────
-
   @Override
   @Transactional
   public void run(ApplicationArguments args) {
@@ -158,8 +152,6 @@ public class TripSeedInitializer implements ApplicationRunner {
 
     log.info("[TripSeedInitializer] 완료 — 여행 {}개 시드", TRIP_COUNT);
   }
-
-  // ── Private helpers ────────────────────────────────────────────────────────
 
   private User getOrCreateUser(String email, String name, String nickname) {
     return userRepository.findByUserEmail(email)

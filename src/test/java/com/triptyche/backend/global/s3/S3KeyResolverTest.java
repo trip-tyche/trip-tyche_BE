@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class S3KeyResolverTest {
 
-    // buildTempKey
     @Test
     void buildTempKey_basicJpg() {
         assertThat(S3KeyResolver.buildTempKey(42L, "abc-123", "jpg"))
@@ -32,14 +31,12 @@ class S3KeyResolverTest {
                 .isEqualTo("temp/42/u.jpg");
     }
 
-    // buildFinalKey
     @Test
     void buildFinalKey_alwaysWebp() {
         assertThat(S3KeyResolver.buildFinalKey(42L, "abc-123"))
                 .isEqualTo("processed/42/abc-123.webp");
     }
 
-    // isTempKey
     @Test
     void isTempKey_trueForTempPrefix() {
         assertThat(S3KeyResolver.isTempKey("temp/x.jpg")).isTrue();
@@ -55,7 +52,6 @@ class S3KeyResolverTest {
         assertThat(S3KeyResolver.isTempKey(null)).isFalse();
     }
 
-    // isFinalKey
     @Test
     void isFinalKey_trueForProcessedPrefix() {
         assertThat(S3KeyResolver.isFinalKey("processed/x.webp")).isTrue();
@@ -66,7 +62,6 @@ class S3KeyResolverTest {
         assertThat(S3KeyResolver.isFinalKey("temp/x.jpg")).isFalse();
     }
 
-    // swapTempToFinalKey
     @Test
     void swapTempToFinalKey_normalCase() {
         assertThat(S3KeyResolver.swapTempToFinalKey("temp/42/abc.jpg"))
@@ -89,7 +84,6 @@ class S3KeyResolverTest {
         assertThat(S3KeyResolver.swapTempToFinalKey("temp/onlyfile.jpg")).isNull();
     }
 
-    // sanity check for existing methods
     @Test
     void buildOriginalKey_sanity() {
         assertThat(S3KeyResolver.buildOriginalKey("trip-1", "photo.jpg"))

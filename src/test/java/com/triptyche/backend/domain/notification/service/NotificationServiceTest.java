@@ -144,7 +144,6 @@ class NotificationServiceTest {
     @DisplayName("이미 읽은 알림은 다시 읽음 처리해도 상태가 그대로다")
     void markAsRead_givenAlreadyReadNotification_statusRemainsRead() {
       // given
-      // READ 상태인 알림은 markAsRead() 내부에서 조기 반환(early return)되어야 한다
       Notification notification = buildNotification(NOTIFICATION_ID, NotificationStatus.READ);
       given(notificationRepository.findById(NOTIFICATION_ID)).willReturn(Optional.of(notification));
 
@@ -194,7 +193,6 @@ class NotificationServiceTest {
     @DisplayName("연관된 여행이 존재하지 않으면 여행 제목이 UNKNOWN_TRIP으로 반환된다")
     void getNotificationDetail_givenMissingTrip_returnsTripTitleAsUnknownTrip() {
       // given
-      // 여행이 삭제되었거나 referenceId가 유효하지 않은 경우를 검증한다
       Notification notification = buildNotification(NOTIFICATION_ID, NotificationStatus.UNREAD);
       given(notificationRepository.findById(NOTIFICATION_ID)).willReturn(Optional.of(notification));
       given(tripQueryService.getTripTitleById(TRIP_ID)).willReturn("UNKNOWN_TRIP");
@@ -245,7 +243,6 @@ class NotificationServiceTest {
     @DisplayName("이미 삭제된 알림은 중복 처리되지 않고 상태가 그대로 유지된다")
     void markAsDeleted_givenAlreadyDeletedNotification_statusRemainsDelete() {
       // given
-      // DELETE 상태인 알림은 필터에서 걸러지므로 markAsDeleted()가 호출되지 않아야 한다
       Notification alreadyDeleted = buildNotification(1L, NotificationStatus.DELETE);
       List<Long> ids = List.of(1L);
       given(notificationRepository.findAllById(ids)).willReturn(List.of(alreadyDeleted));
@@ -254,7 +251,6 @@ class NotificationServiceTest {
       notificationService.markAsDeleted(ids);
 
       // then
-      // 상태가 DELETE로 유지되며 이중 처리되지 않음을 확인
       assertThat(alreadyDeleted.getStatus()).isEqualTo(NotificationStatus.DELETE);
     }
 
@@ -265,7 +261,6 @@ class NotificationServiceTest {
       given(notificationRepository.findAllById(List.of())).willReturn(List.of());
 
       // when & then
-      // 예외 없이 정상 종료되어야 한다
       notificationService.markAsDeleted(List.of());
     }
 
@@ -295,7 +290,6 @@ class NotificationServiceTest {
 
       // then
       assertThat(unread.getStatus()).isEqualTo(NotificationStatus.DELETE);
-      // DELETE 상태였던 것은 필터에서 제외되어 상태 변화 없음
       assertThat(deleted.getStatus()).isEqualTo(NotificationStatus.DELETE);
     }
   }

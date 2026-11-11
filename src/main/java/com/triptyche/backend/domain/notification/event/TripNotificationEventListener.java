@@ -40,9 +40,6 @@ public class TripNotificationEventListener {
     );
   }
 
-  /**
-   * Trip 수정 이벤트 처리 (소유자/공유자 모두 가능)
-   */
   private void processTripUpdatedEvent(TripUpdatedEvent event, NotificationType type) {
     Set<Long> recipientIds = determineTripUpdateRecipients(
             event.tripId(), event.ownerId(), event.actorId(), event.isOwner());
@@ -101,9 +98,6 @@ public class TripNotificationEventListener {
     return shareQueryService.findApprovedRecipientIdsByTripId(tripId);
   }
 
-  /**
-   * Trip 수정 이벤트용 페이로드 생성
-   */
   private Map<String, Object> buildTripUpdatePayload(Long recipientId, String tripKey,
                                                      String tripTitle, String senderNickname,
                                                      NotificationType type) {

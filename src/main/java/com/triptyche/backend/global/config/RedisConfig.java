@@ -43,15 +43,12 @@ public class RedisConfig {
   @Bean
   public RedisConnectionFactory redisConnectionFactory() {
 
-    // Redis 서버 구성
     RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration(host, port);
 
-    // 비밀번호 설정 추가
     if (password != null && !password.isEmpty()) {
       redisConfig.setPassword(password);
     }
 
-    // 커넥션 풀 설정 - 제네릭 타입 지정 (Object)
     GenericObjectPoolConfig<Object> poolConfig = new GenericObjectPoolConfig<>();
     poolConfig.setMaxTotal(8);         // 최대 연결 수
     poolConfig.setMaxIdle(8);          // 최대 유휴 연결 수
@@ -60,7 +57,6 @@ public class RedisConfig {
     poolConfig.setTestOnReturn(true);  // 연결 반환 시 테스트
     poolConfig.setTestWhileIdle(true); // 유휴 상태 테스트
 
-    // Lettuce 클라이언트 옵션 설정
     SocketOptions socketOptions = SocketOptions.builder()
             .connectTimeout(Duration.ofMillis(timeout))
             .build();
@@ -71,7 +67,6 @@ public class RedisConfig {
             .disconnectedBehavior(ClientOptions.DisconnectedBehavior.REJECT_COMMANDS)
             .build();
 
-    // Lettuce 클라이언트 구성
     LettuceClientConfiguration clientConfig = LettucePoolingClientConfiguration.builder()
             .poolConfig(poolConfig)
             .clientOptions(clientOptions)
@@ -79,7 +74,6 @@ public class RedisConfig {
             .shutdownTimeout(Duration.ofSeconds(5))
             .build();
 
-    // Lettuce 연결 팩토리 생성
     LettuceConnectionFactory factory = new LettuceConnectionFactory(redisConfig, clientConfig);
     factory.afterPropertiesSet();
     return factory;
@@ -90,11 +84,9 @@ public class RedisConfig {
     RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
     redisTemplate.setConnectionFactory(redisConnectionFactory());
 
-    // Key 직렬화
     redisTemplate.setKeySerializer(new StringRedisSerializer());
     redisTemplate.setHashKeySerializer(new StringRedisSerializer());
 
-    // Value 직렬화
     redisTemplate.setValueSerializer(new StringRedisSerializer());
     redisTemplate.setHashValueSerializer(new StringRedisSerializer());
 
@@ -102,7 +94,7 @@ public class RedisConfig {
     redisTemplate.afterPropertiesSet();
     return redisTemplate;
   }
-  // Redis 연결 상태 확인을 위한 헬스 체크 빈
+
   @Bean
   public RedisHealthIndicator redisHealthIndicator(RedisConnectionFactory redisConnectionFactory) {
     return new RedisHealthIndicator(redisConnectionFactory);
@@ -130,7 +122,6 @@ public class RedisConfig {
     StreamMessageListenerContainer<String, MapRecord<String, String, String>> container =
         StreamMessageListenerContainer.create(connectionFactory, options);
 
-    // 스트림 + 컨슈머 그룹 생성 (이미 존재하면 무시)
     try {
       redisTemplate().opsForStream().createGroup("media-processed-stream", "media-processed-workers");
     } catch (Exception busyGroup) {

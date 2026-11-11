@@ -102,9 +102,6 @@ class MediaCommandServiceIntegrationTest {
             .build());
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // processAndSaveMetadataBatch
-  // ─────────────────────────────────────────────────────────────────────────
 
   @Nested
   @DisplayName("processAndSaveMetadataBatch")
@@ -231,9 +228,6 @@ class MediaCommandServiceIntegrationTest {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // updateMultipleMediaFiles
-  // ─────────────────────────────────────────────────────────────────────────
 
   @Nested
   @DisplayName("updateMultipleMediaFiles")
@@ -285,9 +279,6 @@ class MediaCommandServiceIntegrationTest {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // deleteMultipleMediaFiles
-  // ─────────────────────────────────────────────────────────────────────────
 
   @Nested
   @DisplayName("deleteMultipleMediaFiles")
@@ -320,9 +311,6 @@ class MediaCommandServiceIntegrationTest {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // helpers
-  // ─────────────────────────────────────────────────────────────────────────
 
   private MediaFile buildMediaFile(Trip trip, PinPoint pinPoint, String key, double lat, double lon) {
     return MediaFile.builder()

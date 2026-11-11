@@ -71,7 +71,6 @@ class TripCommandControllerTest {
             .provider("google")
             .build();
 
-    // CurrentUserArgumentResolver: SecurityContext의 이메일로 User 조회
     given(userRepository.findByUserEmail(TEST_EMAIL))
             .willReturn(Optional.of(mockUser));
   }

@@ -24,16 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
- * 테스트 기준 좌표: 서울 시청 (37.5666, 126.9784)
- *
- * 거리 계산 기준 (Haversine):
- * - 200m 이내: 위도 기준 약 0.0018도 차이 (~200m)
- * - 200m 초과: 위도 기준 약 0.003도 차이 (~330m)
- *
- * 실측 검증:
- * - (37.5666, 126.9784) → (37.5684, 126.9784): 약 200m (임계값 정확히 경계)
- * - 이내 테스트: (37.5674, 126.9784) → 약 89m
- * - 밖 테스트: (37.5696, 126.9784) → 약 333m
+ * 테스트 기준 좌표: 서울 시청 (37.5666, 126.9784). 200m 임계값 경계 근처 좌표로 이내/밖 케이스를 만든다.
  */
 @ExtendWith(MockitoExtension.class)
 class PinPointServiceTest {
@@ -314,7 +305,6 @@ class PinPointServiceTest {
                     .willReturn(secondSaved);
 
             // when
-            // 첫 번째 호출: 빈 목록 → 신규 생성
             PinPoint first = pinPointService.assignPinPoint(existingPinPoints, trip, BASE_LAT, BASE_LON);
             // 두 번째 호출: FAR_LAT 요청, 목록에는 BASE_LAT PinPoint만 존재 (거리 약 333m) → 신규 생성
             PinPoint second = pinPointService.assignPinPoint(existingPinPoints, trip, FAR_LAT, FAR_LON);

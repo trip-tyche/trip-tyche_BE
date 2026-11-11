@@ -110,7 +110,6 @@ class MediaPresignServiceTest {
             PresignedUrl first = response.presignedUrls().get(0);
             PresignedUrl second = response.presignedUrls().get(1);
 
-            // tempKey and finalKey are different for each file
             assertThat(first.tempKey()).isNotEqualTo(second.tempKey());
             assertThat(first.finalKey()).isNotEqualTo(second.finalKey());
 
@@ -118,15 +117,12 @@ class MediaPresignServiceTest {
             assertThat(first.fileKey()).isEqualTo(first.tempKey());
             assertThat(second.fileKey()).isEqualTo(second.tempKey());
 
-            // tempKey starts with temp/, finalKey starts with processed/
             assertThat(first.tempKey()).startsWith("temp/");
             assertThat(first.finalKey()).startsWith("processed/");
             assertThat(first.finalKey()).endsWith(".webp");
 
-            // presignedPutUrl uses tempKey
             assertThat(first.presignedPutUrl()).contains(first.tempKey());
 
-            // mediaFileId assigned
             assertThat(first.mediaFileId()).isNotNull();
             assertThat(second.mediaFileId()).isNotNull();
             assertThat(first.mediaFileId()).isNotEqualTo(second.mediaFileId());
@@ -173,7 +169,6 @@ class MediaPresignServiceTest {
                 assertThat(mf.getTempKey()).startsWith("temp/" + TRIP_ID + "/");
                 assertThat(mf.getFinalKey()).startsWith("processed/" + TRIP_ID + "/");
                 assertThat(mf.getFinalKey()).endsWith(".webp");
-                // mediaKey == finalKey
                 assertThat(mf.getMediaKey()).isEqualTo(mf.getFinalKey());
                 // pinPoint is null (not set at presign time)
                 assertThat(mf.getPinPoint()).isNull();

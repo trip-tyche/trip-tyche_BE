@@ -41,7 +41,6 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
       if (StringUtils.hasText(token)) {
         // 토큰 검증 시 만료되거나 유효하지 않으면 CustomException이 발생합니다.
         jwtTokenProvider.validateToken(token);
-        // 검증 성공 시 토큰에서 사용자 이메일과 권한 정보를 추출하여 인증 객체를 생성합니다.
         String userEmail = jwtTokenProvider.getUserEmailFromToken(token);
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 userEmail, null, jwtTokenProvider.getAuthorities(token)
@@ -50,7 +49,6 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authentication);
       }
     } catch (CustomException ex) {
-      // 만료된 토큰(EXPIRED_JWT) 또는 기타 JWT 오류가 발생한 경우, JSON 형태의 오류 응답을 작성합니다.
       response.setStatus(ex.getResultCode().getHttpStatus().value());
       response.setContentType("application/json;charset=UTF-8");
       ObjectMapper mapper = new ObjectMapper();
@@ -71,9 +69,6 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     return null;
   }
 
-  /**
-   * 요청의 쿠키 목록에서 "access_token" 쿠키의 값을 추출하는 헬퍼 메서드
-   */
   private String getTokenFromCookies(HttpServletRequest request) {
     if (request.getCookies() != null) {
       for (Cookie cookie : request.getCookies()) {
@@ -85,10 +80,6 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     return null;
   }
 
-  /**
-   * 쿼리 파라미터에서 토큰 추출 (?token=...)
-   * WebSocket Handshake 시 Authorization 헤더 전달이 불가한 경우를 위해 지원
-   */
   private String getTokenFromQueryParam(HttpServletRequest request) {
     return request.getParameter("token");
   }

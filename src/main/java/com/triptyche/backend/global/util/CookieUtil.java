@@ -18,7 +18,6 @@ public class CookieUtil {
     boolean isSecure = !profile.equals("local");
     String sameSite = profile.equals("prod") ? "Lax" : "None";
 
-    // Set-Cookie 헤더 직접 작성
     StringBuilder cookieHeader = new StringBuilder();
     cookieHeader.append(name).append("=").append(value)
             .append("; Max-Age=").append(maxAge)
@@ -53,15 +52,6 @@ public class CookieUtil {
     response.addHeader("Set-Cookie", cookieHeader.toString());
   }
 
-  /**
-   * HttpServletRequest에서 지정한 이름의 쿠키 값을 반환하는 헬퍼 메서드.
-   *
-   * @param request
-   *         HttpServletRequest
-   * @param cookieName
-   *         읽어올 쿠키의 이름
-   * @return 해당 쿠키의 값 또는 존재하지 않으면 null 반환
-   */
   public String getCookieValue(HttpServletRequest request, String cookieName) {
     if (request.getCookies() != null) {
       for (Cookie cookie : request.getCookies()) {

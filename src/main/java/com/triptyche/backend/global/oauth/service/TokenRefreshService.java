@@ -32,29 +32,25 @@ public class TokenRefreshService {
     }
 
     try {
-      // 1. Redis 연결 확인 - 연결 문제를 조기에 감지
       if (!refreshTokenRepository.isRedisAvailable()) {
         log.error("Redis 서버 연결 불가 - 토큰 새로고침 불가");
         throw new CustomException(ResultCode.INTERNAL_SERVER_ERROR);
       }
 
-      // 2. Refresh Token의 유효성 검사 (만료되었거나 유효하지 않으면 예외 발생)
       jwtTokenProvider.validateToken(refreshToken);
 
-      // 3. Refresh Token에서 사용자 이메일과 provider 추출
       String userEmail = jwtTokenProvider.getUserEmailFromToken(refreshToken);
       String provider = jwtTokenProvider.extractProviderFromToken(refreshToken);
 
       log.info("토큰 갱신 시도: 사용자={}, 제공자={}", userEmail, provider);
 
-      // 4. 세션 식별자가 없으면 도입 이전 토큰이므로 재로그인시킨다
+      // 세션 식별자가 없으면 도입 이전 토큰이므로 재로그인시킨다
       String sessionId = jwtTokenProvider.extractSessionId(refreshToken);
       if (sessionId == null) {
         log.warn("세션 식별자가 없는 Refresh Token (구버전): 사용자={}", userEmail);
         throw new CustomException(ResultCode.REFRESH_TOKEN_EXPIRED);
       }
 
-      // 5. 해당 세션만 조회한다
       String storedRefreshToken = refreshTokenRepository.find(userEmail, sessionId);
       if (storedRefreshToken == null) {
         log.warn("Redis에 저장된 Refresh Token이 없음 (만료 또는 로그아웃): 사용자={}, 세션={}",
@@ -93,7 +89,6 @@ public class TokenRefreshService {
       // 이미 처리된 예외는 그대로 전파
       throw e;
     } catch (Exception e) {
-      // 예상치 못한 예외 처리
       log.error("토큰 갱신 중 예상치 못한 오류 발생: {}", e.getMessage(), e);
       throw new CustomException(ResultCode.INTERNAL_SERVER_ERROR);
     }

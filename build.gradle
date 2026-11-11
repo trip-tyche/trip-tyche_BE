@@ -34,56 +34,44 @@ dependencies {
     // Boot 3의 starter-web에는 포함되지 않아, 이게 없으면 애노테이션이 조용히 무시된다.
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-    // Lombok 관련 의존성 추가
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    // Spring Boot DevTools 관련 의존성 추가
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
-    // MySQL 관련 의존성 추가
     runtimeOnly 'com.mysql:mysql-connector-j'
 
-    // JUnit5 관련 의존성 추가
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testRuntimeOnly 'com.h2database:h2'
 
-    // JWT 관련 의존성 추가
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-    // Swagger 관련 의존성 추가
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
 
-    // SWS S3 SDK 의존성
     implementation 'software.amazon.awssdk:s3:2.20.17'
 
-    // Jackson 관련 의존성 추가 (버전은 Spring Boot BOM 관리)
+    // 버전은 Spring Boot BOM 관리
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
-    // Prometheus와 Actuator 모니터링을 위한 의존성
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation 'io.prometheus:prometheus-metrics-core:1.1.0'
 
 
-    // Redis 설정
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.apache.commons:commons-pool2'
 
-    // hibernate
     implementation 'org.hibernate.common:hibernate-commons-annotations:6.0.6.Final'
 
-    // Websocket 관련
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework:spring-messaging'
 
-    // FCM 푸시 발송
     implementation('com.google.firebase:firebase-admin:9.9.0') {
         exclude group: 'com.fasterxml.jackson.dataformat', module: 'jackson-dataformat-xml'
     }

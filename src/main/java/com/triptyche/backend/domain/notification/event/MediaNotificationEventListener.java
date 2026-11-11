@@ -89,9 +89,6 @@ public class MediaNotificationEventListener {
     );
   }
 
-  /**
-   * Media 이벤트 처리 (소유자/공유자 모두 가능)
-   */
   private void processMediaEvent(Long tripId,
                                  String tripKey,
                                  String tripTitle,
@@ -114,9 +111,6 @@ public class MediaNotificationEventListener {
     );
   }
 
-  /**
-   * 미디어 이벤트 수신자 결정
-   */
   private Set<Long> determineMediaEventRecipients(Long tripId, Long actorId, Long ownerId, boolean isOwner) {
     Set<Long> recipientIds = new HashSet<>();
     Set<Long> approvedShareIds = getApprovedShareRecipientIds(tripId);
@@ -135,16 +129,10 @@ public class MediaNotificationEventListener {
     return recipientIds;
   }
 
-  /**
-   * 승인된 공유자 ID 목록 조회
-   */
   private Set<Long> getApprovedShareRecipientIds(Long tripId) {
     return shareQueryService.findApprovedRecipientIdsByTripId(tripId);
   }
 
-  /**
-   * Media 이벤트용 페이로드 생성
-   */
   private Map<String, Object> buildMediaPayload(Long recipientId, String tripKey,
                                                 String tripTitle, String senderNickname,
                                                 int count, NotificationType type) {

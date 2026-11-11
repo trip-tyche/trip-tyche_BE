@@ -146,7 +146,6 @@ class MediaProcessedStreamConsumerTest {
           .when(mediaProcessingService)
           .applyProcessedResult(any(), any(), any());
 
-      // 예외가 전파되지 않아야 함
       consumer.onMessage(record);
     }
   }
