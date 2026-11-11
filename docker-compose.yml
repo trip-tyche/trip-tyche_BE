@@ -154,7 +154,8 @@ services:
       OCI_BUCKET_NAME: ${OCI_BUCKET_NAME}
       AWS_REQUEST_CHECKSUM_CALCULATION: when_required
       AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
-      SENTRY_DSN: ${SENTRY_DSN:-}
+      # 워커는 별도 Sentry 프로젝트(Python)로 보낸다.
+      SENTRY_DSN: ${SENTRY_DSN_WORKER:-}
       APP_VERSION: ${APP_VERSION:-unknown}
     deploy:
       resources:
