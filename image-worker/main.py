@@ -344,7 +344,8 @@ def main():
                             log.error("처리 실패 — message_id: %s, error: %s", message_id, e, exc_info=True)
 
         except redis.exceptions.ConnectionError as e:
-            log.error("Redis 연결 오류: %s — 5초 후 재연결", e, exc_info=True)
+            # 5초마다 재시도하므로 error로 남기면 장애 동안 Sentry 이벤트가 쏟아진다.
+            log.warning("Redis 연결 오류: %s — 5초 후 재연결", e)
             time.sleep(5)
         except Exception as e:
             log.error("예상치 못한 오류: %s — 5초 후 재시작", e, exc_info=True)
