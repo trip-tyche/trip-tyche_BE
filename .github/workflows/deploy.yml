@@ -70,6 +70,11 @@ jobs:
             set -euo pipefail
 
             cd ~/triptyche
+
+            # compose가 ${APP_VERSION}를 치환해 app과 image-worker의 Sentry release로 넘긴다.
+            export APP_VERSION=${{ github.sha }}
+
+
             docker compose pull app
             docker compose build image-worker
 
