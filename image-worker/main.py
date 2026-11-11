@@ -105,6 +105,8 @@ def get_redis_client():
         port=REDIS_PORT,
         password=REDIS_PASSWORD if REDIS_PASSWORD else None,
         decode_responses=True,
+        # redis-py 8부터 기본 socket_timeout이 5초라 XREADGROUP block(5초)과 같아 대기 중 타임아웃이 난다.
+        socket_timeout=15,
     )
 
 
