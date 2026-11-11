@@ -1,11 +1,13 @@
 package com.triptyche.backend.global.config;
 
 import com.triptyche.backend.global.redis.MediaProcessedStreamConsumer;
+import com.triptyche.backend.global.redis.StreamPollErrorHandler;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.SocketOptions;
 import java.net.InetAddress;
 import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.data.redis.RedisHealthIndicator;
@@ -112,15 +114,22 @@ public class RedisConfig {
     executor.setThreadNamePrefix("media-processed-");
     executor.initialize();
 
+    AtomicReference<StreamMessageListenerContainer<?, ?>> containerRef = new AtomicReference<>();
+
     StreamMessageListenerContainer.StreamMessageListenerContainerOptions<String, MapRecord<String, String, String>> options =
         StreamMessageListenerContainer.StreamMessageListenerContainerOptions.builder()
             .pollTimeout(Duration.ofSeconds(2))
             .serializer(new StringRedisSerializer())
             .executor(executor)
+            .errorHandler(new StreamPollErrorHandler(() -> {
+              StreamMessageListenerContainer<?, ?> c = containerRef.get();
+              return c != null && c.isRunning();
+            }))
             .build();
 
     StreamMessageListenerContainer<String, MapRecord<String, String, String>> container =
         StreamMessageListenerContainer.create(connectionFactory, options);
+    containerRef.set(container);
 
     try {
       redisTemplate().opsForStream().createGroup("media-processed-stream", "media-processed-workers");
