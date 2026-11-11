@@ -251,6 +251,18 @@ management:
       maximum-expected-value:
         http.server.requests: 30s
 
+# SENTRY_DSN이 비어 있으면 SDK가 비활성화된다(기동에는 영향 없음).
+# 메시지·예외·헤더의 개인정보 마스킹과 traces 샘플링은 SentryConfig가 담당한다.
+sentry:
+  dsn: ${SENTRY_DSN:}
+  environment: prod
+  release: ${APP_VERSION:unknown}
+  send-default-pii: false
+  logging:
+    # 예외를 처리하면서 남기는 log.error가 Sentry 이벤트가 된다.
+    minimum-event-level: error
+    minimum-breadcrumb-level: info
+
 logging:
   level:
     root: info

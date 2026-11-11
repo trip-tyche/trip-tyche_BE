@@ -64,6 +64,12 @@ dependencies {
     implementation 'io.prometheus:prometheus-metrics-core:1.1.0'
 
 
+    // Sentry: 에러 수집 (SENTRY_DSN이 비어 있으면 비활성)
+    // BOM으로 sentry 계열 버전을 한 곳에서 맞춘다.
+    implementation platform('io.sentry:sentry-bom:8.63.0')
+    implementation 'io.sentry:sentry-spring-boot-starter-jakarta'
+    implementation 'io.sentry:sentry-logback'
+
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.apache.commons:commons-pool2'
 
