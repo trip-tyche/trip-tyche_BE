@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <!-- Spring Boot 기본 설정(변환 규칙, logging.pattern.* 반영)을 그대로 가져온다. -->
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+  <!--
+    prod: stdout으로 JSON 한 줄씩 내보낸다(Alloy → Loki 수집용).
+    MDC 키(client, appVersion 등)는 LogstashEncoder가 최상위 필드로 포함한다.
+    파일 로그는 쓰지 않는다. 컨테이너 재생성 시 사라지므로 수집기가 stdout을 읽는다.
+  -->
+  <springProfile name="prod">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+    </appender>
+  </springProfile>
+
+  <!-- 그 외 프로파일(local, test): Spring Boot 기본 콘솔 패턴. logging.pattern.level 설정이 그대로 적용된다. -->
+  <springProfile name="!prod">
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+  </springProfile>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+</configuration>

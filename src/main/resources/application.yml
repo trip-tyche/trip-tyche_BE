@@ -263,17 +263,11 @@ sentry:
     minimum-event-level: error
     minimum-breadcrumb-level: info
 
+# 로그는 stdout으로만 내보낸다(JSON 포맷은 logback-spring.xml 참조).
 logging:
   level:
     root: info
     com.triptyche.backend: info
-  file:
-    path: /var/log/spring-boot/application.log
-  logback:
-    rollingpolicy:
-      max-file-size: 10MB
-      max-history: 7
-      file-name-pattern: /var/log/spring-boot/application-%d{yyyy-MM-dd}-%i.log
 
 trip:
   soft-delete:

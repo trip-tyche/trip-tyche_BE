@@ -70,6 +70,11 @@ dependencies {
     implementation 'io.sentry:sentry-spring-boot-starter-jakarta'
     implementation 'io.sentry:sentry-logback'
 
+    // JSON 로그 (prod 프로파일의 logback-spring.xml에서 사용)
+    // 8.0은 logback 1.5.6 · Jackson 2.17.2 기준으로 빌드돼 Boot 3.3.2가 관리하는 버전과 일치한다.
+    // 9.x부터는 Jackson 3(tools.jackson)을 요구하므로 올리지 말 것.
+    implementation 'net.logstash.logback:logstash-logback-encoder:8.0'
+
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.apache.commons:commons-pool2'
 
