@@ -108,7 +108,8 @@ public class UserService {
             user.getUserNickName(),
             tripsCount,
             unreadNotificationCount,
-            user.getRole()
+            user.getRole(),
+            user.getCreatedAt()
     );
   }
 
