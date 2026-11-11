@@ -34,6 +34,8 @@ services:
       APP_UPDATE_URL: ${APP_UPDATE_URL:-https://triptyche.cloud}
       SENTRY_DSN: ${SENTRY_DSN:-}
       APP_VERSION: ${APP_VERSION:-unknown}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
     volumes:
       - ./secrets/firebase-service-account.json:/run/secrets/firebase.json:ro
     expose:
