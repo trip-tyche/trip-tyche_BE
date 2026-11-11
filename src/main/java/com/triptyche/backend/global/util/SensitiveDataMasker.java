@@ -20,8 +20,9 @@ public final class SensitiveDataMasker {
   public static final String MASKED_EMAIL = "[EMAIL]";
 
   // 앞쪽 lookbehind로 로컬파트의 시작 위치에서만 매칭을 시도해 긴 문자열에서도 선형 시간에 끝난다.
-  private static final Pattern EMAIL_PATTERN =
-      Pattern.compile("(?<![\\w.%+\\-])[\\w.%+\\-]++@[A-Za-z0-9\\-]++(?:\\.[A-Za-z0-9\\-]++)++");
+  // URL 인코딩된 "%40"도 @로 보며, 로컬파트가 %40을 삼켜 구분자를 놓치지 않도록 %(?!40)만 허용한다.
+  private static final Pattern EMAIL_PATTERN = Pattern.compile(
+      "(?<![\\w.%+\\-])(?:[\\w.+\\-]|%(?!40))++(?:@|%40)[A-Za-z0-9\\-]++(?:\\.[A-Za-z0-9\\-]++)++");
 
   private static final Set<String> SENSITIVE_HEADERS = Set.of("authorization", "cookie", "set-cookie");
   private static final Set<String> SENSITIVE_QUERY_PARAMS = Set.of("token", "code");
@@ -30,7 +31,7 @@ public final class SensitiveDataMasker {
   }
 
   public static String maskEmails(String text) {
-    if (text == null || text.indexOf('@') < 0) {
+    if (text == null || (text.indexOf('@') < 0 && !text.contains("%40"))) {
       return text;
     }
     return EMAIL_PATTERN.matcher(text).replaceAll(MASKED_EMAIL);

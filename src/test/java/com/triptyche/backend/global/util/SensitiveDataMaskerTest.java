@@ -56,6 +56,29 @@ class SensitiveDataMaskerTest {
     }
 
     @Test
+    @DisplayName("URL 인코딩된 @(%40) 이메일도 마스킹한다")
+    void maskEmails_givenUrlEncodedAt_masksIt() {
+      assertThat(SensitiveDataMasker.maskEmails("a%40b.com")).isEqualTo("[EMAIL]");
+      assertThat(SensitiveDataMasker.maskEmails("/v1/users/first.last%2Btag%40mail.example.co.kr/trips"))
+              .isEqualTo("/v1/users/[EMAIL]/trips");
+      assertThat(SensitiveDataMasker.maskEmails("from a%40x.com to b@y.org")).isEqualTo("from [EMAIL] to [EMAIL]");
+    }
+
+    @Test
+    @DisplayName("도메인이 없는 %40은 이메일로 보지 않는다")
+    void maskEmails_givenPercent40WithoutDomain_returnsUnchanged() {
+      assertThat(SensitiveDataMasker.maskEmails("100%40 할인, %40mention")).isEqualTo("100%40 할인, %40mention");
+    }
+
+    @Test
+    @DisplayName("%가 많은 긴 문자열도 빠르게 처리한다")
+    void maskEmails_givenVeryLongTextWithPercent_finishesQuickly() {
+      String longText = "a%41,".repeat(100_000) + "%40";
+
+      assertTimeoutPreemptively(Duration.ofSeconds(2), () -> SensitiveDataMasker.maskEmails(longText));
+    }
+
+    @Test
     @DisplayName("@가 없는 긴 문자열도 빠르게 처리한다")
     void maskEmails_givenVeryLongTextWithoutAt_finishesQuickly() {
       String longText = "a.".repeat(100_000) + "@";
@@ -161,6 +184,13 @@ class SensitiveDataMaskerTest {
     void sanitizeQueryString_givenEmailValue_masksIt() {
       assertThat(SensitiveDataMasker.sanitizeQueryString("email=test@example.com&token=abc"))
               .isEqualTo("email=[EMAIL]");
+    }
+
+    @Test
+    @DisplayName("URL 인코딩된 이메일 값도 마스킹한다")
+    void sanitizeQueryString_givenEncodedEmailValue_masksIt() {
+      assertThat(SensitiveDataMasker.sanitizeQueryString("email=test%40example.com&page=1"))
+              .isEqualTo("email=[EMAIL]&page=1");
     }
 
     @Test
