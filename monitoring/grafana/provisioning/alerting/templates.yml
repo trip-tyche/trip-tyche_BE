@@ -1,0 +1,13 @@
+apiVersion: 1
+
+templates:
+  - orgId: 1
+    name: telegram
+    template: |
+      {{ define "tt.title" }}{{ if eq .Status "firing" }}{{ if eq .CommonLabels.severity "critical" }}🔴{{ else }}🟠{{ end }} <b>[장애] {{ .CommonLabels.alertname }}</b>{{ else }}✅ <b>[복구] {{ .CommonLabels.alertname }}</b>{{ end }}{{ end }}
+
+      {{ define "tt.message" }}{{ template "tt.title" . }}
+      {{ range .Alerts }}
+      {{ if .Annotations.summary }}📌 {{ .Annotations.summary }}
+      {{ end }}🕐 {{ .StartsAt | tz "Asia/Seoul" | date "01-02 15:04" }} 발생{{ if eq .Status "resolved" }} → {{ .EndsAt | tz "Asia/Seoul" | date "15:04" }} 복구{{ end }}
+      {{ end }}{{ end }}
