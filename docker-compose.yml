@@ -248,8 +248,9 @@ services:
       # 기본 번들 플러그인(Drilldown 앱 등)을 기동 때마다 내려받아 메모리를 쓰지 않게 한다.
       GF_PLUGINS_PREINSTALL_DISABLED: "true"
       GOMEMLIMIT: 300MiB
-      # 알림 프로비저닝 파일이 참조한다. 웹훅이 없어도 URL이 비지 않도록 더미를 둔다(알림 전송만 실패한다).
-      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-https://discord.invalid/webhook-not-configured}
+      # 알림 프로비저닝 파일이 참조한다. 값이 없어도 프로비저닝이 깨지지 않도록 더미를 둔다(전송만 실패한다).
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-0:not-configured}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-0}
     labels: *monitoring-labels
     ports:
       # SSH 터널로만 접근한다: ssh -L 3001:localhost:3000 triptyche
