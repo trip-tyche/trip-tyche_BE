@@ -21,6 +21,8 @@ public enum ResultCode {
   DATA_SAVE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 1005, "데이터 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."),
   // @Valid 검증 실패, 비즈니스 입력값 오류
   INVALID_REQUEST(HttpStatus.BAD_REQUEST, 1006, "요청 형식이 잘못되었습니다."),
+  // 매핑되지 않은 경로 요청(봇 스캔 등)
+  RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, 1007, "요청한 리소스를 찾을 수 없습니다."),
 
   // 인증 및 로그인 관련 오류 코드 (2000번대)
   EMAIL_ALREADY_REGISTERED(HttpStatus.CONFLICT, 2000, "이미 가입된 이메일입니다."),

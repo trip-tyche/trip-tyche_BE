@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 @Slf4j
@@ -75,7 +76,13 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(response, ResultCode.FILE_TOO_LARGE.getHttpStatus());
   }
 
-  // 기타 예외 처리
+  // 존재하지 않는 경로 요청(주로 봇 스캔)은 클라이언트 오류이므로 에러 로그를 남기지 않는다.
+  @ExceptionHandler(NoResourceFoundException.class)
+  public ResponseEntity<RestResponse<Void>> handleNoResourceFound(NoResourceFoundException ex) {
+    RestResponse<Void> response = RestResponse.error(ResultCode.RESOURCE_NOT_FOUND);
+    return new ResponseEntity<>(response, ResultCode.RESOURCE_NOT_FOUND.getHttpStatus());
+  }
+
   @ExceptionHandler(Exception.class)
   public ResponseEntity<RestResponse<Void>> handleAllExceptions(Exception ex) {
     log.error("[500 Internal Server Error] 처리되지 않은 예외 발생", ex);

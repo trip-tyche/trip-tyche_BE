@@ -1,11 +1,17 @@
 package com.triptyche.backend.global.exception;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.triptyche.backend.domain.share.controller.ShareController;
 import com.triptyche.backend.domain.share.dto.ShareCreateRequest;
@@ -13,10 +19,12 @@ import com.triptyche.backend.domain.share.service.ShareService;
 import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
 import java.util.Optional;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -79,6 +87,46 @@ class GlobalExceptionHandlerTest {
                       .content(objectMapper.writeValueAsString(request)))
               .andExpect(status().isConflict())
               .andExpect(jsonPath("$.code").value(9900));
+    }
+  }
+
+  @Nested
+  @DisplayName("NoResourceFoundException 처리")
+  class HandleNoResourceFound {
+
+    private final Logger handlerLogger = (Logger) LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private ListAppender<ILoggingEvent> logAppender;
+
+    @BeforeEach
+    void attachLogAppender() {
+      logAppender = new ListAppender<>();
+      logAppender.start();
+      handlerLogger.addAppender(logAppender);
+    }
+
+    @AfterEach
+    void detachLogAppender() {
+      handlerLogger.detachAppender(logAppender);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 경로를 요청하면 404 응답과 code 1007을 반환한다")
+    void handleNoResourceFound_returns404WithCode1007() throws Exception {
+      // when & then
+      mockMvc.perform(get("/wp-admin/setup-config.php"))
+              .andExpect(status().isNotFound())
+              .andExpect(jsonPath("$.code").value(1007));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 경로를 요청해도 에러 로그를 남기지 않는다")
+    void handleNoResourceFound_doesNotLogError() throws Exception {
+      // when
+      mockMvc.perform(get("/actuator/env")).andExpect(status().isNotFound());
+
+      // then
+      assertThat(logAppender.list)
+              .noneMatch(event -> event.getLevel().isGreaterOrEqual(Level.ERROR));
     }
   }
 }
