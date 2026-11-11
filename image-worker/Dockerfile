@@ -8,11 +8,11 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 RUN pip install --no-cache-dir \
-    redis \
-    boto3 \
-    Pillow \
-    pillow-heif \
-    pymysql \
+    redis==8.1.0 \
+    boto3==1.44.0 \
+    Pillow==13.0.0 \
+    pillow-heif==1.8.1 \
+    pymysql==1.2.4 \
     sentry-sdk==2.74.0
 
 COPY main.py .
