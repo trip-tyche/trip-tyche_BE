@@ -6,7 +6,10 @@ import com.triptyche.backend.domain.media.dto.CachedMediaEntry;
 import com.triptyche.backend.domain.media.dto.MediaFileDetailResponse;
 import com.triptyche.backend.domain.media.dto.MediaFileSummary;
 import com.triptyche.backend.domain.media.dto.MediaFileResponse;
+import com.triptyche.backend.domain.media.dto.TripCoverInfo;
+import com.triptyche.backend.domain.media.dto.TripCoverRow;
 import com.triptyche.backend.domain.media.dto.TripMediaListResponse;
+import com.triptyche.backend.domain.media.dto.TripPhotoCountRow;
 import com.triptyche.backend.domain.media.dto.UnlocatedMediaResponse;
 import com.triptyche.backend.domain.media.dto.UnlocatedMediaResponse.MediaSummary;
 import com.triptyche.backend.domain.media.dto.UploadStatusResponse;
@@ -22,6 +25,7 @@ import com.triptyche.backend.global.s3.S3KeyResolver;
 import com.triptyche.backend.global.util.DateFormatter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -61,6 +65,27 @@ public class MediaQueryService {
             formatLocalDateToString(trip.getEndDate()),
             mediaFileResponses
     );
+  }
+
+  /**
+   * 여행 목록의 표지·사진 수. 여행 수와 관계없이 쿼리 2회로 끝난다.
+   * 사진이 없는 여행은 결과 Map에 키가 없으므로 호출 측에서 {@link TripCoverInfo#EMPTY}로 대체한다.
+   */
+  @Transactional(readOnly = true)
+  public Map<Long, TripCoverInfo> findCoverInfosByTripIds(Collection<Long> tripIds) {
+    if (tripIds == null || tripIds.isEmpty()) {
+      return Map.of();
+    }
+
+    Map<Long, String> coverLinks = mediaFileRepository.findCoversByTripIds(tripIds, DEFAULT_INVALID_DATE)
+            .stream()
+            .collect(Collectors.toMap(TripCoverRow::getTripId, TripCoverRow::getMediaLink, (a, b) -> a));
+
+    return mediaFileRepository.countByTripIds(tripIds).stream()
+            .collect(Collectors.toMap(
+                    TripPhotoCountRow::getTripId,
+                    row -> new TripCoverInfo(coverLinks.get(row.getTripId()), row.getPhotoCount())
+            ));
   }
 
   @Transactional(readOnly = true)

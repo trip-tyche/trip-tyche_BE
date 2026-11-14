@@ -12,7 +12,9 @@ public record TripDetailResponse(
         String ownerNickname,
         List<String> sharedUsersNicknames,
         Long shareId,
-        Boolean confirmed
+        Boolean confirmed,
+        String coverMediaLink,
+        long photoCount
 ) {
 
 }

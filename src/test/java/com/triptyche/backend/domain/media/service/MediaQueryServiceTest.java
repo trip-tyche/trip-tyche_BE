@@ -1,8 +1,16 @@
 package com.triptyche.backend.domain.media.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
+import com.triptyche.backend.domain.media.dto.TripCoverInfo;
+import com.triptyche.backend.domain.media.dto.TripCoverRow;
+import com.triptyche.backend.domain.media.dto.TripPhotoCountRow;
 import com.triptyche.backend.domain.media.dto.UploadStatusResponse;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.model.ProcessingStatus;
@@ -13,6 +21,7 @@ import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.global.s3.S3KeyResolver;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -221,6 +230,76 @@ class MediaQueryServiceTest {
             UploadStatusResponse.Item item = response.items().get(0);
             assertThat(item.currentUrl()).isEqualTo("https://s3/bucket/original-link");
             assertThat(item.finalUrl()).isEqualTo("https://s3/bucket/original-link");
+        }
+    }
+
+    @Nested
+    @DisplayName("findCoverInfosByTripIds()")
+    class FindCoverInfosByTripIds {
+
+        private TripCoverRow coverRow(Long tripId, String mediaLink) {
+            return new TripCoverRow() {
+                @Override
+                public Long getTripId() {
+                    return tripId;
+                }
+
+                @Override
+                public String getMediaLink() {
+                    return mediaLink;
+                }
+            };
+        }
+
+        private TripPhotoCountRow countRow(Long tripId, Long count) {
+            return new TripPhotoCountRow() {
+                @Override
+                public Long getTripId() {
+                    return tripId;
+                }
+
+                @Override
+                public Long getPhotoCount() {
+                    return count;
+                }
+            };
+        }
+
+        @Test
+        @DisplayName("표지·사진 수를 여행별로 합치고, 처리 중 사진만 있으면 cover=null")
+        void mergesCoverAndCount() {
+            List<Long> tripIds = List.of(1L, 2L, 3L);
+            given(mediaFileRepository.findCoversByTripIds(eq(tripIds), any()))
+                    .willReturn(List.of(coverRow(1L, "link-1")));
+            given(mediaFileRepository.countByTripIds(tripIds))
+                    .willReturn(List.of(countRow(1L, 4L), countRow(2L, 2L)));
+
+            Map<Long, TripCoverInfo> result = mediaQueryService.findCoverInfosByTripIds(tripIds);
+
+            assertThat(result).containsOnly(
+                    Map.entry(1L, new TripCoverInfo("link-1", 4L)),
+                    Map.entry(2L, new TripCoverInfo(null, 2L)));
+            verify(mediaFileRepository, times(1)).findCoversByTripIds(any(), any());
+            verify(mediaFileRepository, times(1)).countByTripIds(any());
+        }
+
+        @Test
+        @DisplayName("1980 기본 날짜를 정렬 기준으로 넘긴다")
+        void passesDefaultDate() {
+            List<Long> tripIds = List.of(1L);
+            given(mediaFileRepository.countByTripIds(tripIds)).willReturn(List.of());
+
+            mediaQueryService.findCoverInfosByTripIds(tripIds);
+
+            verify(mediaFileRepository).findCoversByTripIds(tripIds, LocalDateTime.of(1980, 1, 1, 0, 0, 0));
+        }
+
+        @Test
+        @DisplayName("빈 목록이면 쿼리를 실행하지 않는다")
+        void emptyIds() {
+            assertThat(mediaQueryService.findCoverInfosByTripIds(List.of())).isEmpty();
+            verify(mediaFileRepository, never()).findCoversByTripIds(any(), any());
+            verify(mediaFileRepository, never()).countByTripIds(any());
         }
     }
 }

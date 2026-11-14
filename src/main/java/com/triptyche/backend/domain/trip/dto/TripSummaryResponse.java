@@ -5,5 +5,7 @@ public record TripSummaryResponse(
         String tripTitle,
         String country,
         String startDate,
-        String endDate
+        String endDate,
+        String coverMediaLink,
+        long photoCount
 ) {}

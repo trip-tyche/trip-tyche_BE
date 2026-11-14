@@ -3,6 +3,8 @@ package com.triptyche.backend.domain.media.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 
+import com.triptyche.backend.domain.media.dto.TripCoverRow;
+import com.triptyche.backend.domain.media.dto.TripPhotoCountRow;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.model.ProcessingStatus;
 import com.triptyche.backend.domain.trip.model.PinPoint;
@@ -13,6 +15,8 @@ import jakarta.persistence.EntityManagerFactory;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.BeforeEach;
@@ -256,6 +260,113 @@ class MediaFileRepositoryTest {
             assertThat(results).hasSize(2);
             assertThat(results).extracting(MediaFile::getMediaKey)
                     .containsExactlyInAnyOrder("trip-key1", "trip-key2");
+        }
+    }
+
+    @Nested
+    @DisplayName("findCoversByTripIds() / countByTripIds()")
+    class TripCovers {
+
+        private static final LocalDateTime DEFAULT_DATE = LocalDateTime.of(1980, 1, 1, 0, 0, 0);
+
+        private MediaFile persistPhoto(Trip t, String mediaKey, String mediaLink, LocalDateTime recordDate) {
+            return tem.persist(MediaFile.builder()
+                    .trip(t)
+                    .mediaKey(mediaKey)
+                    .mediaType("image/jpeg")
+                    .mediaLink(mediaLink)
+                    .recordDate(recordDate)
+                    .latitude(37.5)
+                    .longitude(127.0)
+                    .build());
+        }
+
+        private Map<Long, String> coversOf(List<Long> tripIds) {
+            return mediaFileRepository.findCoversByTripIds(tripIds, DEFAULT_DATE).stream()
+                    .collect(Collectors.toMap(TripCoverRow::getTripId, TripCoverRow::getMediaLink));
+        }
+
+        private Map<Long, Long> countsOf(List<Long> tripIds) {
+            return mediaFileRepository.countByTripIds(tripIds).stream()
+                    .collect(Collectors.toMap(TripPhotoCountRow::getTripId, TripPhotoCountRow::getPhotoCount));
+        }
+
+        @Test
+        @DisplayName("1980 기본 날짜 사진은 가장 이른 날짜여도 표지로 뽑히지 않는다")
+        void defaultDateIsPushedBack() {
+            persistPhoto(trip, "k-default", "link-default", DEFAULT_DATE);
+            persistPhoto(trip, "k-late", "link-late", LocalDateTime.of(2025, 1, 9, 10, 0));
+            persistPhoto(trip, "k-early", "link-early", LocalDateTime.of(2025, 1, 2, 10, 0));
+            tem.flush();
+            tem.clear();
+
+            assertThat(coversOf(List.of(trip.getTripId())))
+                    .containsExactly(Map.entry(trip.getTripId(), "link-early"));
+        }
+
+        @Test
+        @DisplayName("날짜 있는 사진이 없으면 기본 날짜 사진이라도 표지가 된다")
+        void onlyDefaultDatePhoto() {
+            persistPhoto(trip, "k-default", "link-default", DEFAULT_DATE);
+            tem.flush();
+            tem.clear();
+
+            assertThat(coversOf(List.of(trip.getTripId())))
+                    .containsExactly(Map.entry(trip.getTripId(), "link-default"));
+        }
+
+        @Test
+        @DisplayName("같은 날짜면 media_file_id가 작은 사진이 표지다")
+        void tieBreakByMediaFileId() {
+            LocalDateTime same = LocalDateTime.of(2025, 1, 3, 9, 0);
+            MediaFile first = persistPhoto(trip, "k-1", "link-1", same);
+            persistPhoto(trip, "k-2", "link-2", same);
+            tem.flush();
+            tem.clear();
+
+            assertThat(coversOf(List.of(trip.getTripId())))
+                    .containsExactly(Map.entry(trip.getTripId(), first.getMediaLink()));
+        }
+
+        @Test
+        @DisplayName("처리 중 사진(media_link=null)은 표지에서 빠지지만 사진 수에는 포함된다")
+        void processingPhotoCountedButNotCover() {
+            persistPhoto(trip, "k-processing", null, LocalDateTime.of(2025, 1, 1, 8, 0));
+            persistPhoto(trip, "k-processing2", null, null);
+            tem.flush();
+            tem.clear();
+
+            assertThat(coversOf(List.of(trip.getTripId()))).isEmpty();
+            assertThat(countsOf(List.of(trip.getTripId())))
+                    .containsExactly(Map.entry(trip.getTripId(), 2L));
+        }
+
+        @Test
+        @DisplayName("여러 여행을 한 번에 조회하고 사진 없는 여행은 결과에 없다")
+        void multipleTrips() {
+            Trip emptyTrip = tem.persist(Trip.builder()
+                    .user(owner)
+                    .tripTitle("여행C")
+                    .country("KR")
+                    .startDate(LocalDate.of(2025, 3, 1))
+                    .endDate(LocalDate.of(2025, 3, 2))
+                    .hashtags("여행")
+                    .status(TripStatus.CONFIRMED)
+                    .build());
+            persistPhoto(trip, "a-1", "link-a1", LocalDateTime.of(2025, 1, 5, 0, 0));
+            persistPhoto(trip, "a-2", "link-a2", LocalDateTime.of(2025, 1, 4, 0, 0));
+            persistPhoto(otherTrip, "b-1", "link-b1", LocalDateTime.of(2025, 2, 5, 0, 0));
+            tem.flush();
+            tem.clear();
+
+            List<Long> tripIds = List.of(trip.getTripId(), otherTrip.getTripId(), emptyTrip.getTripId());
+
+            assertThat(coversOf(tripIds)).containsOnly(
+                    Map.entry(trip.getTripId(), "link-a2"),
+                    Map.entry(otherTrip.getTripId(), "link-b1"));
+            assertThat(countsOf(tripIds)).containsOnly(
+                    Map.entry(trip.getTripId(), 2L),
+                    Map.entry(otherTrip.getTripId(), 1L));
         }
     }
 }

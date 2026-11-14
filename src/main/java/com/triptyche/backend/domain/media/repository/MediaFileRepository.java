@@ -2,6 +2,8 @@ package com.triptyche.backend.domain.media.repository;
 
 import com.triptyche.backend.domain.media.dto.MediaFileSummary;
 import com.triptyche.backend.domain.media.dto.MediaFileDetailResponse;
+import com.triptyche.backend.domain.media.dto.TripCoverRow;
+import com.triptyche.backend.domain.media.dto.TripPhotoCountRow;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.trip.model.Trip;
 import java.time.LocalDate;
@@ -69,6 +71,42 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
   );
 
   List<MediaFile> findByTripTripId(Long tripId);
+
+  /**
+   * 여행별 표지 사진 1장. 처리 완료(media_link IS NOT NULL)된 사진 중
+   * 날짜 없음(NULL·1980 기본값)을 뒤로 보내고 record_date, media_file_id 순으로 첫 행을 고른다.
+   */
+  @Query(value = """
+          SELECT t.trip_id AS tripId, t.media_link AS mediaLink
+          FROM (
+            SELECT m.trip_id, m.media_link,
+                   ROW_NUMBER() OVER (
+                     PARTITION BY m.trip_id
+                     ORDER BY CASE WHEN m.record_date IS NULL OR m.record_date = :defaultDate THEN 1 ELSE 0 END,
+                              m.record_date,
+                              m.media_file_id
+                   ) AS rn
+            FROM media_file m
+            WHERE m.trip_id IN (:tripIds)
+              AND m.media_link IS NOT NULL
+          ) t
+          WHERE t.rn = 1
+          """, nativeQuery = true)
+  List<TripCoverRow> findCoversByTripIds(
+          @Param("tripIds") Collection<Long> tripIds,
+          @Param("defaultDate") LocalDateTime defaultDate
+  );
+
+  /**
+   * 여행별 media_file 전체 행 수(처리 중 사진 포함).
+   */
+  @Query("""
+          SELECT m.trip.tripId AS tripId, COUNT(m) AS photoCount
+          FROM MediaFile m
+          WHERE m.trip.tripId IN :tripIds
+          GROUP BY m.trip.tripId
+          """)
+  List<TripPhotoCountRow> countByTripIds(@Param("tripIds") Collection<Long> tripIds);
 
   @Query("""
           SELECT m FROM MediaFile m

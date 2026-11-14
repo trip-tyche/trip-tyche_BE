@@ -6,6 +6,7 @@ import com.triptyche.backend.domain.media.dto.MediaByDateResponse;
 import com.triptyche.backend.domain.media.dto.MediaFileDetailResponse;
 import com.triptyche.backend.domain.media.dto.MediaFileResponse;
 import com.triptyche.backend.domain.media.dto.MediaFileSummary;
+import com.triptyche.backend.domain.media.dto.TripCoverInfo;
 import com.triptyche.backend.domain.media.service.MediaQueryService;
 import com.triptyche.backend.domain.share.dto.ShareSummaryResponse;
 import com.triptyche.backend.domain.share.service.ShareQueryService;
@@ -63,6 +64,7 @@ public class TripFacade {
 
     Map<Long, List<ShareSummaryResponse>> shareMap = allShares.stream()
             .collect(Collectors.groupingBy(ShareSummaryResponse::tripId));
+    Map<Long, TripCoverInfo> coverMap = mediaQueryService.findCoverInfosByTripIds(tripIds);
 
     List<TripDetailResponse> tripDetails = trips.stream()
             .map(trip -> {
@@ -78,6 +80,8 @@ public class TripFacade {
                       .findFirst()
                       .orElse(null);
 
+              TripCoverInfo cover = coverMap.getOrDefault(trip.getTripId(), TripCoverInfo.EMPTY);
+
               return new TripDetailResponse(
                       trip.getTripKey(),
                       trip.getTripTitle(),
@@ -88,7 +92,9 @@ public class TripFacade {
                       trip.getUser().getUserNickName(),
                       sharedUserNicknames,
                       shareId,
-                      trip.isConfirmed()
+                      trip.isConfirmed(),
+                      cover.coverMediaLink(),
+                      cover.photoCount()
               );
             })
             .toList();
@@ -99,14 +105,26 @@ public class TripFacade {
   public TripSummaryListResponse getTripsSummary(User user) {
     List<Trip> trips = tripRepository.findAllAccessibleTripsWithOwner(user.getUserId());
 
+    if (trips.isEmpty()) {
+      return new TripSummaryListResponse(List.of());
+    }
+
+    List<Long> tripIds = trips.stream().map(Trip::getTripId).toList();
+    Map<Long, TripCoverInfo> coverMap = mediaQueryService.findCoverInfosByTripIds(tripIds);
+
     List<TripSummaryResponse> summaries = trips.stream()
-            .map(trip -> new TripSummaryResponse(
-                    trip.getTripKey(),
-                    trip.getTripTitle(),
-                    trip.getCountry(),
-                    formatLocalDateToString(trip.getStartDate()),
-                    formatLocalDateToString(trip.getEndDate())
-            ))
+            .map(trip -> {
+              TripCoverInfo cover = coverMap.getOrDefault(trip.getTripId(), TripCoverInfo.EMPTY);
+              return new TripSummaryResponse(
+                      trip.getTripKey(),
+                      trip.getTripTitle(),
+                      trip.getCountry(),
+                      formatLocalDateToString(trip.getStartDate()),
+                      formatLocalDateToString(trip.getEndDate()),
+                      cover.coverMediaLink(),
+                      cover.photoCount()
+              );
+            })
             .toList();
 
     return new TripSummaryListResponse(summaries);
