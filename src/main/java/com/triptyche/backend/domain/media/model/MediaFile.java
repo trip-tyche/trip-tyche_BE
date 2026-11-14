@@ -75,6 +75,10 @@ public class MediaFile {
   @Column(length = 255)
   private String finalKey;
 
+  // 표지·그리드용 축소본(processed/{tripId}/{uuid}_thumb.webp). 워커가 만들지 못했거나 v1 사진이면 null.
+  @Column(length = 255)
+  private String thumbnailKey;
+
   @Enumerated(EnumType.STRING)
   @Column(length = 20)
   private ProcessingStatus processingStatus;
@@ -132,5 +136,9 @@ public class MediaFile {
 
   public void updateMediaLink(String mediaLink) {
     this.mediaLink = mediaLink;
+  }
+
+  public void updateThumbnailKey(String thumbnailKey) {
+    this.thumbnailKey = thumbnailKey;
   }
 }

@@ -74,6 +74,9 @@ public class TripCleanupScheduler {
               if (webpKey != null && !webpKey.equals(mf.getMediaKey())) {
                 keys.add(webpKey);
               }
+              if (mf.getThumbnailKey() != null) {
+                keys.add(mf.getThumbnailKey());
+              }
               return keys.stream();
             })
             .distinct()

@@ -8,4 +8,6 @@ public interface TripCoverRow {
   Long getTripId();
 
   String getMediaLink();
+
+  String getThumbnailKey();
 }

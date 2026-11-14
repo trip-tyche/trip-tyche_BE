@@ -94,7 +94,8 @@ public class TripFacade {
                       shareId,
                       trip.isConfirmed(),
                       cover.coverMediaLink(),
-                      cover.photoCount()
+                      cover.photoCount(),
+                      cover.coverThumbnailLink()
               );
             })
             .toList();
@@ -122,7 +123,8 @@ public class TripFacade {
                       formatLocalDateToString(trip.getStartDate()),
                       formatLocalDateToString(trip.getEndDate()),
                       cover.coverMediaLink(),
-                      cover.photoCount()
+                      cover.photoCount(),
+                      cover.coverThumbnailLink()
               );
             })
             .toList();

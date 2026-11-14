@@ -83,7 +83,7 @@ class MediaProcessingServiceTest {
       given(mediaFileRepository.findById(MEDIA_FILE_ID)).willReturn(Optional.of(mf));
       given(s3KeyResolver.buildUrl(FINAL_KEY)).willReturn(FINAL_URL);
 
-      mediaProcessingService.applyProcessedResult(MEDIA_FILE_ID, FINAL_KEY, PROCESSED_AT);
+      mediaProcessingService.applyProcessedResult(MEDIA_FILE_ID, FINAL_KEY, null, PROCESSED_AT);
 
       assertThat(mf.getProcessingStatus()).isEqualTo(ProcessingStatus.PROCESSED);
       assertThat(mf.getMediaLink()).isEqualTo(FINAL_URL);
@@ -104,7 +104,7 @@ class MediaProcessingServiceTest {
       given(mediaFileRepository.findById(MEDIA_FILE_ID)).willReturn(Optional.of(mf));
       given(s3KeyResolver.buildUrl(FINAL_KEY)).willReturn(FINAL_URL);
 
-      mediaProcessingService.applyProcessedResult(MEDIA_FILE_ID, FINAL_KEY, PROCESSED_AT);
+      mediaProcessingService.applyProcessedResult(MEDIA_FILE_ID, FINAL_KEY, null, PROCESSED_AT);
 
       assertThat(mf.getProcessingStatus()).isEqualTo(ProcessingStatus.PROCESSED);
       verify(eventPublisher).publishEvent(any(ImageProcessedEvent.class));
@@ -116,9 +116,46 @@ class MediaProcessingServiceTest {
       MediaFile mf = buildMediaFile(ProcessingStatus.PROCESSED);
       given(mediaFileRepository.findById(MEDIA_FILE_ID)).willReturn(Optional.of(mf));
 
-      mediaProcessingService.applyProcessedResult(MEDIA_FILE_ID, FINAL_KEY, PROCESSED_AT);
+      mediaProcessingService.applyProcessedResult(MEDIA_FILE_ID, FINAL_KEY, null, PROCESSED_AT);
 
       verify(eventPublisher, never()).publishEvent(any());
+    }
+
+    @Test
+    @DisplayName("썸네일 키가 오면 엔티티에 저장한다")
+    void applyProcessedResult_givenThumbKey_storesThumbnailKey() {
+      MediaFile mf = buildMediaFile(ProcessingStatus.PROCESSING);
+      given(mediaFileRepository.findById(MEDIA_FILE_ID)).willReturn(Optional.of(mf));
+      given(s3KeyResolver.buildUrl(FINAL_KEY)).willReturn(FINAL_URL);
+
+      mediaProcessingService.applyProcessedResult(MEDIA_FILE_ID, FINAL_KEY, "processed/42/abc_thumb.webp", PROCESSED_AT);
+
+      assertThat(mf.getThumbnailKey()).isEqualTo("processed/42/abc_thumb.webp");
+    }
+
+    @Test
+    @DisplayName("썸네일 키가 없으면(생성 실패·구버전 워커) PROCESSED가 되고 thumbnailKey는 null")
+    void applyProcessedResult_givenNoThumbKey_keepsThumbnailNull() {
+      MediaFile mf = buildMediaFile(ProcessingStatus.PROCESSING);
+      given(mediaFileRepository.findById(MEDIA_FILE_ID)).willReturn(Optional.of(mf));
+      given(s3KeyResolver.buildUrl(FINAL_KEY)).willReturn(FINAL_URL);
+
+      mediaProcessingService.applyProcessedResult(MEDIA_FILE_ID, FINAL_KEY, null, PROCESSED_AT);
+
+      assertThat(mf.getProcessingStatus()).isEqualTo(ProcessingStatus.PROCESSED);
+      assertThat(mf.getThumbnailKey()).isNull();
+    }
+
+    @Test
+    @DisplayName("processed/ 형식이 아닌 썸네일 키는 저장하지 않는다")
+    void applyProcessedResult_givenInvalidThumbKey_ignoresIt() {
+      MediaFile mf = buildMediaFile(ProcessingStatus.PROCESSING);
+      given(mediaFileRepository.findById(MEDIA_FILE_ID)).willReturn(Optional.of(mf));
+      given(s3KeyResolver.buildUrl(FINAL_KEY)).willReturn(FINAL_URL);
+
+      mediaProcessingService.applyProcessedResult(MEDIA_FILE_ID, FINAL_KEY, "seed/x/y.webp", PROCESSED_AT);
+
+      assertThat(mf.getThumbnailKey()).isNull();
     }
 
     @Test
@@ -126,7 +163,7 @@ class MediaProcessingServiceTest {
     void applyProcessedResult_givenMissingMediaFile_throwsNotFound() {
       given(mediaFileRepository.findById(MEDIA_FILE_ID)).willReturn(Optional.empty());
 
-      assertThatThrownBy(() -> mediaProcessingService.applyProcessedResult(MEDIA_FILE_ID, FINAL_KEY, PROCESSED_AT))
+      assertThatThrownBy(() -> mediaProcessingService.applyProcessedResult(MEDIA_FILE_ID, FINAL_KEY, null, PROCESSED_AT))
           .isInstanceOf(CustomException.class)
           .extracting(e -> ((CustomException) e).getResultCode())
           .isEqualTo(ResultCode.MEDIA_FILE_NOT_FOUND);
@@ -168,6 +205,43 @@ class MediaProcessingServiceTest {
       mediaProcessingService.applyFailedResult(MEDIA_FILE_ID, REASON);
 
       verify(eventPublisher, never()).publishEvent(any());
+    }
+
+    @Test
+    @DisplayName("썸네일 키가 오면 엔티티에 저장한다")
+    void applyProcessedResult_givenThumbKey_storesThumbnailKey() {
+      MediaFile mf = buildMediaFile(ProcessingStatus.PROCESSING);
+      given(mediaFileRepository.findById(MEDIA_FILE_ID)).willReturn(Optional.of(mf));
+      given(s3KeyResolver.buildUrl(FINAL_KEY)).willReturn(FINAL_URL);
+
+      mediaProcessingService.applyProcessedResult(MEDIA_FILE_ID, FINAL_KEY, "processed/42/abc_thumb.webp", PROCESSED_AT);
+
+      assertThat(mf.getThumbnailKey()).isEqualTo("processed/42/abc_thumb.webp");
+    }
+
+    @Test
+    @DisplayName("썸네일 키가 없으면(생성 실패·구버전 워커) PROCESSED가 되고 thumbnailKey는 null")
+    void applyProcessedResult_givenNoThumbKey_keepsThumbnailNull() {
+      MediaFile mf = buildMediaFile(ProcessingStatus.PROCESSING);
+      given(mediaFileRepository.findById(MEDIA_FILE_ID)).willReturn(Optional.of(mf));
+      given(s3KeyResolver.buildUrl(FINAL_KEY)).willReturn(FINAL_URL);
+
+      mediaProcessingService.applyProcessedResult(MEDIA_FILE_ID, FINAL_KEY, null, PROCESSED_AT);
+
+      assertThat(mf.getProcessingStatus()).isEqualTo(ProcessingStatus.PROCESSED);
+      assertThat(mf.getThumbnailKey()).isNull();
+    }
+
+    @Test
+    @DisplayName("processed/ 형식이 아닌 썸네일 키는 저장하지 않는다")
+    void applyProcessedResult_givenInvalidThumbKey_ignoresIt() {
+      MediaFile mf = buildMediaFile(ProcessingStatus.PROCESSING);
+      given(mediaFileRepository.findById(MEDIA_FILE_ID)).willReturn(Optional.of(mf));
+      given(s3KeyResolver.buildUrl(FINAL_KEY)).willReturn(FINAL_URL);
+
+      mediaProcessingService.applyProcessedResult(MEDIA_FILE_ID, FINAL_KEY, "seed/x/y.webp", PROCESSED_AT);
+
+      assertThat(mf.getThumbnailKey()).isNull();
     }
 
     @Test

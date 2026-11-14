@@ -237,7 +237,7 @@ class MediaQueryServiceTest {
     @DisplayName("findCoverInfosByTripIds()")
     class FindCoverInfosByTripIds {
 
-        private TripCoverRow coverRow(Long tripId, String mediaLink) {
+        private TripCoverRow coverRow(Long tripId, String mediaLink, String thumbnailKey) {
             return new TripCoverRow() {
                 @Override
                 public Long getTripId() {
@@ -247,6 +247,11 @@ class MediaQueryServiceTest {
                 @Override
                 public String getMediaLink() {
                     return mediaLink;
+                }
+
+                @Override
+                public String getThumbnailKey() {
+                    return thumbnailKey;
                 }
             };
         }
@@ -266,19 +271,23 @@ class MediaQueryServiceTest {
         }
 
         @Test
-        @DisplayName("표지·사진 수를 여행별로 합치고, 처리 중 사진만 있으면 cover=null")
+        @DisplayName("표지·썸네일·사진 수를 여행별로 합치고, 처리 중 사진만 있으면 cover=null")
         void mergesCoverAndCount() {
-            List<Long> tripIds = List.of(1L, 2L, 3L);
+            List<Long> tripIds = List.of(1L, 2L, 3L, 4L);
             given(mediaFileRepository.findCoversByTripIds(eq(tripIds), any()))
-                    .willReturn(List.of(coverRow(1L, "link-1")));
+                    .willReturn(List.of(
+                            coverRow(1L, "link-1", "processed/1/a_thumb.webp"),
+                            coverRow(4L, "link-4", null)));
             given(mediaFileRepository.countByTripIds(tripIds))
-                    .willReturn(List.of(countRow(1L, 4L), countRow(2L, 2L)));
+                    .willReturn(List.of(countRow(1L, 4L), countRow(2L, 2L), countRow(4L, 1L)));
+            given(s3KeyResolver.buildUrl("processed/1/a_thumb.webp")).willReturn("https://cdn/processed/1/a_thumb.webp");
 
             Map<Long, TripCoverInfo> result = mediaQueryService.findCoverInfosByTripIds(tripIds);
 
             assertThat(result).containsOnly(
-                    Map.entry(1L, new TripCoverInfo("link-1", 4L)),
-                    Map.entry(2L, new TripCoverInfo(null, 2L)));
+                    Map.entry(1L, new TripCoverInfo("link-1", "https://cdn/processed/1/a_thumb.webp", 4L)),
+                    Map.entry(2L, new TripCoverInfo(null, null, 2L)),
+                    Map.entry(4L, new TripCoverInfo("link-4", null, 1L)));
             verify(mediaFileRepository, times(1)).findCoversByTripIds(any(), any());
             verify(mediaFileRepository, times(1)).countByTripIds(any());
         }

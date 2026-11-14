@@ -23,7 +23,11 @@ public class MediaProcessingService {
   private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
-  public void applyProcessedResult(Long mediaFileId, String finalKey, LocalDateTime processedAt) {
+  /**
+   * @param thumbnailKey 워커가 만든 썸네일 키. 썸네일 생성에 실패했으면 null.
+   */
+  public void applyProcessedResult(Long mediaFileId, String finalKey, String thumbnailKey,
+      LocalDateTime processedAt) {
     MediaFile mf = mediaFileRepository.findById(mediaFileId)
         .orElseThrow(() -> new CustomException(ResultCode.MEDIA_FILE_NOT_FOUND));
 
@@ -33,6 +37,9 @@ public class MediaProcessingService {
 
     String finalUrl = s3KeyResolver.buildUrl(finalKey);
     mf.updateMediaLink(finalUrl);
+    if (S3KeyResolver.isFinalKey(thumbnailKey)) {
+      mf.updateThumbnailKey(thumbnailKey);
+    }
 
     Long userId = mf.getTrip().getUser().getUserId();
     eventPublisher.publishEvent(new ImageProcessedEvent(mediaFileId, userId, finalUrl, processedAt));

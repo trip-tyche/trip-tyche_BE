@@ -88,8 +88,8 @@ class TripFacadeTest {
     // 사진 없는 여행은 Map에 키가 없다. 처리 중 사진만 있는 여행은 cover=null, count>0.
     given(mediaQueryService.findCoverInfosByTripIds(List.of(10L, 20L, 30L)))
         .willReturn(Map.of(
-            20L, new TripCoverInfo(null, 3L),
-            30L, new TripCoverInfo("https://cdn/processed/30/a.webp", 5L)
+            20L, new TripCoverInfo(null, null, 3L),
+            30L, new TripCoverInfo("https://cdn/processed/30/a.webp", "https://cdn/processed/30/a_thumb.webp", 5L)
         ));
   }
 
@@ -105,11 +105,11 @@ class TripFacadeTest {
       List<TripSummaryResponse> result = tripFacade.getTripsSummary(user).trips();
 
       assertThat(result).extracting(TripSummaryResponse::tripKey, TripSummaryResponse::coverMediaLink,
-              TripSummaryResponse::photoCount)
+              TripSummaryResponse::photoCount, TripSummaryResponse::coverThumbnailLink)
           .containsExactly(
-              tuple("KEY-10", null, 0L),
-              tuple("KEY-20", null, 3L),
-              tuple("KEY-30", "https://cdn/processed/30/a.webp", 5L));
+              tuple("KEY-10", null, 0L, null),
+              tuple("KEY-20", null, 3L, null),
+              tuple("KEY-30", "https://cdn/processed/30/a.webp", 5L, "https://cdn/processed/30/a_thumb.webp"));
       verify(mediaQueryService, times(1)).findCoverInfosByTripIds(anyCollection());
     }
 
@@ -137,11 +137,11 @@ class TripFacadeTest {
       List<TripDetailResponse> result = tripFacade.getTripsByUser(user).trips();
 
       assertThat(result).extracting(TripDetailResponse::tripKey, TripDetailResponse::coverMediaLink,
-              TripDetailResponse::photoCount)
+              TripDetailResponse::photoCount, TripDetailResponse::coverThumbnailLink)
           .containsExactly(
-              tuple("KEY-10", null, 0L),
-              tuple("KEY-20", null, 3L),
-              tuple("KEY-30", "https://cdn/processed/30/a.webp", 5L));
+              tuple("KEY-10", null, 0L, null),
+              tuple("KEY-20", null, 3L, null),
+              tuple("KEY-30", "https://cdn/processed/30/a.webp", 5L, "https://cdn/processed/30/a_thumb.webp"));
       verify(mediaQueryService, times(1)).findCoverInfosByTripIds(anyCollection());
     }
   }

@@ -14,7 +14,8 @@ public record TripDetailResponse(
         Long shareId,
         Boolean confirmed,
         String coverMediaLink,
-        long photoCount
+        long photoCount,
+        String coverThumbnailLink
 ) {
 
 }

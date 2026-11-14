@@ -11,6 +11,8 @@ import com.triptyche.backend.domain.user.model.User;
 import com.triptyche.backend.domain.user.repository.UserRepository;
 import com.triptyche.backend.global.s3.S3KeyResolver;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -36,7 +38,8 @@ public class GuestCleanupExecutor {
 
         List<String> s3Keys = allTrips.isEmpty() ? List.of() :
                 mediaFileRepository.findAllByTripIn(allTrips).stream()
-                        .map(MediaFile::getMediaKey)
+                        .flatMap(mf -> Stream.of(mf.getMediaKey(), mf.getThumbnailKey()))
+                        .filter(Objects::nonNull)
                         .filter(key -> !S3KeyResolver.isSeedKey(key))
                         .toList();
 

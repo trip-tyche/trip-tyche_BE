@@ -77,9 +77,9 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Long> {
    * 날짜 없음(NULL·1980 기본값)을 뒤로 보내고 record_date, media_file_id 순으로 첫 행을 고른다.
    */
   @Query(value = """
-          SELECT t.trip_id AS tripId, t.media_link AS mediaLink
+          SELECT t.trip_id AS tripId, t.media_link AS mediaLink, t.thumbnail_key AS thumbnailKey
           FROM (
-            SELECT m.trip_id, m.media_link,
+            SELECT m.trip_id, m.media_link, m.thumbnail_key,
                    ROW_NUMBER() OVER (
                      PARTITION BY m.trip_id
                      ORDER BY CASE WHEN m.record_date IS NULL OR m.record_date = :defaultDate THEN 1 ELSE 0 END,

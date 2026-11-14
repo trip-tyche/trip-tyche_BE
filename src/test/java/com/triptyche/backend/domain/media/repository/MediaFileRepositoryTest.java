@@ -305,6 +305,20 @@ class MediaFileRepositoryTest {
         }
 
         @Test
+        @DisplayName("표지 행의 thumbnail_key를 함께 돌려준다")
+        void returnsThumbnailKey() {
+            MediaFile mf = persistPhoto(trip, "k-1", "link-1", LocalDateTime.of(2025, 1, 2, 10, 0));
+            mf.updateThumbnailKey("processed/1/k-1_thumb.webp");
+            tem.flush();
+            tem.clear();
+
+            assertThat(mediaFileRepository.findCoversByTripIds(List.of(trip.getTripId()), DEFAULT_DATE))
+                    .singleElement()
+                    .extracting(TripCoverRow::getThumbnailKey)
+                    .isEqualTo("processed/1/k-1_thumb.webp");
+        }
+
+        @Test
         @DisplayName("날짜 있는 사진이 없으면 기본 날짜 사진이라도 표지가 된다")
         void onlyDefaultDatePhoto() {
             persistPhoto(trip, "k-default", "link-default", DEFAULT_DATE);

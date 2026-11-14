@@ -2,6 +2,7 @@ package com.triptyche.backend.global.redis;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -46,9 +47,30 @@ class MediaProcessedStreamConsumerTest {
       verify(mediaProcessingService).applyProcessedResult(
           eq(1L),
           eq("processed/42/abc.webp"),
+          isNull(),
           eq(LocalDateTime.of(2026, 5, 27, 14, 32, 52, 160_586_000))
       );
       verify(mediaProcessingService, never()).applyFailedResult(any(), any());
+    }
+
+    @Test
+    @DisplayName("thumbKey가 있으면 함께 넘긴다")
+    void onMessage_givenThumbKey_passesIt() {
+      MapRecord<String, String, String> record = MapRecord.create(STREAM_KEY, Map.of(
+          "mediaFileId", "1",
+          "finalKey", "processed/42/abc.webp",
+          "thumbKey", "processed/42/abc_thumb.webp",
+          "processedAt", "2026-05-27T14:32:52+00:00"
+      ));
+
+      consumer.onMessage(record);
+
+      verify(mediaProcessingService).applyProcessedResult(
+          eq(1L),
+          eq("processed/42/abc.webp"),
+          eq("processed/42/abc_thumb.webp"),
+          eq(LocalDateTime.of(2026, 5, 27, 14, 32, 52))
+      );
     }
 
     @Test
@@ -62,7 +84,7 @@ class MediaProcessedStreamConsumerTest {
 
       consumer.onMessage(record);
 
-      verify(mediaProcessingService, never()).applyProcessedResult(any(), any(), any());
+      verify(mediaProcessingService, never()).applyProcessedResult(any(), any(), any(), any());
       verify(mediaProcessingService, never()).applyFailedResult(any(), any());
     }
   }
@@ -83,7 +105,7 @@ class MediaProcessedStreamConsumerTest {
       consumer.onMessage(record);
 
       verify(mediaProcessingService).applyFailedResult(eq(2L), eq("처리 타임아웃"));
-      verify(mediaProcessingService, never()).applyProcessedResult(any(), any(), any());
+      verify(mediaProcessingService, never()).applyProcessedResult(any(), any(), any(), any());
     }
 
     @Test
@@ -114,7 +136,7 @@ class MediaProcessedStreamConsumerTest {
 
       consumer.onMessage(record);
 
-      verify(mediaProcessingService, never()).applyProcessedResult(any(), any(), any());
+      verify(mediaProcessingService, never()).applyProcessedResult(any(), any(), any(), any());
       verify(mediaProcessingService, never()).applyFailedResult(any(), any());
     }
 
@@ -129,7 +151,7 @@ class MediaProcessedStreamConsumerTest {
 
       consumer.onMessage(record);
 
-      verify(mediaProcessingService, never()).applyProcessedResult(any(), any(), any());
+      verify(mediaProcessingService, never()).applyProcessedResult(any(), any(), any(), any());
       verify(mediaProcessingService, never()).applyFailedResult(any(), any());
     }
 
@@ -144,7 +166,7 @@ class MediaProcessedStreamConsumerTest {
 
       org.mockito.Mockito.doThrow(new RuntimeException("DB 오류"))
           .when(mediaProcessingService)
-          .applyProcessedResult(any(), any(), any());
+          .applyProcessedResult(any(), any(), any(), any());
 
       consumer.onMessage(record);
     }

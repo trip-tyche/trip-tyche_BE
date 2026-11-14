@@ -4,11 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 
+import com.triptyche.backend.domain.media.dto.MediaBatchDeleteRequest;
 import com.triptyche.backend.domain.media.dto.MediaProcessingRequest;
 import com.triptyche.backend.domain.media.dto.MediaProcessingResponse;
 import com.triptyche.backend.domain.media.event.MediaFileRegisteredEvent;
+import com.triptyche.backend.domain.media.event.MediaFilesS3DeleteRequestedEvent;
 import com.triptyche.backend.domain.media.model.MediaFile;
 import com.triptyche.backend.domain.media.model.ProcessingStatus;
 import com.triptyche.backend.domain.media.repository.MediaFileRepository;
@@ -248,6 +251,45 @@ class MediaCommandServiceTest {
             assertThat(published.finalKey()).isEqualTo("processed/42/uuid1.webp");
             assertThat(published.originalKey()).isNull();
             assertThat(published.mediaFileId()).isEqualTo(101L);
+        }
+    }
+
+    @Nested
+    @DisplayName("deleteMultipleMediaFiles()")
+    class DeleteMultipleMediaFiles {
+
+        @Test
+        @DisplayName("본·썸네일 키를 모두 S3 삭제 대상에 넣고, 썸네일 없는 사진은 본만 넣는다")
+        void includesThumbnailKey() {
+            given(tripAccessGuard.validateAccessibleTripByKey(TRIP_KEY, user)).willReturn(trip);
+            MediaFile withThumb = MediaFile.builder()
+                    .mediaFileId(1L)
+                    .trip(trip)
+                    .mediaKey("processed/42/a.webp")
+                    .mediaLink("https://cdn/bucket/processed/42/a.webp")
+                    .thumbnailKey("processed/42/a_thumb.webp")
+                    .build();
+            MediaFile withoutThumb = MediaFile.builder()
+                    .mediaFileId(2L)
+                    .trip(trip)
+                    .mediaKey("processed/42/b.webp")
+                    .mediaLink("https://cdn/bucket/processed/42/b.webp")
+                    .build();
+            given(mediaFileRepository.findAllById(List.of(1L, 2L))).willReturn(List.of(withThumb, withoutThumb));
+            given(s3KeyResolver.extractKey("https://cdn/bucket/processed/42/a.webp")).willReturn("processed/42/a.webp");
+            given(s3KeyResolver.extractKey("https://cdn/bucket/processed/42/b.webp")).willReturn("processed/42/b.webp");
+
+            mediaCommandService.deleteMultipleMediaFiles(user, TRIP_KEY, new MediaBatchDeleteRequest(List.of(1L, 2L)));
+
+            ArgumentCaptor<MediaFilesS3DeleteRequestedEvent> captor =
+                    ArgumentCaptor.forClass(MediaFilesS3DeleteRequestedEvent.class);
+            verify(eventPublisher, atLeastOnce()).publishEvent(captor.capture());
+            assertThat(captor.getAllValues())
+                    .filteredOn(MediaFilesS3DeleteRequestedEvent.class::isInstance)
+                    .singleElement()
+                    .extracting(MediaFilesS3DeleteRequestedEvent::mediaKeys)
+                    .asList()
+                    .containsExactlyInAnyOrder("processed/42/a.webp", "processed/42/a_thumb.webp", "processed/42/b.webp");
         }
     }
 }

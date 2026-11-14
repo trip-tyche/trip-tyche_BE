@@ -34,10 +34,12 @@ public class MediaProcessedStreamConsumer implements StreamListener<String, MapR
         mediaProcessingService.applyFailedResult(mediaFileId, reason);
       } else {
         String finalKey = fields.get("finalKey");
+        // 구버전 워커는 thumbKey를 보내지 않는다.
+        String thumbKey = fields.get("thumbKey");
         LocalDateTime processedAt = OffsetDateTime
             .parse(fields.get("processedAt"))
             .toLocalDateTime();
-        mediaProcessingService.applyProcessedResult(mediaFileId, finalKey, processedAt);
+        mediaProcessingService.applyProcessedResult(mediaFileId, finalKey, thumbKey, processedAt);
       }
     } catch (Exception e) {
       log.error("[media-processed-stream] 메시지 처리 실패 — mediaFileId: {}, errorType: {}, errorMsg: {}, fields: {}",

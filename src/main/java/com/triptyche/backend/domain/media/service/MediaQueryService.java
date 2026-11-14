@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -56,7 +57,8 @@ public class MediaQueryService {
                     mediaFile.getMediaLink(),
                     mediaFile.getRecordDate(),
                     mediaFile.getLatitude(),
-                    mediaFile.getLongitude()
+                    mediaFile.getLongitude(),
+                    buildUrlOrNull(mediaFile.getThumbnailKey())
             ))
             .toList();
 
@@ -77,15 +79,26 @@ public class MediaQueryService {
       return Map.of();
     }
 
-    Map<Long, String> coverLinks = mediaFileRepository.findCoversByTripIds(tripIds, DEFAULT_INVALID_DATE)
+    Map<Long, TripCoverRow> covers = mediaFileRepository.findCoversByTripIds(tripIds, DEFAULT_INVALID_DATE)
             .stream()
-            .collect(Collectors.toMap(TripCoverRow::getTripId, TripCoverRow::getMediaLink, (a, b) -> a));
+            .collect(Collectors.toMap(TripCoverRow::getTripId, Function.identity(), (a, b) -> a));
 
     return mediaFileRepository.countByTripIds(tripIds).stream()
             .collect(Collectors.toMap(
                     TripPhotoCountRow::getTripId,
-                    row -> new TripCoverInfo(coverLinks.get(row.getTripId()), row.getPhotoCount())
+                    row -> toCoverInfo(covers.get(row.getTripId()), row.getPhotoCount())
             ));
+  }
+
+  private TripCoverInfo toCoverInfo(TripCoverRow cover, long photoCount) {
+    if (cover == null) {
+      return new TripCoverInfo(null, null, photoCount);
+    }
+    return new TripCoverInfo(cover.getMediaLink(), buildUrlOrNull(cover.getThumbnailKey()), photoCount);
+  }
+
+  private String buildUrlOrNull(String key) {
+    return key == null ? null : s3KeyResolver.buildUrl(key);
   }
 
   @Transactional(readOnly = true)

@@ -86,6 +86,10 @@ CONSUMER_NAME = "worker-1"
 MAX_RETRY = 3
 MAX_IMAGE_SIZE = 1920
 WEBP_QUALITY = 85
+# 표지용 축소본. 프론트가 카드 비율로 잘라(cover crop) 최대 750px 폭으로 그리므로 짧은 변 기준으로 줄인다.
+THUMB_SHORT_SIDE = 800
+THUMB_QUALITY = 80
+THUMB_SUFFIX = "_thumb.webp"
 # 객체 키에 UUID가 들어 있어 내용이 바뀌지 않는다. 재처리해도 같은 원본에서 같은 결과가 나온다.
 # private: CDN 같은 공유 캐시가 보관하면 사진 삭제·공유 해제 뒤에도 계속 내보낼 수 있다. 브라우저 캐시만 허용한다.
 CACHE_CONTROL = "private, max-age=31536000, immutable"
@@ -171,19 +175,56 @@ def move_to_dlq(r: redis.Redis, message_id: str, fields: dict, reason: str):
         log.error("DLQ 이동 실패 — message_id: %s, error: %s", message_id, e, exc_info=True)
 
 
-def resize_and_convert(image_bytes: bytes) -> bytes:
+def decode_image(image_bytes: bytes) -> Image.Image:
+    """회전(EXIF)과 RGB 변환까지 끝낸 이미지. 48MP 사진도 있으므로 한 번만 디코딩해 여러 출력에 쓴다."""
     with Image.open(io.BytesIO(image_bytes)) as img:
         img = ImageOps.exif_transpose(img)
-        img = img.convert("RGB")
-        w, h = img.size
-        if max(w, h) > MAX_IMAGE_SIZE:
-            ratio = MAX_IMAGE_SIZE / max(w, h)
-            new_size = (int(w * ratio), int(h * ratio))
-            img = img.resize(new_size, Image.LANCZOS)
+        return img.convert("RGB")
 
-        output = io.BytesIO()
-        img.save(output, format="WEBP", quality=WEBP_QUALITY)
-        return output.getvalue()
+
+def fit_long_side(img: Image.Image, max_size: int) -> Image.Image:
+    w, h = img.size
+    if max(w, h) <= max_size:
+        return img
+    ratio = max_size / max(w, h)
+    return img.resize((int(w * ratio), int(h * ratio)), Image.LANCZOS)
+
+
+def fit_short_side(img: Image.Image, short_size: int) -> Image.Image:
+    w, h = img.size
+    if min(w, h) <= short_size:
+        return img
+    ratio = short_size / min(w, h)
+    # 짧은 변이 정확히 short_size가 되도록 그 변은 반올림 오차 없이 고정한다.
+    new_size = (short_size, round(h * ratio)) if w <= h else (round(w * ratio), short_size)
+    return img.resize(new_size, Image.LANCZOS)
+
+
+def encode_webp(img: Image.Image, quality: int) -> bytes:
+    output = io.BytesIO()
+    img.save(output, format="WEBP", quality=quality)
+    return output.getvalue()
+
+
+def resize_and_convert(image_bytes: bytes) -> bytes:
+    return encode_webp(fit_long_side(decode_image(image_bytes), MAX_IMAGE_SIZE), WEBP_QUALITY)
+
+
+def build_thumb_key(final_key: str) -> str:
+    # processed/{tripId}/{uuid}.webp → processed/{tripId}/{uuid}_thumb.webp
+    base = final_key[:-len(".webp")] if final_key.endswith(".webp") else final_key.rsplit(".", 1)[0]
+    return base + THUMB_SUFFIX
+
+
+def put_webp(s3, key: str, body: bytes):
+    s3.put_object(
+        Bucket=OCI_BUCKET_NAME,
+        Key=key,
+        Body=body,
+        ContentType="image/webp",
+        ContentLength=len(body),
+        CacheControl=CACHE_CONTROL,
+    )
 
 
 def build_webp_key(original_key: str) -> str:
@@ -215,13 +256,17 @@ def delete_original(s3, original_key: str):
         log.warning("원본 삭제 실패 (무시) — key: %s, error: %s", original_key, e)
 
 
-def publish_processed_result(r: redis.Redis, media_file_id: int, final_key: str, processed_at: str):
+def publish_processed_result(r: redis.Redis, media_file_id: int, final_key: str, processed_at: str,
+                             thumb_key: str = None):
+    fields = {
+        "mediaFileId": str(media_file_id),
+        "finalKey": final_key,
+        "processedAt": processed_at,
+    }
+    if thumb_key:
+        fields["thumbKey"] = thumb_key
     try:
-        r.xadd(PROCESSED_STREAM_KEY, {
-            "mediaFileId": str(media_file_id),
-            "finalKey": final_key,
-            "processedAt": processed_at,
-        })
+        r.xadd(PROCESSED_STREAM_KEY, fields)
         log.info("[v2] 결과 발행 완료 — mediaFileId: %d", media_file_id)
     except Exception as e:
         log.error("[v2] 결과 발행 실패 — mediaFileId: %d, error: %s", media_file_id, e, exc_info=True)
@@ -239,9 +284,24 @@ def publish_failed_result(r: redis.Redis, media_file_id: int, reason: str):
         log.error("[v2] 실패 결과 발행 실패 — mediaFileId: %d, error: %s", media_file_id, e, exc_info=True)
 
 
+def create_thumbnail(s3, media_file_id: int, img: Image.Image, final_key: str):
+    """썸네일은 보조 자료다. 실패해도 본 처리를 실패시키지 않고 None을 돌려준다."""
+    thumb_key = build_thumb_key(final_key)
+    try:
+        # 파노라마처럼 극단적인 비율은 짧은 변 기준이면 본보다 커지므로 긴 변도 본과 같은 한도로 묶는다.
+        thumb = fit_long_side(fit_short_side(img, THUMB_SHORT_SIDE), MAX_IMAGE_SIZE)
+        thumb_bytes = encode_webp(thumb, THUMB_QUALITY)
+        put_webp(s3, thumb_key, thumb_bytes)
+        return thumb_key
+    except Exception as e:
+        log.warning("[v2] 썸네일 생성 실패 (무시) — mediaFileId: %d, key: %s, error: %s",
+                    media_file_id, thumb_key, e)
+        return None
+
+
 def process_message_v2(s3, fields: dict) -> tuple:
-    """v2 흐름. 변환본 PUT만 수행 — DB/원본 삭제는 BE 위임.
-    반환: (media_file_id, final_key, processed_at_iso)
+    """v2 흐름. 변환본·썸네일 PUT만 수행 — DB/원본 삭제는 BE 위임.
+    반환: (media_file_id, final_key, processed_at_iso, thumb_key 또는 None)
     """
     from datetime import datetime, timezone
 
@@ -253,21 +313,18 @@ def process_message_v2(s3, fields: dict) -> tuple:
 
     response = s3.get_object(Bucket=OCI_BUCKET_NAME, Key=temp_key)
     image_bytes = response["Body"].read()
-    webp_bytes = resize_and_convert(image_bytes)
+    img = decode_image(image_bytes)
+    del image_bytes, response
 
-    s3.put_object(
-        Bucket=OCI_BUCKET_NAME,
-        Key=final_key,
-        Body=webp_bytes,
-        ContentType="image/webp",
-        ContentLength=len(webp_bytes),
-        CacheControl=CACHE_CONTROL,
-    )
+    webp_bytes = encode_webp(fit_long_side(img, MAX_IMAGE_SIZE), WEBP_QUALITY)
+    put_webp(s3, final_key, webp_bytes)
+
+    thumb_key = create_thumbnail(s3, media_file_id, img, final_key)
 
     processed_at = datetime.now(timezone.utc).isoformat()
 
-    log.info("[v2] 변환 완료 — mediaFileId: %d, finalKey: %s", media_file_id, final_key)
-    return media_file_id, final_key, processed_at
+    log.info("[v2] 변환 완료 — mediaFileId: %d, finalKey: %s, thumbKey: %s", media_file_id, final_key, thumb_key)
+    return media_file_id, final_key, processed_at, thumb_key
 
 
 def process_message(s3, message_id: str, fields: dict):
@@ -334,9 +391,9 @@ def main():
                         try:
                             flow = fields.get("flow", "v1")
                             if flow == "v2":
-                                media_file_id, final_key, processed_at = process_message_v2(s3, fields)
+                                media_file_id, final_key, processed_at, thumb_key = process_message_v2(s3, fields)
                                 r.xack(STREAM_KEY, CONSUMER_GROUP, message_id)
-                                publish_processed_result(r, media_file_id, final_key, processed_at)
+                                publish_processed_result(r, media_file_id, final_key, processed_at, thumb_key)
                             else:
                                 original_key = process_message(s3, message_id, fields)
                                 r.xack(STREAM_KEY, CONSUMER_GROUP, message_id)
