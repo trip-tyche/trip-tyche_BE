@@ -267,3 +267,9 @@ __pycache__/
 ### firebase / service account keys
 secrets/
 *firebase-adminsdk*.json
+
+### 포트폴리오 (개인 문서 — 저장소에 올리지 않는다)
+/PORTFOLIO.md
+
+### Claude 산출물
+/Claude outputs/
