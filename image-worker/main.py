@@ -86,6 +86,9 @@ CONSUMER_NAME = "worker-1"
 MAX_RETRY = 3
 MAX_IMAGE_SIZE = 1920
 WEBP_QUALITY = 85
+# 객체 키에 UUID가 들어 있어 내용이 바뀌지 않는다. 재처리해도 같은 원본에서 같은 결과가 나온다.
+# private: CDN 같은 공유 캐시가 보관하면 사진 삭제·공유 해제 뒤에도 계속 내보낼 수 있다. 브라우저 캐시만 허용한다.
+CACHE_CONTROL = "private, max-age=31536000, immutable"
 
 running = True
 
@@ -258,6 +261,7 @@ def process_message_v2(s3, fields: dict) -> tuple:
         Body=webp_bytes,
         ContentType="image/webp",
         ContentLength=len(webp_bytes),
+        CacheControl=CACHE_CONTROL,
     )
 
     processed_at = datetime.now(timezone.utc).isoformat()
@@ -284,6 +288,7 @@ def process_message(s3, message_id: str, fields: dict):
         Body=webp_bytes,
         ContentType="image/webp",
         ContentLength=len(webp_bytes),
+        CacheControl=CACHE_CONTROL,
     )
 
     webp_url = f"{OCI_S3_ENDPOINT}/{OCI_BUCKET_NAME}/{webp_key}"
